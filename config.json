@@ -1,0 +1,15 @@
+{
+  "app": "control-lab",
+  "version": 1,
+  "app_enabled": true,
+  "maintenance_message": "التطبيق تحت الصيانة حاليًا. يرجى المحاولة لاحقًا.",
+  "closed_until": null,
+  "allow_autosolve": true,
+  "allow_ghost": true,
+  "allow_power_auto": true,
+  "min_version": null,
+  "member_codes": [],
+  "revoked_devices": [],
+  "modules": {},
+  "admin_hash": "b4bd650c8992cb0b811cad1c991ba1e17ef75e68954d30109513a23ad13c2504"
+}

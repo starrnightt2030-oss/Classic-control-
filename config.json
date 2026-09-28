@@ -1,15 +1,117 @@
 {
-  "app": "control-lab",
-  "version": 1,
   "app_enabled": true,
   "maintenance_message": "التطبيق تحت الصيانة حاليًا. يرجى المحاولة لاحقًا.",
-  "closed_until": null,
   "allow_autosolve": true,
   "allow_ghost": true,
   "allow_power_auto": true,
+  "modules": {
+    "lib_estop": {
+      "state": "open"
+    },
+    "lib_lamp": {
+      "state": "premium"
+    },
+    "lib_ls": {
+      "state": "premium"
+    },
+    "lib_sel": {
+      "state": "premium"
+    },
+    "lib_prox": {
+      "state": "premium"
+    },
+    "lib_sol": {
+      "state": "premium"
+    },
+    "lib_rev": {
+      "state": "premium"
+    },
+    "lib_relay": {
+      "state": "open"
+    },
+    "lib_kc": {
+      "state": "premium"
+    },
+    "lib_mcb": {
+      "state": "premium"
+    },
+    "lib_trafo": {
+      "state": "premium"
+    },
+    "lib_ol": {
+      "state": "premium"
+    },
+    "lib_timer": {
+      "state": "premium"
+    },
+    "lib_term": {
+      "state": "premium"
+    },
+    "lib_motor": {
+      "state": "premium"
+    },
+    "lib_sd": {
+      "state": "premium"
+    },
+    "c_2loc": {
+      "state": "premium"
+    },
+    "c_2start": {
+      "state": "premium"
+    },
+    "c_2hand": {
+      "state": "premium"
+    },
+    "c_ondelay": {
+      "state": "premium"
+    },
+    "c_offdelay": {
+      "state": "premium"
+    },
+    "c_seq_on": {
+      "state": "premium"
+    },
+    "c_seq_off": {
+      "state": "premium"
+    },
+    "c_seq_time": {
+      "state": "premium"
+    },
+    "c_seq_swap": {
+      "state": "premium"
+    },
+    "c_seq3": {
+      "state": "premium"
+    },
+    "c_rev": {
+      "state": "premium"
+    },
+    "c_rev_semi": {
+      "state": "premium"
+    },
+    "c_rev_auto": {
+      "state": "premium"
+    },
+    "c_rev_timer": {
+      "state": "premium"
+    },
+    "c_sd": {
+      "state": "premium"
+    },
+    "c_sd2": {
+      "state": "premium"
+    },
+    "free": {
+      "state": "premium"
+    }
+  },
+  "app": "control-lab",
+  "version": 44,
+  "closed_until": null,
   "min_version": null,
   "member_codes": [],
   "revoked_devices": [],
-  "modules": {},
-  "admin_hash": "b4bd650c8992cb0b811cad1c991ba1e17ef75e68954d30109513a23ad13c2504"
+  "admin_hash": "b4bd650c8992cb0b811cad1c991ba1e17ef75e68954d30109513a23ad13c2504",
+  "member_salt": "8hjpwjfttd5umyus",
+  "updated": "2026-09-28T00:13:18.319Z"
 }

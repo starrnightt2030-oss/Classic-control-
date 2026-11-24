@@ -36,7 +36,7 @@ def C_(M):
     )
 
 
-def build(M, cutaway=False):
+def build(M, cutaway=False, single=False):
     C = C_(M)
     # frame + fins + feet
     fr = CYL(62, -80, 80, 0, 0, C["paint"], "frame", axis="X", bw=2.0, verts=96)
@@ -119,25 +119,29 @@ def build(M, cutaway=False):
     for x in (-8, 16):
         CYL(10, -48, -38, x, 79, C["black"], "terminal_box", axis="Y", bw=1.5, verts=6)
         CYL(8, -54, -48, x, 79, C["black"], "terminal_box", axis="Y", bw=1.5)
-    terminal_board(C, M, "terminal_box", z=66, links="delta")
+    terminal_board(C, M, "terminal_box", z=66, links="single" if single else "delta")
     # nameplate
     B(-30, 30, -63, -61.5, -8, 28, C["plate"], "nameplate", bw=0.4)
-    lines = ["3~ MOTOR  ELDAWLY  EM100L-4", "4 kW   400V D / 690V Y   50Hz", "8.2 A   1440 rpm   cos 0.82",
-             "IP55   Ins.F   S1   IE3", "IEC 60034-1"]
+    lines = (["1~ MOTOR  ELDAWLY  EM90L-4", "1.1 kW   230V   50Hz", "7.2 A   1420 rpm   cos 0.92",
+              "Cs 150uF 250V  Cr 25uF 450V", "IP54   Ins.F   S1"] if single else
+             ["3~ MOTOR  ELDAWLY  EM100L-4", "4 kW   400V D / 690V Y   50Hz", "8.2 A   1440 rpm   cos 0.82",
+              "IP55   Ins.F   S1   IE3", "IEC 60034-1"])
     for i, l in enumerate(lines):
         T(l, 0, -63.06, 22 - i * 6.5, 2.6, C["ink"], "nameplate")
 
 
 def terminal_board(C, M, g, z=66, links="delta"):
     B(-24, 28, -26, 26, z - 3, z, C["board"], g, bw=0.8)
-    top = [("U1", -12), ("V1", 2), ("W1", 16)]
-    bot = [("W2", -12), ("U2", 2), ("V2", 16)]
+    top = [("U1", -12), ("V1", 2), ("W1", 16)] if links != "single" else [("U1", -12), ("Z1", 2), ("L", 16)]
+    bot = [("W2", -12), ("U2", 2), ("V2", 16)] if links != "single" else [("U2", -12), ("Z2", 2), ("N", 16)]
     for (lab, x), y in [(t, -10) for t in top] + [(b, 12) for b in bot]:
         CYL(2.5, z, z + 14, x, y, C["brass"], g, axis="Z", bw=0.2, verts=24)
         CYL(4.5, z + 9, z + 12, x, y, C["brass"], g, axis="Z", bw=0.5, verts=6)
         T(lab, x - 6.5, y - 6.5, z + 0.05, 3.0, lib.mat("mo_wink", (0.9, 0.9, 0.9), rough=0.6), g, rot=(0, 0, 0))
     cu = C["copper"]
-    if links == "delta":
+    if links == "single":
+        B(-15, -9, -13, 15, z + 6, z + 8, cu, g, bw=0.5)                    # U1-U2 bridge (example link)
+    elif links == "delta":
         for x in (-12, 2, 16):
             B(x - 3, x + 3, -13, 15, z + 6, z + 8, cu, g, bw=0.5)          # U1-W2, V1-U2, W1-V2
     else:
@@ -148,6 +152,37 @@ def terminal_board(C, M, g, z=66, links="delta"):
 def build_board(M, links="delta"):
     C = C_(M)
     terminal_board(C, M, "terminal_box", z=0, links=links)
+
+
+PARTS_1PH = dict(PARTS)
+PARTS_1PH.update({
+    "stator": ("الإستاتور: الملف الرئيسي والمساعد", "Stator: main & auxiliary windings", (0, -150, 0)),
+    "terminal_box": ("علبة الترامل (U1-U2 و Z1-Z2)", "Terminal box (U1-U2 / Z1-Z2)", (0, 0, 110)),
+    "run_capacitor": ("مكثف التشغيل الدائم", "Run capacitor", (0, -40, 170)),
+    "start_capacitor": ("مكثف البدء", "Start capacitor", (60, 40, 170)),
+    "centrifugal_switch": ("المفتاح الطارد المركزي", "Centrifugal switch", (90, -150, -90), (70, 0, 0)),
+})
+
+
+def build_1ph(M):
+    build(M, single=True)
+    C = C_(M)
+    silver = lib.mat("mo_cap_s", (0.75, 0.76, 0.78), metal=0.6, rough=0.35)
+    blk = lib.mat("mo_cap_b", (0.03, 0.03, 0.03), rough=0.4)
+    CYL(15, 40, 92, -20, 80, silver, "run_capacitor", axis="X", bw=2.0)
+    T("25uF 450V", 66, -20, 95.2, 3.0, C["ink"], "run_capacitor", rot=(0, 0, 0))
+    for x in (50, 82):
+        B(x - 3, x + 3, -36, -4, 62, 66, C["steel"], "run_capacitor", bw=0.4)
+    CYL(15, 40, 92, 20, 80, blk, "start_capacitor", axis="X", bw=2.0)
+    T("150uF 250V", 66, 20, 95.2, 3.0, lib.mat("mo_wink2", (0.9, 0.9, 0.9), rough=0.6), "start_capacitor", rot=(0, 0, 0))
+    for x in (50, 82):
+        B(x - 3, x + 3, 4, 36, 62, 66, C["steel"], "start_capacitor", bw=0.4)
+    # centrifugal switch: rotating weights on shaft + stationary contact on NDE shield
+    CYL(22, 66, 72, 0, 0, C["alu"], "centrifugal_switch", axis="X", bw=1.0)
+    for s_ in (-1, 1):
+        B(64, 74, -6, 6, s_ * 18 - 5, s_ * 18 + 5, C["steel"], "centrifugal_switch", bw=1.0)
+    helix("centrifugal_switch", (69, 0, 0), 4, 16, 3, 0.4, C["steel"], axis="X")
+    B(74, 78, -10, 10, 24, 40, lib.mat("mo_sw", (0.75, 0.62, 0.40), rough=0.5), "centrifugal_switch", bw=0.6)
 
 
 class V:
@@ -163,6 +198,7 @@ VARIANTS = {
     "motor":            (V(PARTS, build), True, (0.0, 0, 0.004), 0.62),
     "motor_tbox_delta": (V(TBP, build_board, links="delta"), False, (0.002, 0, 0.004), 0.17),
     "motor_tbox_star":  (V(TBP, build_board, links="star"), False, (0.002, 0, 0.004), 0.17),
+    "motor_1ph":        (V(PARTS_1PH, build_1ph), True, (0.0, 0, 0.010), 0.62),
 }
 
 if __name__ == "__main__":

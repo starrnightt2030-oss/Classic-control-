@@ -10,12 +10,15 @@ ORDER = ["contactor", "overload", "aux_block", "pneumatic_timer", "mcb", "rccb",
          "selector", "pilot_lamp", "pb_station", "control_relay", "timer", "reversing_contactor", "proximity_sensor",
          "limit_switch", "float_pressure", "solenoid_valve", "signaling", "panel_meter", "current_transformer",
          "rotary_switches", "electronic_protection", "installation", "motor", "tools", "enclosure"]
+# components added after the first 7 files were sent for recording: always go to NEW files so old parts never change
+ADDED = ["control_transformer", "power_supply_24v", "motor_1ph"]
 WARN = {"contactor": "warn/live_terminals.mp3", "overload": "warn/never_bypass.mp3", "mcb": "warn/never_bypass.mp3",
         "rccb": "warn/never_bypass.mp3", "mpcb": "warn/never_bypass.mp3", "fuse": "warn/never_bypass.mp3",
         "estop": "warn/estop_not_routine.mp3", "reversing_contactor": "warn/sim_interlock.mp3",
         "current_transformer": "warn/ct_open.mp3", "motor": "warn/rotating.mp3", "tools": "warn/meter_category.mp3",
         "enclosure": "warn/lockout.mp3", "installation": "warn/lockout.mp3", "electronic_protection": "warn/live_terminals.mp3",
-        "panel_meter": "warn/meter_category.mp3", "rotary_switches": "warn/lockout.mp3"}
+        "panel_meter": "warn/meter_category.mp3", "rotary_switches": "warn/lockout.mp3",
+        "control_transformer": "warn/never_bypass.mp3", "power_supply_24v": "warn/live_terminals.mp3", "motor_1ph": "warn/rotating.mp3"}
 
 cues = json.load(open(os.path.join(HERE, "audio_cues.json"), encoding="utf8"))
 CSFX = cues["component_sfx"]
@@ -43,10 +46,10 @@ for grp in cues["voice"]:
     g.append(f"## {grp['group']}\n")
     for c in grp["clips"]:
         g.append(clip(c["audio"], c["text_ar"], c.get("sfx_before"), c.get("sfx_after")))
-blocks.append(("الصوتيات العامة: شعارات، ومراحل، وانتقالات، وتحذيرات، وردود فعل", g))
+blocks.append(("الصوتيات العامة: شعارات، ومراحل، وانتقالات، وتحذيرات، وردود فعل", g, False))
 
 total_clips = sum(len(grp["clips"]) for grp in cues["voice"])
-for comp in ORDER:
+for comp in ORDER + ADDED:
     p = os.path.join(HERE, comp + ".json")
     d = json.load(open(p, encoding="utf8"))
     name = d["name_ar"]
@@ -79,14 +82,17 @@ for comp in ORDER:
     c.append(clip(d["closing"]["audio"], d["closing"]["text_ar"], after="success_chime",
                   note="قبلها: `global/assemble.mp3` ومعاه 🔊 `sfx/assemble_snap.ogg`" if parts else None))
     total_clips += 3 + len(d.get("lesson", [])) + len(parts)
-    blocks.append((f"{name} — {d['name_en']}", c))
+    blocks.append((f"{name} — {d['name_en']}", c, comp == ADDED[0]))
 
 HEAD = ("# نصوص التسجيل — معمل الكلاسيك كنترول v2 (الجزء {n})\n\n"
         "> **اقرا بصوت عالي الفقرات العادية بس.** السطور اللي بتبدأ بـ 🔊 أو ↪ تعليمات للمونتاج، مش بتتقري.\n"
         "> احفظ كل مقطع باسم الملف المكتوب فوقه بالظبط، جوه `assets/audio/`.\n\n")
 
 files, cur = [], ""
-for title, cl in blocks:
+for title, cl, brk in blocks:
+    if brk and cur:
+        files.append(cur)
+        cur = ""
     sec = f"---\n\n## {title}\n\n"
     for x in cl:
         if len(HEAD) + len(cur) + len(sec) + len(x) > LIMIT - 200:

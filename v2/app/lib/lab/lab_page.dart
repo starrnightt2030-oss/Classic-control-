@@ -992,12 +992,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     children.add(Positioned(
       left: 0,
       right: 0,
-      bottom: -9 * kPx,
+      bottom: -11 * kPx,
       child: Center(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 2 * kPx, vertical: 0.3 * kPx),
-          decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx)),
-          child: Text('-${p.id}', style: TextStyle(fontSize: 3.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B))),
+          padding: EdgeInsets.symmetric(horizontal: 2.2 * kPx, vertical: 0.2 * kPx),
+          decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx), boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 2))]),
+          child: Text('-${p.id}', style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
         ),
       ),
     ));
@@ -1026,14 +1026,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   List<Widget> _liveOverlay(Placed p, Comp c) {
     final sz = p.size;
     Widget badge(String t, Color col) => Positioned(
-          top: -7 * kPx,
-          left: 0,
-          right: 0,
+          top: -11 * kPx,
+          left: -20 * kPx,
+          right: -20 * kPx,
           child: Center(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 2.4 * kPx, vertical: 0.4 * kPx),
+              padding: EdgeInsets.symmetric(horizontal: 2.6 * kPx, vertical: 0.3 * kPx),
               decoration: BoxDecoration(color: col, borderRadius: BorderRadius.circular(3 * kPx), boxShadow: glow(col, 0.8)),
-              child: Text(t, style: TextStyle(fontSize: 3.4 * kPx, fontWeight: FontWeight.w800, color: Colors.white)),
+              child: Text(t, style: TextStyle(fontSize: 5.4 * kPx, fontWeight: FontWeight.w800, color: Colors.white, height: 1.25)),
             ),
           ),
         );
@@ -1107,19 +1107,19 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               padding: EdgeInsets.all(2.2 * kPx),
               decoration: BoxDecoration(color: const Color(0xE60A1228), borderRadius: BorderRadius.circular(3 * kPx), border: Border.all(color: bad ? CC.red : (run ? CC.green : CC.line2))),
               child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-                Text(mode, style: TextStyle(fontSize: 3.8 * kPx, fontWeight: FontWeight.w800, color: bad ? CC.red : (run ? CC.green : CC.text2))),
+                Text(mode, style: TextStyle(fontSize: 7 * kPx, fontWeight: FontWeight.w800, color: bad ? CC.red : (run ? CC.green : CC.text2))),
                 Text('${(c.s.spd * 1450).round()} rpm · ${c.s.current.toStringAsFixed(1)} A${c.s.load ? ' · حمل زائد' : ''}',
-                    style: TextStyle(fontSize: 3.0 * kPx, color: CC.text2, fontFamily: CC.mono)),
-                if (run) Text(c.s.dir == 1 ? '↻' : '↺', style: TextStyle(fontSize: 6 * kPx, color: CC.cyan, height: 1)),
+                    style: TextStyle(fontSize: 5.4 * kPx, color: CC.text2, fontFamily: CC.mono)),
+                if (run) Text(c.s.dir == 1 ? '↻' : '↺', style: TextStyle(fontSize: 9 * kPx, color: CC.cyan, height: 1)),
               ]),
             ),
           ),
           Positioned(
-            left: 6 * kPx,
-            bottom: 8 * kPx,
+            left: 2 * kPx,
+            top: 58 * kPx,
             child: Transform.rotate(
               angle: c.s.ang * math.pi / 180,
-              child: Icon(Icons.toys, size: 16 * kPx, color: run ? CC.cyan : CC.muted),
+              child: Icon(Icons.toys, size: 26 * kPx, color: run ? CC.cyan : CC.muted),
             ),
           ),
         ];

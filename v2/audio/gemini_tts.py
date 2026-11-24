@@ -34,8 +34,11 @@ API = "https://generativelanguage.googleapis.com/v1beta"
 sys.path.insert(0, str(HERE))
 from asr_split import words_of  # noqa: E402
 
-# English director's note in the documented "Say …:" form, so it is not spoken itself
-STYLE = "Read aloud word for word, in a calm, clear Egyptian Arabic teacher voice: "
+# Style goes in the system instruction; the spoken content is the script text only
+# (this TTS model reads any instruction placed in the content aloud).
+STYLE = ("You are a text-to-speech narrator. Speak the user's text exactly, word for word, in Egyptian Arabic, "
+         "with a calm, clear, warm teacher voice. Do not add, skip, translate or explain anything.")
+_USE_SYSTEM = [True]
 
 
 def missing_clips():
@@ -74,13 +77,24 @@ def pick_model(key, wanted):
 
 def synth(key, model, voice, text):
     body = {
-        "contents": [{"parts": [{"text": STYLE + text}]}],
+        "contents": [{"role": "user", "parts": [{"text": text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
         },
     }
-    res = http("POST", f"{API}/models/{model}:generateContent?key={key}", body)
+    if _USE_SYSTEM[0]:
+        body["systemInstruction"] = {"parts": [{"text": STYLE}]}
+    try:
+        res = http("POST", f"{API}/models/{model}:generateContent?key={key}", body)
+    except urllib.error.HTTPError as e:
+        if e.code == 400 and _USE_SYSTEM[0]:
+            print("  model rejects systemInstruction; sending the text only", flush=True)
+            _USE_SYSTEM[0] = False
+            body.pop("systemInstruction", None)
+            res = http("POST", f"{API}/models/{model}:generateContent?key={key}", body)
+        else:
+            raise
     for part in res["candidates"][0]["content"]["parts"]:
         inline = part.get("inlineData") or part.get("inline_data")
         if inline and inline.get("data"):

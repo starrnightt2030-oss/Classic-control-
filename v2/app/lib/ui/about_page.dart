@@ -52,8 +52,6 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ]),
         ),
-          ]),
-        ),
         const SizedBox(height: 18),
         GridView.count(
           crossAxisCount: c.maxWidth >= 700 ? 4 : 2,
@@ -85,8 +83,8 @@ class _AboutPageState extends State<AboutPage> {
               title: const Text('الشرح الصوتي', style: TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(
                 repo.recordedClips == 0
-                    ? 'التسجيلات بالعامية المصرية لسه بتتجهز، والشرح المكتوب موجود كامل.'
-                    : 'متضاف ${repo.recordedClips} تسجيل لحد دلوقتي.',
+                    ? 'الشرح الصوتي بالعربية الفصحى قيد التجهيز، والشرح المكتوب متاح كاملًا.'
+                    : 'عدد المقاطع الصوتية المتاحة: ${repo.recordedClips}.',
                 style: const TextStyle(color: CC.muted, fontSize: 12.5),
               ),
             ),

@@ -182,5 +182,13 @@
   "references": [
     "IEC 60898-1: Circuit-breakers for overcurrent protection for household and similar installations",
     "IEC 60617: Graphical symbols"
-  ]
+  ],
+  "opening": {
+    "audio": "mcb/opening.mp3",
+    "text_ar": "أهلًا بيك في درس القاطع (MCB). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "mcb/closing.mp3",
+    "text_ar": "كده خلصنا درس القاطع (MCB). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

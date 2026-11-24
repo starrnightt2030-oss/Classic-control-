@@ -111,5 +111,13 @@
     "ISO 13850: Emergency stop function",
     "IEC 60947-5-5: Electrical emergency stop devices with mechanical latching",
     "IEC 60204-1"
-  ]
+  ],
+  "opening": {
+    "audio": "estop/opening.mp3",
+    "text_ar": "أهلًا بيك في درس مفتاح الطوارئ. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "estop/closing.mp3",
+    "text_ar": "كده خلصنا درس مفتاح الطوارئ. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

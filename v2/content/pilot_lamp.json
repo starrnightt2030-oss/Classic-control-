@@ -101,5 +101,13 @@
   "references": [
     "IEC 60204-1: Colours of indicator lights",
     "IEC 60073"
-  ]
+  ],
+  "opening": {
+    "audio": "pilot_lamp/opening.mp3",
+    "text_ar": "أهلًا بيك في درس لمبة البيان (AD16). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "pilot_lamp/closing.mp3",
+    "text_ar": "كده خلصنا درس لمبة البيان (AD16). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

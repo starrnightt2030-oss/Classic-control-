@@ -128,5 +128,13 @@
   "references": [
     "IEC 60947-5-1: Control circuit devices (AC-15, DC-13, mechanically linked contacts)",
     "EN 50005 / IEC 60947-1: Terminal marking"
-  ]
+  ],
+  "opening": {
+    "audio": "aux_block/opening.mp3",
+    "text_ar": "أهلًا بيك في درس البلوك المساعد. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "aux_block/closing.mp3",
+    "text_ar": "كده خلصنا درس البلوك المساعد. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

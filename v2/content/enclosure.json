@@ -115,5 +115,13 @@
     "IEC 60529: IP code",
     "IEC 61439-1/-2: Low-voltage switchgear assemblies",
     "IEC 62208: Empty enclosures"
-  ]
+  ],
+  "opening": {
+    "audio": "enclosure/opening.mp3",
+    "text_ar": "أهلًا بيك في درس صندوق اللوحة. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "enclosure/closing.mp3",
+    "text_ar": "كده خلصنا درس صندوق اللوحة. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

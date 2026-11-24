@@ -1,27 +1,134 @@
-"""Builds scripts_for_recording.md: every narration text with the exact audio file name it must be saved as.
+"""Builds the recording scripts in content/recording/part_XX.md (each file <= 20,000 characters).
+Every clip shows the exact audio file name. Lines starting with 🔊 or ↪ are production cues: NOT to be read aloud.
 Run: python build_recording_script.py"""
-import json, glob, os
+import json, os, glob
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-files = sorted(glob.glob(os.path.join(HERE, "*.json")))
-out = ["# نصوص التسجيل الصوتي — معمل الكلاسيك كنترول v2", "",
-       "كل فقرة تحتها اسم الملف اللي لازم تتحفظ بيه بالظبط (داخل `assets/audio/`).",
-       "التسجيل بنفس الصوت للتطبيق كله. الصيغة المقترحة: MP3 أو Opus، أحادي، من 48 لـ 64 kbps.", ""]
-count = 0
-for f in files:
-    d = json.load(open(f, encoding="utf8"))
-    comp = d["component"]
-    out += ["---", "", f"## {d['name_ar']} — {d['name_en']}", ""]
-    if "intro" in d:
-        out += [f"**مقدمة** — `{d['intro']['audio']}`", "", d["intro"]["text_ar"], ""]
-        count += 1
-    for l in d.get("lesson", []):
-        fn = f"{comp}/lesson_{l['id']}.mp3"
-        out += [f"**{l['title_ar']}** — `{fn}`", "", l["text_ar"], ""]
-        count += 1
-    for p in d.get("parts", []):
-        out += [f"**{p['name_ar']}** — `{p['audio']}`", "", p["text_ar"], ""]
-        count += 1
-out.insert(4, f"إجمالي المقاطع: **{count}** مقطع، من **{len(files)}** مكون.")
-open(os.path.join(HERE, "scripts_for_recording.md"), "w", encoding="utf8").write("\n".join(out))
-print(count, "clips from", len(files), "components")
+OUTD = os.path.join(HERE, "recording")
+LIMIT = 20000
+ORDER = ["contactor", "overload", "aux_block", "pneumatic_timer", "mcb", "rccb", "mpcb", "fuse", "pushbutton", "estop",
+         "selector", "pilot_lamp", "pb_station", "control_relay", "timer", "reversing_contactor", "proximity_sensor",
+         "limit_switch", "float_pressure", "solenoid_valve", "signaling", "panel_meter", "current_transformer",
+         "rotary_switches", "electronic_protection", "installation", "motor", "tools", "enclosure"]
+WARN = {"contactor": "warn/live_terminals.mp3", "overload": "warn/never_bypass.mp3", "mcb": "warn/never_bypass.mp3",
+        "rccb": "warn/never_bypass.mp3", "mpcb": "warn/never_bypass.mp3", "fuse": "warn/never_bypass.mp3",
+        "estop": "warn/estop_not_routine.mp3", "reversing_contactor": "warn/sim_interlock.mp3",
+        "current_transformer": "warn/ct_open.mp3", "motor": "warn/rotating.mp3", "tools": "warn/meter_category.mp3",
+        "enclosure": "warn/lockout.mp3", "installation": "warn/lockout.mp3", "electronic_protection": "warn/live_terminals.mp3",
+        "panel_meter": "warn/meter_category.mp3", "rotary_switches": "warn/lockout.mp3"}
+
+cues = json.load(open(os.path.join(HERE, "audio_cues.json"), encoding="utf8"))
+CSFX = cues["component_sfx"]
+
+
+SPOKEN = {}
+
+
+def clip(audio, text, before=None, after=None, note=None):
+    SPOKEN[audio] = text.replace("**", "").replace("\n\n", "\n")
+    s = [f"### `{audio}`"]
+    if before:
+        s.append(f"🔊 قبلها: `sfx/{before}.ogg`")
+    if note:
+        s.append(f"↪ {note}")
+    s += ["", text]
+    if after:
+        s += ["", f"🔊 بعدها: `sfx/{after}.ogg`"]
+    return "\n".join(s) + "\n"
+
+
+blocks = []   # (title, [clip strings])
+g = []
+for grp in cues["voice"]:
+    g.append(f"## {grp['group']}\n")
+    for c in grp["clips"]:
+        g.append(clip(c["audio"], c["text_ar"], c.get("sfx_before"), c.get("sfx_after")))
+blocks.append(("الصوتيات العامة: شعارات، ومراحل، وانتقالات، وتحذيرات، وردود فعل", g))
+
+total_clips = sum(len(grp["clips"]) for grp in cues["voice"])
+for comp in ORDER:
+    p = os.path.join(HERE, comp + ".json")
+    d = json.load(open(p, encoding="utf8"))
+    name = d["name_ar"]
+    d["opening"] = {"audio": f"{comp}/opening.mp3", "text_ar": f"أهلًا بيك في درس {name}. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."}
+    d["closing"] = {"audio": f"{comp}/closing.mp3", "text_ar": f"كده خلصنا درس {name}. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."}
+    json.dump(d, open(p, "w", encoding="utf8"), ensure_ascii=False, indent=2)
+    c = []
+    ev = CSFX.get(comp, [])
+    if ev:
+        c.append("🔊 مؤثرات الدرس: " + "، ".join(f"{e[0]} ← " + " + ".join(f"`{x}`" for x in e[1:]) for e in ev) + "\n")
+    c.append(clip(d["opening"]["audio"], d["opening"]["text_ar"], before="stage_sting"))
+    c.append(clip(d["intro"]["audio"], d["intro"]["text_ar"]))
+    if comp in WARN:
+        c.append(f"↪ بعد المقدمة يتشغل التحذير المسجل: `{WARN[comp]}`\n")
+    for i, l in enumerate(d.get("lesson", [])):
+        note = "قبلها: `global/next_section.mp3`" if i else None
+        if l["id"] in ("safety", "danger", "rules"):
+            note = (note + "، و" if note else "قبلها: ") + "`warn/lockout.mp3`"
+        c.append(clip(l.get("audio", f"{comp}/lesson_{l['id']}.mp3"), f"**{l['title_ar']}**\n\n" + l["text_ar"], note=note))
+    parts = d.get("parts", [])
+    if parts:
+        c.append("↪ قبل شرح القطع: `global/disassemble.mp3` ومعاه 🔊 `sfx/explode_whoosh.ogg`. وكل قطعة بتتلمس بيتشغل معاها 🔊 `sfx/part_select.ogg`\n")
+    for pt in parts:
+        txt = pt["text_ar"]
+        if pt.get("fault_ar"):
+            txt += "\n\n**العطل الشائع:** " + pt["fault_ar"]
+        if pt.get("test_ar"):
+            txt += "\n\n**الاختبار:** " + pt["test_ar"]
+        c.append(clip(pt["audio"], txt))
+    c.append(clip(d["closing"]["audio"], d["closing"]["text_ar"], after="success_chime",
+                  note="قبلها: `global/assemble.mp3` ومعاه 🔊 `sfx/assemble_snap.ogg`" if parts else None))
+    total_clips += 3 + len(d.get("lesson", [])) + len(parts)
+    blocks.append((f"{name} — {d['name_en']}", c))
+
+HEAD = ("# نصوص التسجيل — معمل الكلاسيك كنترول v2 (الجزء {n})\n\n"
+        "> **اقرا بصوت عالي الفقرات العادية بس.** السطور اللي بتبدأ بـ 🔊 أو ↪ تعليمات للمونتاج، مش بتتقري.\n"
+        "> احفظ كل مقطع باسم الملف المكتوب فوقه بالظبط، جوه `assets/audio/`.\n\n")
+
+files, cur = [], ""
+for title, cl in blocks:
+    sec = f"---\n\n## {title}\n\n"
+    for x in cl:
+        if len(HEAD) + len(cur) + len(sec) + len(x) > LIMIT - 200:
+            if sec.strip() and len(sec) > 40:
+                cur += sec
+            files.append(cur)
+            cur, sec = "", f"---\n\n## {title} (تكملة)\n\n"
+        sec += x + "\n"
+    cur += sec
+files.append(cur)
+
+os.makedirs(OUTD, exist_ok=True)
+for f in glob.glob(os.path.join(OUTD, "part_*.md")) + glob.glob(os.path.join(OUTD, "tts_part_*.txt")) + glob.glob(os.path.join(OUTD, "manifest_part_*.json")):
+    os.remove(f)
+index = ["# فهرس ملفات التسجيل", "", f"إجمالي المقاطع الصوتية: **{total_clips}**. والمؤثرات الصوتية: **{len(cues['sfx'])}** ملف في `assets/audio/sfx/`.", "",
+         "| الملف | عدد الحروف | المحتوى |", "|---|---|---|"]
+for i, body in enumerate(files, 1):
+    text = HEAD.format(n=i) + body
+    assert len(text) <= LIMIT, (i, len(text))
+    fn = f"part_{i:02d}.md"
+    open(os.path.join(OUTD, fn), "w", encoding="utf8").write(text)
+    order = [l.split("`")[1] for l in body.splitlines() if l.startswith("### `")]
+    tts = "\n\n.\n\n".join(SPOKEN[a] for a in order)
+    assert len(tts) <= LIMIT, (fn, len(tts))
+    open(os.path.join(OUTD, f"tts_part_{i:02d}.txt"), "w", encoding="utf8").write(tts)
+    json.dump({"order": order, "pause_marker": "\\n\\n.\\n\\n", "chars": len(tts)}, open(os.path.join(OUTD, f"manifest_part_{i:02d}.json"), "w", encoding="utf8"), ensure_ascii=False, indent=1)
+    titles = [l[3:].replace(" (تكملة)", "") for l in body.splitlines() if l.startswith("## ") and not l.startswith("### ")]
+    seen = []
+    for tt in titles:
+        if tt not in seen:
+            seen.append(tt)
+    index.append(f"| [`{fn}`]({fn}) | {len(text):,} | " + "، ".join(s.split(' — ')[0] for s in seen) + " |")
+index += ["", "## طريقتين للتسجيل", "",
+          "1. **مقطع مقطع (الأدق):** من ملف `part_XX.md` انسخ كل فقرة لوحدها، واحفظ صوتها باسم الملف اللي فوقها.",
+          "2. **الملف كله مرة واحدة (الأسرع):** حط ملف `tts_part_XX.txt` كله في Studio-Eldawly. فيه الكلام المقروء بس، وبين كل مقطع والتاني سطر فيه نقطة لوحدها عشان يعمل وقفة. وبعد ما الصوت يطلع، شغّل `python audio/split_tts.py <الصوت> content/recording/manifest_part_XX.json`، وده بيقطّعه عند الوقفات ويحفظ كل مقطع باسمه الصح.",
+          "", "## ملاحظات للتسجيل", "",
+          "- **نفس الصوت ونفس الإعدادات** في كل الملفات، والسرعة هادية وواضحة زي المدرب.",
+          "- السطور اللي فيها 🔊 أو ↪ **مش بتتقري**. دي بتقول المؤثر أو المقطع العام اللي يتشغل قبل الفقرة أو بعدها.",
+          "- " + cues["real_recording_note"],
+          "- لو اتعدل أي ملف شرح، شغّل `python content/build_recording_script.py`، والملفات دي هتتولد تاني."]
+open(os.path.join(OUTD, "README.md"), "w", encoding="utf8").write("\n".join(index))
+old = os.path.join(HERE, "scripts_for_recording.md")
+if os.path.exists(old):
+    os.remove(old)
+print(len(files), "files;", total_clips, "clips; max chars:", max(len(HEAD) + len(b) for b in files))

@@ -77,5 +77,13 @@
   ],
   "references": [
     "IEC 61869-2: Current transformers"
-  ]
+  ],
+  "opening": {
+    "audio": "current_transformer/opening.mp3",
+    "text_ar": "أهلًا بيك في درس محول التيار (CT). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "current_transformer/closing.mp3",
+    "text_ar": "كده خلصنا درس محول التيار (CT). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

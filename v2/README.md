@@ -44,7 +44,8 @@ v2/
 ├── assets/
 │   ├── models/          ← ملفات GLB الجاهزة للتطبيق
 │   └── renders/         ← صور المكونات مجمّعة ومفكوكة بالأسماء
-└── content/             ← الشرح الأكاديمي لـ 29 مكون (JSON) + scripts_for_recording.md (360 مقطع للتسجيل)
+├── audio/               ← sfx_synth.py (المؤثرات) + split_tts.py (تقطيع التسجيل لمقاطع)
+└── content/             ← الشرح الأكاديمي لـ 29 مكون (JSON) + audio_cues.json + recording/ (7 ملفات تسجيل، 464 مقطع)
 ```
 
 ## إزاي تشغّل كود النماذج

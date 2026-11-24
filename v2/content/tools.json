@@ -42,5 +42,13 @@
   "references": [
     "IEC 61010-1 / -2-033: Safety of measuring equipment (CAT ratings)",
     "IEC 60900: Insulated hand tools"
-  ]
+  ],
+  "opening": {
+    "audio": "tools/opening.mp3",
+    "text_ar": "أهلًا بيك في درس أدوات المتدرب. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "tools/closing.mp3",
+    "text_ar": "كده خلصنا درس أدوات المتدرب. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

@@ -103,5 +103,13 @@
   "references": [
     "IEC 60947-4-1",
     "IEC 60034-8: Terminal markings and direction of rotation"
-  ]
+  ],
+  "opening": {
+    "audio": "reversing_contactor/opening.mp3",
+    "text_ar": "أهلًا بيك في درس الكونتاكتور العاكس والانترلوك. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "reversing_contactor/closing.mp3",
+    "text_ar": "كده خلصنا درس الكونتاكتور العاكس والانترلوك. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

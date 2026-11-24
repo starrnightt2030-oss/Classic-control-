@@ -117,5 +117,13 @@
   "references": [
     "IEC 61812-1: Time relays for industrial use",
     "EN 50005: terminal marking"
-  ]
+  ],
+  "opening": {
+    "audio": "timer/opening.mp3",
+    "text_ar": "أهلًا بيك في درس التايمرات الإلكترونية. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "timer/closing.mp3",
+    "text_ar": "كده خلصنا درس التايمرات الإلكترونية. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

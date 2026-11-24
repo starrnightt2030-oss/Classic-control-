@@ -77,5 +77,13 @@
   ],
   "references": [
     "IEC 60529: Degrees of protection (IP code)"
-  ]
+  ],
+  "opening": {
+    "audio": "pb_station/opening.mp3",
+    "text_ar": "أهلًا بيك في درس علبة الضواغط. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "pb_station/closing.mp3",
+    "text_ar": "كده خلصنا درس علبة الضواغط. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

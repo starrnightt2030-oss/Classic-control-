@@ -154,5 +154,13 @@
     "IEC 60034-1: Rotating electrical machines — rating",
     "IEC 60034-8: Terminal markings and direction of rotation",
     "IEC 60034-30-1: Efficiency classes"
-  ]
+  ],
+  "opening": {
+    "audio": "motor/opening.mp3",
+    "text_ar": "أهلًا بيك في درس المحرك الحثي التلات فاز. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "motor/closing.mp3",
+    "text_ar": "كده خلصنا درس المحرك الحثي التلات فاز. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

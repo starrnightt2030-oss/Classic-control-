@@ -108,5 +108,13 @@
   ],
   "references": [
     "IEC 60051: Direct acting indicating analogue electrical measuring instruments"
-  ]
+  ],
+  "opening": {
+    "audio": "panel_meter/opening.mp3",
+    "text_ar": "أهلًا بيك في درس الأميتر والفولتميتر بالإبرة. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "panel_meter/closing.mp3",
+    "text_ar": "كده خلصنا درس الأميتر والفولتميتر بالإبرة. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

@@ -93,5 +93,13 @@
     "IEC 60947-3: Switches, disconnectors, switch-disconnectors",
     "IEC 60947-5-1",
     "IEC 60204-1 (supply disconnecting device)"
-  ]
+  ],
+  "opening": {
+    "audio": "rotary_switches/opening.mp3",
+    "text_ar": "أهلًا بيك في درس مفاتيح التحويل والسكينة الرئيسية. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "rotary_switches/closing.mp3",
+    "text_ar": "كده خلصنا درس مفاتيح التحويل والسكينة الرئيسية. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

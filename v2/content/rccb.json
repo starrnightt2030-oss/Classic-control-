@@ -162,5 +162,13 @@
   "references": [
     "IEC 61008-1: Residual current operated circuit-breakers without integral overcurrent protection (RCCBs)",
     "IEC 60364-4-41: Protection against electric shock"
-  ]
+  ],
+  "opening": {
+    "audio": "rccb/opening.mp3",
+    "text_ar": "أهلًا بيك في درس قاطع التسرب الأرضي (RCCB). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "rccb/closing.mp3",
+    "text_ar": "كده خلصنا درس قاطع التسرب الأرضي (RCCB). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

@@ -89,5 +89,13 @@
   "references": [
     "ISO 4401 / manufacturer data (general practice)"
   ],
-  "review_note": "قيم الضغط على الصمام مثال."
+  "review_note": "قيم الضغط على الصمام مثال.",
+  "opening": {
+    "audio": "solenoid_valve/opening.mp3",
+    "text_ar": "أهلًا بيك في درس الصمام الكهربي (السولينويد). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "solenoid_valve/closing.mp3",
+    "text_ar": "كده خلصنا درس الصمام الكهربي (السولينويد). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

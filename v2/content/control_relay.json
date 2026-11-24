@@ -120,5 +120,13 @@
   "references": [
     "IEC 61810-1: Electromechanical elementary relays",
     "IEC 60947-5-1"
-  ]
+  ],
+  "opening": {
+    "audio": "control_relay/opening.mp3",
+    "text_ar": "أهلًا بيك في درس الريلاي المساعد وقواعده. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "control_relay/closing.mp3",
+    "text_ar": "كده خلصنا درس الريلاي المساعد وقواعده. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

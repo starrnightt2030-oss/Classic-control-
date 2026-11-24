@@ -55,5 +55,13 @@
   "references": [
     "IEC 60255 (measuring relays)",
     "IEC 62053-21: Electricity metering"
-  ]
+  ],
+  "opening": {
+    "audio": "electronic_protection/opening.mp3",
+    "text_ar": "أهلًا بيك في درس أجهزة الحماية والقياس الإلكترونية على الريل. هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "electronic_protection/closing.mp3",
+    "text_ar": "كده خلصنا درس أجهزة الحماية والقياس الإلكترونية على الريل. جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

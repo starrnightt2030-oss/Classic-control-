@@ -102,5 +102,13 @@
   "references": [
     "IEC 60947-5-1 (Annex K: positive opening)",
     "ISO 14119: Interlocking devices"
-  ]
+  ],
+  "opening": {
+    "audio": "limit_switch/opening.mp3",
+    "text_ar": "أهلًا بيك في درس الليميت سويتش (مفتاح نهاية المشوار). هنشوفه من بره ومن جوه، ونفهم بيشتغل إزاي، وبنختاره ونختبره إزاي."
+  },
+  "closing": {
+    "audio": "limit_switch/closing.mp3",
+    "text_ar": "كده خلصنا درس الليميت سويتش (مفتاح نهاية المشوار). جرّب تفكه وتركّبه بإيدك، واسمع شرح كل قطعة، وبعدين اختبر نفسك في الأسئلة."
+  }
 }

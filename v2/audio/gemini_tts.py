@@ -41,6 +41,18 @@ STYLE = ("You are a text-to-speech narrator. Speak the user's text exactly, word
 _USE_SYSTEM = [True]
 
 
+def all_clips():
+    out = []
+    for part in range(1, 100):
+        tts = REC / f"tts_part_{part:02d}.txt"
+        if not tts.exists():
+            break
+        order = json.loads((REC / f"manifest_part_{part:02d}.json").read_text(encoding="utf8"))["order"]
+        texts = [s.strip() for s in tts.read_text(encoding="utf8").split(MARK) if s.strip()]
+        out += list(zip(order, texts))
+    return out
+
+
 def missing_clips():
     out = []
     for part in range(1, 100):
@@ -102,6 +114,18 @@ def synth(key, model, voice, text):
     raise RuntimeError("no audio in response")
 
 
+def synth_azure(key, region, voice, text, rate="-4%"):
+    from xml.sax.saxutils import escape
+    ssml = (f"<speak version='1.0' xml:lang='ar-EG' xmlns='http://www.w3.org/2001/10/synthesis'>"
+            f"<voice name='{voice}'><prosody rate='{rate}'>{escape(text)}</prosody></voice></speak>")
+    req = urllib.request.Request(
+        f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1", data=ssml.encode("utf8"), method="POST",
+        headers={"Ocp-Apim-Subscription-Key": key, "Content-Type": "application/ssml+xml",
+                 "X-Microsoft-OutputFormat": "raw-24khz-16bit-mono-pcm", "User-Agent": "control-academy"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return r.read(), "audio/L16;rate=24000"
+
+
 def to_mp3(pcm, mime, dst):
     rate = 24000
     if "rate=" in mime:
@@ -133,29 +157,49 @@ class Verifier:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="Charon")
+    ap.add_argument("--engine", default="gemini", choices=["gemini", "azure"])
+    ap.add_argument("--voice", default="")
+    ap.add_argument("--only", default="", help="comma-separated clip names (also regenerates existing ones)")
+    ap.add_argument("--out", default="", help="write here instead of assets/audio (samples)")
     ap.add_argument("--model", default="auto")
     ap.add_argument("--max", type=int, default=400)
     ap.add_argument("--delay", type=float, default=7.0, help="seconds between requests (free-tier rate limits)")
     ap.add_argument("--verify", action="store_true")
     a = ap.parse_args()
-    key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not key:
-        raise SystemExit("GEMINI_API_KEY is not set (add it as a repository secret).")
-
-    model = pick_model(key, a.model)
-    todo = missing_clips()[: a.max]
+    if a.engine == "azure":
+        key = os.environ.get("AZURE_SPEECH_KEY", "").strip()
+        region = os.environ.get("AZURE_SPEECH_REGION", "").strip()
+        if not key or not region:
+            raise SystemExit("AZURE_SPEECH_KEY / AZURE_SPEECH_REGION are not set (repository secrets).")
+        a.voice = a.voice or "ar-EG-ShakirNeural"
+        model = "azure-neural"
+        a.delay = min(a.delay, 3.2)          # F0 tier: 20 requests / minute
+        tts = lambda text: synth_azure(key, region, a.voice, text)
+    else:
+        key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if not key:
+            raise SystemExit("GEMINI_API_KEY is not set (add it as a repository secret).")
+        a.voice = a.voice or "Charon"
+        model = pick_model(key, a.model)
+        tts = lambda text: synth(key, model, a.voice, text)
+    out_root = pathlib.Path(a.out) if a.out else AUDIO
+    if a.only:
+        want = [x.strip() for x in a.only.split(",") if x.strip()]
+        allc = dict(all_clips())
+        todo = [(n, allc[n]) for n in want if n in allc]
+    else:
+        todo = missing_clips()[: a.max]
     print(f"model={model} voice={a.voice} missing={len(todo)}", flush=True)
     ver = Verifier() if a.verify else None
     status = json.loads(STATUS.read_text(encoding="utf8")) if STATUS.exists() else {}
     quota_hits = 0
     done = 0
     for i, (name, text) in enumerate(todo, 1):
-        dst = AUDIO / name
+        dst = out_root / name
         ok = False
         for attempt in (1, 2):
             try:
-                pcm, mime = synth(key, model, a.voice, text)
+                pcm, mime = tts(text)
                 quota_hits = 0
             except urllib.error.HTTPError as e:
                 msg = e.read().decode("utf8", "replace")[:300]

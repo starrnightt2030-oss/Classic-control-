@@ -7,14 +7,19 @@
 <style>
 @font-face{font-family:Cairo;src:url(/assets/fonts/Cairo-400.ttf);font-weight:400}
 @font-face{font-family:Cairo;src:url(/assets/fonts/Cairo-700.ttf);font-weight:700}
-html,body{margin:0;height:100%;overflow:hidden;background-color:#0F1519;background-image:radial-gradient(#1C2730 1px,transparent 1px);background-size:16px 16px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background-color:#0C1520;background-image:radial-gradient(#1A2738 1px,transparent 1px);background-size:16px 16px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{display:block;position:absolute;inset:0;outline:none}
 #lines{position:absolute;inset:0;pointer-events:none;overflow:visible}
 #labels{position:absolute;inset:0;pointer-events:none}
-.lbl{position:absolute;left:0;top:0;background:#0B0F12;border:1px solid #33414C;border-radius:8px;padding:2px 8px 3px;color:#E8EEF2;font:700 12px/1.25 Cairo,sans-serif;white-space:nowrap;text-align:center;will-change:transform}
-.lbl small{display:block;font:400 10px/1.2 Cairo,sans-serif;color:#93A3AF;direction:ltr}
+.lbl{position:absolute;left:0;top:0;background:rgba(11,15,18,.92);border:1px solid #33414C;border-radius:8px;padding:3px 8px 4px 9px;color:#E8EEF2;font:700 12.5px/1.25 Cairo,sans-serif;white-space:nowrap;text-align:right;will-change:transform}
+.lbl b{float:right;margin-left:7px;margin-top:1px;min-width:18px;height:18px;border-radius:5px;background:#F5A400;color:#0B0F12;font:700 11px/18px Cairo,sans-serif;text-align:center}
+.lbl small{display:block;font:400 10px/1.2 Cairo,sans-serif;color:#93A3AF;direction:ltr;text-align:right}
 .lbl.sel{background:#F5A400;color:#0B0F12;border-color:#F5A400}
+.lbl.sel b{background:#0B0F12;color:#F5A400}
 .lbl.sel small{color:#4a3500}
+.compact .lbl{font-size:10.5px;padding:2px 6px 3px 6px;border-radius:6px}
+.compact .lbl b{min-width:15px;height:15px;line-height:15px;font-size:9.5px;margin-left:5px}
+.compact .lbl small{font-size:8.5px}
 #msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93A3AF;font:600 14px Cairo,sans-serif;pointer-events:none}
 </style>
 <script type="importmap">

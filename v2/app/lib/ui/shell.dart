@@ -29,7 +29,7 @@ class _ShellState extends State<Shell> {
     _Dest('الرئيسية', CcIcons.home),
     _Dest('المكتبة', CcIcons.library),
     _Dest('المخططات', CcIcons.diagram),
-    _Dest('عن المعمل', CcIcons.info),
+    _Dest('عن التطبيق', CcIcons.info),
   ];
 
   void go(int i) => setState(() => _index = i);
@@ -138,7 +138,7 @@ class _Rail extends StatelessWidget {
       child: SafeArea(
         child: Column(children: [
           const SizedBox(height: 14),
-          const AppMark(size: 40),
+          ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset('assets/images/logo_small.webp', width: 52, height: 52)),
           const SizedBox(height: 18),
           for (var i = 0; i < _ShellState._dests.length; i++)
             Padding(

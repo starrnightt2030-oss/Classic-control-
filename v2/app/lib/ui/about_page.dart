@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app_info.dart';
 import '../data/repository.dart';
 import '../services/audio_service.dart';
 import 'icons.dart';
@@ -24,16 +25,31 @@ class _AboutPageState extends State<AboutPage> {
       final pad = c.maxWidth >= 900 ? 28.0 : 16.0;
       return ListView(padding: EdgeInsets.fromLTRB(pad, 18, pad, 28), children: [
         Row(children: [
-          const AppMark(size: 56),
-          const SizedBox(width: 14),
+          ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.asset('assets/images/logo.webp', width: 96, height: 96)),
+          const SizedBox(width: 16),
           const Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('معمل الكلاسيك كنترول', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-              Text('Classic Control Simulation Lab · v2 (نسخة تجريبية)',
-                  textDirection: TextDirection.ltr, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, color: CC.muted)),
+              Text(AppInfo.brandEn, textDirection: TextDirection.ltr, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: CC.amber)),
+              Text(AppInfo.brandAr, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              Text('${AppInfo.product} · الإصدار ${AppInfo.version} (${AppInfo.build})', style: TextStyle(fontSize: 12.5, color: CC.muted)),
             ]),
           ),
         ]),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: panelBox(),
+          child: const Row(children: [
+            Icon(Icons.engineering_outlined, color: CC.cyan),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('المطوّر', style: TextStyle(fontSize: 12, color: CC.muted)),
+                Text(AppInfo.developer, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              ]),
+            ),
+          ]),
+        ),
         const SizedBox(height: 18),
         GridView.count(
           crossAxisCount: c.maxWidth >= 700 ? 4 : 2,
@@ -84,7 +100,6 @@ class _AboutPageState extends State<AboutPage> {
           style: TextStyle(fontSize: 12.5, color: CC.text2, fontFamily: CC.mono, height: 1.7),
         ),
         const SizedBox(height: 18),
-        const Text('مركز التدريب · ترسانة الإسكندرية', style: TextStyle(fontSize: 13, color: CC.muted)),
       ]);
     });
   }

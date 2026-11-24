@@ -24,7 +24,7 @@ def patch_android() -> None:
         s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
     if "usesCleartextTraffic" not in s:
         s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
-    s = re.sub(r'android:label="[^"]*"', 'android:label="معمل الكنترول"', s, count=1)
+    s = re.sub(r'android:label="[^"]*"', 'android:label="Control Academy"', s, count=1)
     man.write_text(s, encoding="utf-8")
 
     res = APP / "android/app/src/main/res"
@@ -40,7 +40,7 @@ def patch_windows() -> None:
     if not main_cpp.exists():
         return
     s = main_cpp.read_text(encoding="utf-8")
-    s = re.sub(r'window\.Create\(L"[^"]*"', 'window.Create(L"Classic Control Lab"', s)
+    s = re.sub(r'window\.Create\(L"[^"]*"', 'window.Create(L"Control Academy"', s)
     s = re.sub(r"Win32Window::Size size\(\d+, \d+\)", "Win32Window::Size size(1360, 860)", s)
     main_cpp.write_text(s, encoding="utf-8")
     cm = APP / "windows/CMakeLists.txt"

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../services/export_service.dart';
+import 'lesson_sheet_page.dart';
+
 import '../data/catalog.dart';
 import '../data/models.dart';
 import '../data/repository.dart';
@@ -9,9 +12,12 @@ import 'theme.dart';
 import 'viewer3d.dart';
 import 'widgets.dart';
 
+enum AutoAction { none, sheet, video }
+
 class ComponentPage extends StatefulWidget {
   final String componentId;
-  const ComponentPage({super.key, required this.componentId});
+  final AutoAction autoAction;
+  const ComponentPage({super.key, required this.componentId, this.autoAction = AutoAction.none});
 
   @override
   State<ComponentPage> createState() => _ComponentPageState();
@@ -23,8 +29,9 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
   final _viewer = Viewer3DController();
   late final TabController _tabs;
   String? _selected;
-  bool _exploded = false;
+  double _explode = 0;
   bool _labels = true;
+  bool _working = false;
 
   bool get _hasParts => c.parts.isNotEmpty;
 
@@ -35,7 +42,7 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
     _model = c.model;
     _tabs = TabController(length: _hasParts ? 4 : 2, vsync: this);
     Repository.instance.setLastComponent(c.id);
-    _viewer.load(_model);
+    _viewer.load(_model, nameAr: c.nameAr, nameEn: c.nameEn);
   }
 
   @override
@@ -56,16 +63,83 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
     });
   }
 
+  bool _autoDone = false;
+  void _onLoaded() {
+    if (_autoDone || widget.autoAction == AutoAction.none) return;
+    _autoDone = true;
+    Future<void>.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      if (widget.autoAction == AutoAction.sheet) _openSheet();
+      if (widget.autoAction == AutoAction.video) _makeVideo();
+    });
+  }
+
   void _pickFromList(String id) {
-    _viewer.select(id);
+    _viewer.focus(id);
     _onPart(id);
   }
 
-  void _setExploded(bool v) {
-    if (v == _exploded) return;
-    setState(() => _exploded = v);
-    _viewer.setExplode(v ? 1 : 0);
-    AudioService.instance.sfx(v ? 'explode_whoosh' : 'assemble_snap');
+  void _scrub(double v) {
+    setState(() => _explode = v);
+    _viewer.scrub(v);
+  }
+
+  void _snapTo(double v) {
+    setState(() => _explode = v);
+    _viewer.setExplode(v);
+    AudioService.instance.sfx(v > 0.5 ? 'explode_whoosh' : 'assemble_snap');
+  }
+
+  Future<void> _openSheet() async {
+    if (_working) return;
+    setState(() => _working = true);
+    final shots = await _viewer.captureSheet();
+    if (!mounted) return;
+    setState(() => _working = false);
+    if (shots.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('استنى المجسم يحمّل وجرّب تاني.')));
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => LessonSheetPage(component: c, shots: shots)));
+  }
+
+  Future<void> _makeVideo() async {
+    if (_working) return;
+    setState(() => _working = true);
+    final file = await _viewer.recordVideo();
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _explode = 0;
+    });
+    if (file == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الجهاز ده مش بيدعم تسجيل الفيديو من العارض.')));
+      return;
+    }
+    final ext = file.path.split('.').last;
+    final mb = (await file.length()) / (1024 * 1024);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: CC.surface,
+        title: const Text('فيديو الشرح جاهز', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: Text('${c.nameAr} · فيديو ${ext.toUpperCase()} · ${mb.toStringAsFixed(1)} ميجا\nتقدر تحفظه أو تبعته.',
+            style: const TextStyle(height: 1.7, color: CC.text2)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: CC.amber, foregroundColor: CC.bg),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ExportService.deliverFile(file, 'ControlAcademy_${ExportService.safeName(c.nameEn)}.$ext',
+                  mime: ext == 'mp4' ? 'video/mp4' : 'video/webm', text: c.nameAr);
+            },
+            child: const Text('حفظ / مشاركة'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _setModel(String m) {
@@ -73,9 +147,9 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
     setState(() {
       _model = m;
       _selected = null;
-      _exploded = false;
+      _explode = 0;
     });
-    _viewer.load(m);
+    _viewer.load(m, nameAr: c.nameAr, nameEn: c.nameEn);
   }
 
   @override
@@ -141,6 +215,10 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
             ),
           ]),
         ),
+        const SizedBox(width: 8),
+        SquareButton(icon: CcIcons.sheet, label: 'ورقة الدرس (صورة / PDF)', onTap: _working ? null : _openSheet),
+        const SizedBox(width: 8),
+        SquareButton(icon: CcIcons.film, label: 'فيديو الشرح', onTap: _working ? null : _makeVideo),
       ]),
     );
   }
@@ -164,51 +242,81 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
             borderRadius: BorderRadius.circular(20),
             child: DecoratedBox(
               decoration: BoxDecoration(border: Border.all(color: const Color(0xFF222C35)), borderRadius: BorderRadius.circular(20)),
-              child: Viewer3D(controller: _viewer, onPart: _onPart),
+              child: Stack(children: [
+                Positioned.fill(child: Viewer3D(controller: _viewer, onPart: _onPart, onLoaded: _onLoaded)),
+                PositionedDirectional(
+                  top: 10,
+                  start: 10,
+                  end: 10,
+                  child: ValueListenableBuilder<int?>(
+                    valueListenable: _viewer.progress,
+                    builder: (context, p, _) {
+                      if (p == null && !_working) return const SizedBox.shrink();
+                      return Align(
+                        alignment: AlignmentDirectional.topStart,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: panelBox(color: const Color(0xE60B0F12), radius: 10, border: CC.amberLine),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: CC.amber)),
+                            const SizedBox(width: 10),
+                            Text(p == null ? 'جاري تجهيز الصور…' : 'بيتسجّل الفيديو… $p%',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                          ]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ]),
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Row(children: [
-          if (_hasParts)
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: panelBox(color: CC.bg, radius: 12),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                _seg('مُجمّع', !_exploded, () => _setExploded(false)),
-                _seg('مفكوك', _exploded, () => _setExploded(true)),
-              ]),
-            ),
-          const Spacer(),
           if (_hasParts) ...[
-            SquareButton(icon: CcIcons.tag, label: _labels ? 'إخفاء الأسماء' : 'إظهار الأسماء', active: _labels, onTap: () {
+            Tooltip(
+              message: 'تركيب',
+              child: IconButton(
+                onPressed: _working ? null : () => _snapTo(0),
+                icon: const CcIcon(CcIcons.assemble, size: 22, color: CC.text2),
+              ),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 6,
+                  activeTrackColor: CC.amber,
+                  inactiveTrackColor: CC.line,
+                  thumbColor: CC.amber,
+                  overlayColor: CC.amber.withValues(alpha: 0.15),
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 11),
+                ),
+                child: Semantics(
+                  label: 'التحكم في الفك والتركيب',
+                  child: Slider(value: _explode, onChanged: _working ? null : _scrub),
+                ),
+              ),
+            ),
+            Tooltip(
+              message: 'فك',
+              child: IconButton(
+                onPressed: _working ? null : () => _snapTo(1),
+                icon: const CcIcon(CcIcons.explode, size: 22, color: CC.text2),
+              ),
+            ),
+            const SizedBox(width: 4),
+            SquareButton(icon: CcIcons.tag, label: _labels ? 'إخفاء الأسماء والأرقام' : 'إظهار الأسماء والأرقام', active: _labels, onTap: () {
               setState(() => _labels = !_labels);
               _viewer.setLabels(_labels);
             }),
             const SizedBox(width: 8),
-          ],
+          ] else
+            const Spacer(),
           SquareButton(icon: CcIcons.reset, label: 'إعادة الكاميرا', onTap: _viewer.reset),
         ]),
         SizedBox(height: compact ? 4 : 12),
       ]),
-    );
-  }
-
-  Widget _seg(String label, bool on, VoidCallback onTap) {
-    return Material(
-      color: on ? CC.amber : Colors.transparent,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(9),
-        onTap: onTap,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.center,
-          child: Text(label,
-              style: TextStyle(fontSize: 13.5, fontWeight: on ? FontWeight.w700 : FontWeight.w600, color: on ? CC.bg : CC.text2)),
-        ),
-      ),
     );
   }
 

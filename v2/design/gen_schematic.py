@@ -109,7 +109,7 @@ def schematic():
     o.append(txt(p1 - 4, 484, "1-2", "tn", "end")); o.append(txt(p1 - 4, 496, "3-4", "tn", "end")); o.append(txt(p1 - 4, 508, "5-6", "tn", "end"))
     o.append(txt(p1 + 4, 484, "13-14 ›1")); o.append(txt(p1 + 4, 496, "23-24 ›2"))
     o.append(txt(p1 - 22, 466, "NO", "tn", "end"))
-    o.append(txt(p3 - 30, 492, "‹ النقط الرئيسية في مخطط القوى", "tn"))
+    o.append(txt(360, 492, "النقط الرئيسية في مخطط القوى ›", "tn", "end"))
     return "".join(x for x in o if x)
 
 
@@ -212,3 +212,39 @@ if __name__ == "__main__":
     patch(P + "DesktopLab.dc.html", '<svg role="img" aria-label="مخطط تحكم كلاسيك', "</svg>",
           f'<svg role="img" aria-label="{ARIA}" viewBox="0 0 368 520" style="position: absolute; top: 52px; left: 6%; width: 88%; height: auto" dir="ltr">{SVG_BODY}</svg>')
     print("ok", len(SVG_BODY))
+
+
+# ---------- standalone SVG files for the Flutter app (flutter_svg: no CSS) ----------
+def standalone(body: str, label: str) -> str:
+    import re as _re
+    ar = _re.compile(r"[؀-ۿ]")
+
+    def text_attrs(m):
+        cls, rest, content = m.group(1), m.group(2), m.group(3)
+        fam = "Cairo" if ar.search(content) else "JetBrainsMono"
+        if cls == "tg":
+            a = f'font-family="{fam}" font-size="12" font-weight="700" fill="#E8EEF2"'
+        else:
+            a = f'font-family="{fam}" font-size="{10 if fam == "Cairo" else 9.5}" fill="#93A3AF"'
+        rest = rest.replace(' style="font-size: 20px"', ' font-size="20"')
+        if 'font-size="20"' in rest:
+            a = a.replace('font-size="12"', '')
+        return f"<text {a}{rest}>{content}</text>"
+
+    body = _re.sub(r'<text class="(tg|tn)"([^>]*)>(.*?)</text>', lambda m: text_attrs(m), body)
+    body = _re.sub(r'<text x="([^"]+)" y="([^"]+)" class="(tg|tn)"([^>]*)>(.*?)</text>',
+                   lambda m: text_attrs(type("M", (), {"group": lambda s, i: [None, m.group(3), f' x="{m.group(1)}" y="{m.group(2)}"' + m.group(4), m.group(5)][i]})()), body)
+
+    def rgba(m):
+        r, g, b, a = m.group(1).split(",")
+        return f'fill="#{int(r):02X}{int(g):02X}{int(b):02X}" fill-opacity="{a.strip()}"'
+    body = _re.sub(r'fill="rgba\(([^)]+)\)"', rgba, body)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 368 520" width="368" height="520">'
+            f'<title>{label}</title>{body}</svg>')
+
+
+def write_app_svgs(out_dir: str) -> None:
+    p = pathlib.Path(out_dir)
+    p.mkdir(parents=True, exist_ok=True)
+    (p / "dol_control.svg").write_text(standalone(SVG_BODY, "DOL control circuit"), encoding="utf-8")
+    (p / "dol_power.svg").write_text(standalone(POWER_BODY, "DOL power circuit"), encoding="utf-8")

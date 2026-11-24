@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 /// «Graphite & Signal» — see v2/design/README.md
 class CC {
-  static const bg = Color(0xFF0B0F12);
-  static const surface = Color(0xFF131A1F);
-  static const surface2 = Color(0xFF1A232A);
-  static const stage = Color(0xFF0F1519);
-  static const nav = Color(0xFF0F1418);
-  static const line = Color(0xFF26323C);
-  static const line2 = Color(0xFF33414C);
+  static const bg = Color(0xFF0A111B);
+  static const surface = Color(0xFF111B27);
+  static const surface2 = Color(0xFF182536);
+  static const stage = Color(0xFF0C1520);
+  static const nav = Color(0xFF0C141F);
+  static const line = Color(0xFF22324A);
+  static const line2 = Color(0xFF2E4058);
   static const text = Color(0xFFE8EEF2);
   static const text2 = Color(0xFFC9D4DB);
   static const muted = Color(0xFF93A3AF);

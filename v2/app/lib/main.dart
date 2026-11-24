@@ -3,7 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/repository.dart';
 import 'services/asset_server.dart';
-import 'ui/shell.dart';
+import 'app_info.dart';
+import 'ui/intro_page.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
@@ -19,7 +20,7 @@ class ClassicControlApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'معمل الكلاسيك كنترول',
+      title: AppInfo.brandEn,
       debugShowCheckedModeBanner: false,
       theme: CC.theme(),
       locale: const Locale('ar', 'EG'),
@@ -29,7 +30,7 @@ class ClassicControlApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const Shell(),
+      home: const IntroPage(),
     );
   }
 }

@@ -66,33 +66,40 @@ class CompThumb extends StatelessWidget {
 class ContinueCard extends StatelessWidget {
   final Component component;
   final int seen;
-  final VoidCallback onOpen;
-  const ContinueCard({super.key, required this.component, required this.seen, required this.onOpen});
+  const ContinueCard({super.key, required this.component, required this.seen});
 
   @override
   Widget build(BuildContext context) {
     final total = component.parts.length;
     final frac = total == 0 ? 0.0 : (seen / total).clamp(0.0, 1.0);
     return Container(
-      decoration: panelBox(radius: 22),
-      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: CC.line),
+        gradient: const LinearGradient(
+          begin: AlignmentDirectional.centerStart,
+          end: AlignmentDirectional.centerEnd,
+          colors: [CC.surface, Color(0xFF16263B)],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
       child: Row(children: [
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(color: CC.amber, borderRadius: BorderRadius.circular(99)),
               child: Text(seen > 0 ? 'كمّل من حيث وقفت' : 'ابدأ بيه',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: CC.bg)),
             ),
-            const SizedBox(height: 8),
-            Text(component.nameAr, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, height: 1.25)),
+            const SizedBox(height: 6),
+            Text(component.nameAr, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.25)),
             Text(component.nameEn,
                 textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 12, color: CC.muted, fontFamily: CC.mono)),
-            const SizedBox(height: 8),
             if (total > 0) ...[
-              Text('شفت $seen من $total جزء', style: const TextStyle(fontSize: 13, color: CC.text2)),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
+              Text('شفت $seen من $total جزء', style: const TextStyle(fontSize: 12.5, color: CC.text2)),
+              const SizedBox(height: 5),
               ClipRRect(
                 borderRadius: BorderRadius.circular(99),
                 child: SizedBox(
@@ -102,22 +109,9 @@ class ContinueCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 14),
-            FilledButton.icon(
-              onPressed: onOpen,
-              style: FilledButton.styleFrom(
-                backgroundColor: CC.amber,
-                foregroundColor: CC.bg,
-                minimumSize: const Size(0, 44),
-                textStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 14, fontWeight: FontWeight.w700),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('افتح الشرح'),
-            ),
           ]),
         ),
-        CompThumb(component.id, size: 150),
+        CompThumb(component.id, size: 160),
       ]),
     );
   }

@@ -5,6 +5,8 @@ class AppInfo {
   static const product = 'Classic Control Lab';
   static const version = '2.1.0';
   static const build = 'نسخة تجريبية';
-  /// TODO(owner): replace with the developer's name/contact as it should appear.
-  static const developer = 'مركز التدريب · ترسانة الإسكندرية';
+  static const developer = 'Mohamed-Eldawly';
+  static const organization = 'مركز تدريب شركة ترسانة الإسكندرية';
+  static const organizationEn = 'Alexandria Shipyard · Training Center';
+  static const orgLogo = 'assets/images/org_logo.webp';
 }

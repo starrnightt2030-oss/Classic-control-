@@ -39,15 +39,19 @@ class _AboutPageState extends State<AboutPage> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: panelBox(),
-          child: const Row(children: [
-            Icon(Icons.engineering_outlined, color: CC.cyan),
-            SizedBox(width: 12),
-            Expanded(
+          child: Row(children: [
+            Image.asset(AppInfo.orgLogo, width: 58, height: 58),
+            const SizedBox(width: 14),
+            const Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('المطوّر', style: TextStyle(fontSize: 12, color: CC.muted)),
-                Text(AppInfo.developer, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                Text(AppInfo.organization, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                Text(AppInfo.organizationEn, textDirection: TextDirection.ltr, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, color: CC.muted)),
+                SizedBox(height: 4),
+                Text('تطوير: ${AppInfo.developer}', style: TextStyle(fontSize: 13.5, color: CC.amber, fontWeight: FontWeight.w700)),
               ]),
             ),
+          ]),
+        ),
           ]),
         ),
         const SizedBox(height: 18),

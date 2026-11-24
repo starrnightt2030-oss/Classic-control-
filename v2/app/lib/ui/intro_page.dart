@@ -54,7 +54,8 @@ class _IntroPageState extends State<IntroPage> {
     final q = Uri(queryParameters: {
       'ar': AppInfo.brandAr,
       'en': AppInfo.product.toUpperCase(),
-      'dev': AppInfo.developer,
+      'dev': 'تطوير: ${AppInfo.developer}',
+      'org': AppInfo.organization,
       'ver': 'الإصدار ${AppInfo.version} · ${AppInfo.build}',
     }).query;
     final url = '${AssetServer.instance.origin}/assets/web/intro.html?$q';

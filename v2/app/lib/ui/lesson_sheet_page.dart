@@ -218,9 +218,11 @@ class _LessonSheetPageState extends State<LessonSheetPage> {
                 color: const Color(0xFF0B1220),
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                 child: Row(children: [
-                  const Text('${AppInfo.brandEn} · ${AppInfo.brandAr}', style: TextStyle(color: Color(0xFFB9C6D1), fontSize: 12)),
+                  Image.asset(AppInfo.orgLogo, width: 34, height: 34),
+                  const SizedBox(width: 10),
+                  const Text('${AppInfo.organization} · ${AppInfo.brandEn}', style: TextStyle(color: Color(0xFFB9C6D1), fontSize: 12)),
                   const Spacer(),
-                  Text('${AppInfo.developer} · v${AppInfo.version}', style: const TextStyle(color: Color(0xFFB9C6D1), fontSize: 12)),
+                  const Text('تطوير: ${AppInfo.developer} · v${AppInfo.version}', style: TextStyle(color: Color(0xFFB9C6D1), fontSize: 12)),
                 ]),
               ),
             ])),

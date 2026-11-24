@@ -19,7 +19,7 @@ const msg = document.getElementById('msg');
 const labelsEl = document.getElementById('labels');
 const linesEl = document.getElementById('lines');
 const SVGNS = 'http://www.w3.org/2000/svg';
-const AMBER = '#F5A400', CYAN = '#3FD5E8';
+const AMBER = '#3D8BFF', CYAN = '#4FD8FF';
 
 // ---------- renderer / scene (tuned for natural colours) ----------
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -293,7 +293,7 @@ function buildLabels() {
     linesEl.appendChild(ln);
     const dot = document.createElementNS(SVGNS, 'circle');
     dot.setAttribute('r', '3.5');
-    dot.setAttribute('fill', '#0B0F12');
+    dot.setAttribute('fill', '#0A1228');
     dot.setAttribute('stroke-width', '2');
     linesEl.appendChild(dot);
     p.el = el; p.line = ln; p.dot = dot; p.w = 0;
@@ -392,20 +392,20 @@ function drawLabels(ctx, W, H, k) {
     ctx.strokeStyle = sel ? AMBER : 'rgba(201,212,219,.9)';
     ctx.lineWidth = 1.6 * k;
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(elbow, ay); ctx.lineTo(v.x, v.y); ctx.stroke();
-    ctx.fillStyle = '#0B0F12'; ctx.strokeStyle = sel ? AMBER : CYAN; ctx.lineWidth = 2.2 * k;
+    ctx.fillStyle = '#0A1228'; ctx.strokeStyle = sel ? AMBER : CYAN; ctx.lineWidth = 2.2 * k;
     ctx.beginPath(); ctx.arc(v.x, v.y, 4.5 * k, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     roundRect(ctx, v.lx, v.ly, v.w, v.h, 8 * k);
     ctx.fillStyle = sel ? AMBER : 'rgba(11,15,18,.92)'; ctx.fill();
     ctx.strokeStyle = sel ? AMBER : '#33414C'; ctx.lineWidth = 1.2 * k; ctx.stroke();
     const bx = v.lx + v.w - pad - badge, by = v.ly + (v.h - badge) / 2;
     roundRect(ctx, bx, by, badge, badge, 6 * k);
-    ctx.fillStyle = sel ? '#0B0F12' : AMBER; ctx.fill();
-    ctx.fillStyle = sel ? AMBER : '#0B0F12';
+    ctx.fillStyle = sel ? '#0A1228' : AMBER; ctx.fill();
+    ctx.fillStyle = sel ? AMBER : '#0A1228';
     ctx.font = `700 ${Math.round(12 * k)}px Cairo, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(String(v.p.n), bx + badge / 2, by + badge / 2 + 0.5 * k);
     ctx.textAlign = 'right'; ctx.direction = 'rtl';
-    ctx.fillStyle = sel ? '#0B0F12' : '#E8EEF2'; ctx.font = fN;
+    ctx.fillStyle = sel ? '#0A1228' : '#E8EEF2'; ctx.font = fN;
     const tx = bx - pad * 0.8;
     ctx.fillText(v.p.ar, tx, v.ly + (v.p.en ? 14 * k : v.h / 2));
     if (v.p.en) {
@@ -418,7 +418,7 @@ function drawLabels(ctx, W, H, k) {
 }
 
 function paintBackground(ctx, W, H) {
-  ctx.fillStyle = '#0C1520';
+  ctx.fillStyle = '#081024';
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#1A2738';
   const step = Math.max(12, Math.round(16 * W / 900));

@@ -17,7 +17,7 @@ class OpenCard extends StatefulWidget {
   final Widget Function(BuildContext context) open;
   final double radius;
   final VoidCallback? onClosed;
-  const OpenCard({super.key, required this.closed, required this.open, this.radius = 22, this.onClosed});
+  const OpenCard({super.key, required this.closed, required this.open, this.radius = 26, this.onClosed});
 
   @override
   State<OpenCard> createState() => _OpenCardState();
@@ -39,7 +39,7 @@ class _OpenCardState extends State<OpenCard> {
         child: OpenContainer<void>(
           transitionType: ContainerTransitionType.fadeThrough,
           transitionDuration: const Duration(milliseconds: 520),
-          closedColor: CC.surface,
+          closedColor: CC.bg,
           openColor: CC.bg,
           middleColor: CC.bg,
           closedElevation: 0,
@@ -55,7 +55,7 @@ class _OpenCardState extends State<OpenCard> {
             },
             child: widget.closed(context),
           ),
-          openBuilder: (context, _) => widget.open(context),
+          openBuilder: (context, _) => AppBackdrop(child: widget.open(context)),
         ),
       ),
     );
@@ -90,14 +90,15 @@ class SectionCard extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.45, 0.72, 1],
-            colors: [Color(0x000A111B), Color(0xCC0A111B), Color(0xFA0A111B)],
+            colors: [Color(0x00050914), Color(0xB3071028), Color(0xF5050914)],
           ),
         ),
       ),
       DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: accent.withValues(alpha: 0.35)),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: accent.withValues(alpha: 0.45)),
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0x1FFFFFFF), Color(0x00FFFFFF)], stops: [0, 0.4]),
         ),
       ),
       PositionedDirectional(
@@ -107,9 +108,10 @@ class SectionCard extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: const Color(0xCC0A111B),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0x99091431),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: accent.withValues(alpha: 0.6)),
+            boxShadow: glow(accent, 0.8),
           ),
           child: Center(child: CcIcon(icon, color: accent, size: 22)),
         ),
@@ -120,7 +122,7 @@ class SectionCard extends StatelessWidget {
           end: 14,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-            decoration: BoxDecoration(color: const Color(0xCC0A111B), borderRadius: BorderRadius.circular(99), border: Border.all(color: CC.line2)),
+            decoration: BoxDecoration(color: const Color(0x99091431), borderRadius: BorderRadius.circular(99), border: Border.all(color: CC.line2)),
             child: const Text('قريبًا', style: TextStyle(fontSize: 11.5, color: CC.text2, fontWeight: FontWeight.w600)),
           ),
         ),
@@ -253,7 +255,7 @@ class ComponentCard extends StatelessWidget {
             gradient: const RadialGradient(
               center: Alignment(0, -0.35),
               radius: 0.95,
-              colors: [Color(0xFF1B2D45), CC.surface],
+              colors: [Color(0xFF1A2C5E), Color(0xFF0B1531)],
             ),
           ),
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),

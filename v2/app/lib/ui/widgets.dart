@@ -29,10 +29,10 @@ class SquareButton extends StatelessWidget {
         button: true,
         label: label,
         child: Material(
-          color: active ? CC.amberBg : CC.surface,
+          color: active ? CC.amberBg : const Color(0x14FFFFFF),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: active ? CC.amberLine : CC.line),
+            side: BorderSide(color: active ? CC.amberLine : CC.glassBorder),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -79,7 +79,7 @@ class ContinueCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: AlignmentDirectional.centerStart,
           end: AlignmentDirectional.centerEnd,
-          colors: [CC.surface, Color(0xFF16263B)],
+          colors: [Color(0xFF13214A), Color(0xFF0A1430)],
         ),
       ),
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
@@ -90,7 +90,7 @@ class ContinueCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(color: CC.amber, borderRadius: BorderRadius.circular(99)),
               child: Text(seen > 0 ? 'كمّل من حيث وقفت' : 'ابدأ بيه',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: CC.bg)),
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
             const SizedBox(height: 6),
             Text(component.nameAr, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.25)),
@@ -138,8 +138,8 @@ class ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = accent == CC.amber ? CC.amberBg : CC.cyanBg;
     return Material(
-      color: CC.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: CC.line)),
+      color: const Color(0x12FFFFFF),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: CC.glassBorder)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -178,13 +178,13 @@ class SafetyStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: panelBox(color: const Color(0xFF1E1A0E), border: CC.amberLine, radius: 14),
+      decoration: panelBox(color: CC.goldBg, border: CC.goldLine, radius: 16),
       child: Row(children: [
-        const CcIcon(CcIcons.warning, color: CC.amber, size: 22),
+        const CcIcon(CcIcons.warning, color: CC.gold, size: 22),
         const SizedBox(width: 12),
         Expanded(
           child: Text.rich(TextSpan(children: [
-            const TextSpan(text: 'قاعدة السلامة: ', style: TextStyle(color: CC.amber, fontWeight: FontWeight.w700)),
+            const TextSpan(text: 'قاعدة السلامة: ', style: TextStyle(color: CC.gold, fontWeight: FontWeight.w700)),
             TextSpan(text: text),
           ]), style: const TextStyle(fontSize: 13, height: 1.6, color: Color(0xFFF3E3BE))),
         ),
@@ -203,9 +203,9 @@ class CircuitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: CC.surface,
+      color: const Color(0x12FFFFFF),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: CC.line)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: CC.glassBorder)),
       child: InkWell(
         onTap: onTap,
         child: SizedBox(

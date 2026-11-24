@@ -49,7 +49,6 @@ class _ShellState extends State<Shell> {
         return Scaffold(
           body: Row(children: [
             _Rail(index: _index, onTap: go),
-            const VerticalDivider(width: 1, color: CC.line),
             Expanded(child: body),
           ]),
         );
@@ -69,12 +68,13 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: CC.nav, border: Border(top: BorderSide(color: Color(0xFF1F2830)))),
-      child: SafeArea(
-        top: false,
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: Glass(
+        radius: 30,
         child: SizedBox(
-          height: 68,
+          height: 70,
           child: Row(children: [
             for (var i = 0; i < _ShellState._dests.length; i++)
               Expanded(child: _NavItem(dest: _ShellState._dests[i], selected: i == index, onTap: () => onTap(i))),
@@ -93,32 +93,28 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? CC.amber : CC.muted;
     return Semantics(
       selected: selected,
       button: true,
       label: dest.label,
-      child: InkWell(
+      child: InkResponse(
         onTap: onTap,
-        child: Stack(alignment: Alignment.center, children: [
-          if (selected)
-            Positioned(
-              top: 0,
-              child: Container(
-                width: 28,
-                height: 3,
-                decoration: const BoxDecoration(
-                  color: CC.amber,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(3)),
-                ),
-              ),
+        radius: 34,
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            width: selected ? 46 : 34,
+            height: selected ? 46 : 34,
+            margin: EdgeInsets.only(bottom: selected ? 0 : 4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: selected ? const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF5AA0FF), Color(0xFF2563EB)]) : null,
+              boxShadow: selected ? glow(CC.amber, 1.2) : null,
             ),
-          Column(mainAxisSize: MainAxisSize.min, children: [
-            CcIcon(dest.icon, color: color),
-            const SizedBox(height: 4),
-            Text(dest.label,
-                style: TextStyle(fontSize: 11.5, color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w600)),
-          ]),
+            child: Center(child: CcIcon(dest.icon, size: selected ? 22 : 22, color: selected ? Colors.white : CC.muted)),
+          ),
+          if (!selected) Text(dest.label, style: const TextStyle(fontSize: 11, color: CC.muted, fontWeight: FontWeight.w600)),
         ]),
       ),
     );
@@ -133,8 +129,11 @@ class _Rail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 88,
-      color: CC.nav,
+      width: 92,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x14FFFFFF), Color(0x05FFFFFF)]),
+        border: BorderDirectional(end: BorderSide(color: CC.glassBorder)),
+      ),
       child: SafeArea(
         child: Column(children: [
           const SizedBox(height: 14),
@@ -144,7 +143,7 @@ class _Rail extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
               child: Material(
-                color: i == index ? CC.amberBg : Colors.transparent,
+                color: i == index ? const Color(0x333D8BFF) : Colors.transparent,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),

@@ -71,9 +71,9 @@ class _CircuitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: CC.surface,
+      color: const Color(0x12FFFFFF),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: CC.line)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: CC.glassBorder)),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -421,7 +421,7 @@ class _CircuitSimPageState extends State<CircuitSimPage> with SingleTickerProvid
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: panelBox(color: CC.amberBg, border: CC.amberLine, radius: 12),
+            decoration: panelBox(color: CC.goldBg, border: CC.goldLine, radius: 12),
             child: Text(c.tip, style: const TextStyle(fontSize: 13.5, height: 1.7, color: Color(0xFFFFE2A8))),
           ),
         ]),

@@ -129,7 +129,7 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: CC.amber, foregroundColor: CC.bg),
+            style: FilledButton.styleFrom(backgroundColor: CC.amber, foregroundColor: Colors.white),
             onPressed: () async {
               Navigator.pop(ctx);
               await ExportService.deliverFile(file, 'ControlAcademy_${ExportService.safeName(c.nameEn)}.$ext',
@@ -381,7 +381,7 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(color: CC.amber, borderRadius: BorderRadius.circular(10)),
-          child: Text('$idx', style: const TextStyle(fontFamily: CC.mono, fontWeight: FontWeight.w700, color: CC.bg)),
+          child: Text('$idx', style: const TextStyle(fontFamily: CC.mono, fontWeight: FontWeight.w700, color: Colors.white)),
         ),
         const SizedBox(width: 12),
         Expanded(

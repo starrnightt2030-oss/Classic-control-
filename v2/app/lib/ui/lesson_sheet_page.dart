@@ -92,7 +92,7 @@ class _LessonSheetPageState extends State<LessonSheetPage> {
         onPressed: onTap,
         style: FilledButton.styleFrom(
           backgroundColor: CC.amber,
-          foregroundColor: CC.bg,
+          foregroundColor: Colors.white,
           minimumSize: const Size(0, 44),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           textStyle: const TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w700, fontSize: 13),

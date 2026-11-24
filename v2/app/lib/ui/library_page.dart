@@ -56,7 +56,7 @@ class _LibraryPageState extends State<LibraryPage> {
             hintStyle: const TextStyle(color: CC.muted),
             prefixIcon: const Padding(padding: EdgeInsets.all(12), child: CcIcon(CcIcons.search, size: 20, color: CC.muted)),
             filled: true,
-            fillColor: CC.surface,
+            fillColor: const Color(0x14FFFFFF),
             contentPadding: const EdgeInsets.symmetric(vertical: 12),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: CC.line)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: CC.amber)),

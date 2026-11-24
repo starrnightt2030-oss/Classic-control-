@@ -57,7 +57,7 @@ def pauses(path, noise="-40dB", d=0.15):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("audio")
-    ap.add_argument("part", type=int)
+    ap.add_argument("part", help="part number (tts_part_XX) or rr_XX for a re-record file")
     ap.add_argument("asr")
     ap.add_argument("--out", default=os.path.join(HERE, "..", "assets", "audio"))
     ap.add_argument("--report")
@@ -65,8 +65,13 @@ def main():
     ap.add_argument("--min-match", type=float, default=0.55)
     a = ap.parse_args()
 
-    man = json.load(open(os.path.join(REC, f"manifest_part_{a.part:02d}.json"), encoding="utf8"))
-    text = open(os.path.join(REC, f"tts_part_{a.part:02d}.txt"), encoding="utf8").read()
+    if a.part.startswith("rr_"):
+        man = json.load(open(os.path.join(REC, "rerecord", f"manifest_{a.part}.json"), encoding="utf8"))
+        text = open(os.path.join(REC, "rerecord", f"{a.part}.txt"), encoding="utf8").read()
+    else:
+        n = int(a.part)
+        man = json.load(open(os.path.join(REC, f"manifest_part_{n:02d}.json"), encoding="utf8"))
+        text = open(os.path.join(REC, f"tts_part_{n:02d}.txt"), encoding="utf8").read()
     clips = [s.strip() for s in text.split(MARK) if s.strip()]
     order = man["order"]
     assert len(clips) == len(order), (len(clips), len(order))

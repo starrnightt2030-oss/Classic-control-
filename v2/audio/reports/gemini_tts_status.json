@@ -1,12 +1,12 @@
 {
  "stage/lab_intro.mp3": {
-  "recall": 0.85,
-  "precision": 0.57,
-  "attempt": 1,
-  "ok": true,
+  "recall": 0.56,
+  "precision": 0.45,
+  "attempt": 2,
+  "ok": false,
   "voice": "Charon",
   "model": "gemini-3.8-flash-tts",
-  "heard": "ريد العود word for word in a calm clear egyptian arabic teacher voice المرحله التلته المعمل قدامك سندوق لوحه حقيقي ركب المكونات علي الريل ووصل الاسلاك من مصمار "
+  "heard": "المرحله التالته المعمل و الدمك سندوق لحه حقيقي ركب المكونات علي الريل و وصل الاسلاك من مصمار لمصمار و اختر لون و مقطع كل سلك و قبل ما تشغل رجعت وصلك بالافو ميتر"
  },
  "warn/sim_short_circuit.mp3": {
   "recall": 0.73,

@@ -1,5 +1,10 @@
 {
  "order": [
+  "aux_block/clip.mp3",
+  "aux_block/base.mp3",
+  "aux_block/closing.mp3",
+  "pneumatic_timer/opening.mp3",
+  "pneumatic_timer/intro.mp3",
   "pneumatic_timer/lesson_definition.mp3",
   "pneumatic_timer/lesson_principle.mp3",
   "pneumatic_timer/lesson_setting.mp3",
@@ -8,12 +13,8 @@
   "pneumatic_timer/dial.mp3",
   "pneumatic_timer/cover.mp3",
   "pneumatic_timer/needle.mp3",
-  "pneumatic_timer/filter.mp3",
-  "pneumatic_timer/bellows.mp3",
-  "pneumatic_timer/spring.mp3",
-  "pneumatic_timer/fixed.mp3",
-  "pneumatic_timer/bridges.mp3"
+  "pneumatic_timer/filter.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3863
+ "chars": 3887
 }

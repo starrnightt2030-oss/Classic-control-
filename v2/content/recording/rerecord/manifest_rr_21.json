@@ -1,5 +1,11 @@
 {
  "order": [
+  "control_transformer/lesson_protection.mp3",
+  "control_transformer/core.mp3",
+  "control_transformer/primary.mp3",
+  "control_transformer/secondary.mp3",
+  "control_transformer/bobbin.mp3",
+  "control_transformer/terminals.mp3",
   "control_transformer/bracket.mp3",
   "control_transformer/label.mp3",
   "control_transformer/closing.mp3",
@@ -15,12 +21,8 @@
   "power_supply_24v/heatsink.mp3",
   "power_supply_24v/front.mp3",
   "power_supply_24v/closing.mp3",
-  "motor_1ph/opening.mp3",
-  "motor_1ph/intro.mp3",
-  "motor_1ph/lesson_principle.mp3",
-  "motor_1ph/lesson_types.mp3",
-  "motor_1ph/lesson_caps.mp3"
+  "motor_1ph/opening.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3873
+ "chars": 3915
 }

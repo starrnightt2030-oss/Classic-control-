@@ -1,6 +1,14 @@
 {
  "order": [
+  "global/slogan_short.mp3",
+  "stage/ladder_intro.mp3",
   "stage/lab_intro.mp3",
+  "stage/exam_outro_pass.mp3",
+  "global/disassemble.mp3",
+  "global/assemble.mp3",
+  "global/energize.mp3",
+  "global/try_yourself.mp3",
+  "warn/meter_category.mp3",
   "warn/sim_short_circuit.mp3",
   "warn/sim_wrong_coil_voltage.mp3",
   "warn/sim_overload_trip.mp3",
@@ -9,6 +17,7 @@
   "warn/sim_live_touch.mp3",
   "fb/correct.mp3",
   "fb/correct_alt.mp3",
+  "fb/wrong.mp3",
   "fb/wire_ok.mp3",
   "fb/time_up.mp3",
   "fb/motor_running.mp3",
@@ -19,9 +28,8 @@
   "contactor/lesson_selection.mp3",
   "contactor/lesson_coil_data.mp3",
   "contactor/front_housing.mp3",
-  "contactor/terminal_screw.mp3",
-  "contactor/fixed_bottom.mp3"
+  "contactor/terminal_screw.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3793
+ "chars": 3782
 }

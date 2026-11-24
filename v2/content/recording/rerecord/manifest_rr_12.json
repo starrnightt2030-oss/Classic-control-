@@ -1,5 +1,8 @@
 {
  "order": [
+  "estop/ring_nut.mp3",
+  "estop/base.mp3",
+  "estop/block.mp3",
   "estop/block_contacts.mp3",
   "estop/closing.mp3",
   "selector/opening.mp3",
@@ -12,14 +15,8 @@
   "selector/head_spring.mp3",
   "selector/ring_nut.mp3",
   "selector/base.mp3",
-  "selector/block.mp3",
-  "selector/block_contacts.mp3",
-  "selector/closing.mp3",
-  "pilot_lamp/opening.mp3",
-  "pilot_lamp/intro.mp3",
-  "pilot_lamp/lesson_colors.mp3",
-  "pilot_lamp/lesson_voltage.mp3"
+  "selector/block.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3995
+ "chars": 3807
 }

@@ -1,5 +1,9 @@
 {
  "order": [
+  "pneumatic_timer/bellows.mp3",
+  "pneumatic_timer/spring.mp3",
+  "pneumatic_timer/fixed.mp3",
+  "pneumatic_timer/bridges.mp3",
   "pneumatic_timer/plunger.mp3",
   "pneumatic_timer/base.mp3",
   "pneumatic_timer/closing.mp3",
@@ -10,12 +14,8 @@
   "mcb/housing_left.mp3",
   "mcb/housing_right.mp3",
   "mcb/handle.mp3",
-  "mcb/mechanism.mp3",
-  "mcb/contacts.mp3",
-  "mcb/arc_chute.mp3",
-  "rccb/opening.mp3",
-  "rccb/intro.mp3"
+  "mcb/mechanism.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3871
+ "chars": 3787
 }

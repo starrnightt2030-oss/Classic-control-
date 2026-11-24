@@ -1,5 +1,11 @@
 {
  "order": [
+  "electronic_protection/intro.mp3",
+  "electronic_protection/lesson_phase.mp3",
+  "electronic_protection/lesson_pmv.mp3",
+  "electronic_protection/lesson_kwh.mp3",
+  "electronic_protection/lesson_counter.mp3",
+  "electronic_protection/closing.mp3",
   "installation/opening.mp3",
   "installation/intro.mp3",
   "installation/bar.mp3",
@@ -11,16 +17,8 @@
   "motor/lesson_parts_maint.mp3",
   "motor/bearings.mp3",
   "motor/end_shield_de.mp3",
-  "motor/end_shield_nde.mp3",
-  "motor/fan_cover.mp3",
-  "motor/closing.mp3",
-  "tools/opening.mp3",
-  "tools/intro.mp3",
-  "tools/lesson_multimeter.mp3",
-  "tools/lesson_clamp.mp3",
-  "tools/lesson_safety.mp3",
-  "tools/closing.mp3"
+  "motor/end_shield_nde.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3900
+ "chars": 3969
 }

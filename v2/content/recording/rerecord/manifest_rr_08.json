@@ -1,5 +1,9 @@
 {
  "order": [
+  "rccb/test_button.mp3",
+  "rccb/test_resistor.mp3",
+  "rccb/toroid.mp3",
+  "rccb/trip_relay.mp3",
   "rccb/mechanism.mp3",
   "rccb/contacts.mp3",
   "rccb/line_terminals.mp3",
@@ -9,13 +13,8 @@
   "mpcb/intro.mp3",
   "mpcb/lesson_definition.mp3",
   "mpcb/lesson_vs.mp3",
-  "mpcb/lesson_thermal.mp3",
-  "mpcb/lesson_magnetic.mp3",
-  "mpcb/lesson_breaking.mp3",
-  "mpcb/lesson_handle.mp3",
-  "mpcb/lesson_coordination.mp3",
-  "mpcb/lesson_wiring.mp3"
+  "mpcb/lesson_thermal.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3885
+ "chars": 3769
 }

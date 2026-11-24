@@ -29,11 +29,16 @@
 | تايمر إلكتروني 8 رجل (ST3P) | ✅ `timer_st3p.glb` (7 قطع) | ✅ | ✅ `timer.json` | |
 | تايمر مودولار، وتايمر ستار دلتا | ✅ `timer_din`، `timer_star_delta` | — | ضمن `timer.json` | |
 | الكونتاكتور العاكس + انترلوك ميكانيكي + كباري القوى | ✅ `reversing_contactor.glb` | ✅ | ✅ | |
+| حساس حثي M18 + سعوي M30 + مربع + ضوئي | ✅ `prox_*`، `photo_sensor` | ✅ (الحثي) | ✅ `proximity_sensor.json` | |
+| ليميت سويتش: بكرة، وذراع، وسوستة، وبلنجر | ✅ `limit_*` | ✅ (البكرة) | ✅ `limit_switch.json` | |
+| عوامة + بريشر سويتش | ✅ `float_switch`، `pressure_switch` | — | ✅ `float_pressure.json` | |
+| صمام كهربي نحاس NC | ✅ `solenoid_valve.glb` | ✅ | ✅ `solenoid_valve.json` | |
+| لمبة تحذير دوارة + سارينة + برج إشارة | ✅ `beacon`، `siren`، `signal_tower` | — | ✅ `signaling.json` | |
 
 الصور كلها في [`../assets/renders/`](../assets/renders/).
 
 ## 🔜 الخطوة الجاية بالظبط
-1. الحساسات والليميت سويتش والمخارج (الدفعة 7)، وبعدين باقي المكتبة حسب [`06-roadmap.md`](06-roadmap.md).
+1. أجهزة القياس والحماية والمفاتيح الرئيسية والفيوز (الدفعة 8 و9)، وبعدين باقي المكتبة حسب [`06-roadmap.md`](06-roadmap.md).
 
 ## ⚠️ مشاكل معروفة
 - ملفات GLB تقيلة (من 1 لـ 4 ميجا)، ومحتاجة تخفيف قبل التطبيق.

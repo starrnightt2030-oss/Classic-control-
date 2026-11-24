@@ -1182,8 +1182,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               decoration: BoxDecoration(color: const Color(0xE60A1228), borderRadius: BorderRadius.circular(3 * kPx), border: Border.all(color: bad ? CC.red : (run ? CC.green : CC.line2))),
               child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
                 Text(mode, style: TextStyle(fontSize: 7 * kPx, fontWeight: FontWeight.w800, color: bad ? CC.red : (run ? CC.green : CC.text2))),
-                Text('${(c.s.spd * 1450).round()} rpm · ${c.s.current.toStringAsFixed(1)} A${c.s.load ? ' · حمل زائد' : ''}',
+                Text('${(c.s.spd * 1450).round()} rpm · ${c.s.current.toStringAsFixed(1)} A',
+                    textDirection: TextDirection.ltr,
                     style: TextStyle(fontSize: 5.4 * kPx, color: CC.text2, fontFamily: CC.mono)),
+                if (c.s.load) Text('حمل زائد', style: TextStyle(fontSize: 5.4 * kPx, color: CC.gold, fontWeight: FontWeight.w700)),
                 if (run) Text(c.s.dir == 1 ? '↻' : '↺', style: TextStyle(fontSize: 9 * kPx, color: CC.cyan, height: 1)),
               ]),
             ),

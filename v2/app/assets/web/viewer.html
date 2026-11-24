@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>3D</title>
+<style>
+@font-face{font-family:Cairo;src:url(/assets/fonts/Cairo-400.ttf);font-weight:400}
+@font-face{font-family:Cairo;src:url(/assets/fonts/Cairo-700.ttf);font-weight:700}
+html,body{margin:0;height:100%;overflow:hidden;background-color:#0F1519;background-image:radial-gradient(#1C2730 1px,transparent 1px);background-size:16px 16px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:absolute;inset:0;outline:none}
+#lines{position:absolute;inset:0;pointer-events:none;overflow:visible}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;background:#0B0F12;border:1px solid #33414C;border-radius:8px;padding:2px 8px 3px;color:#E8EEF2;font:700 12px/1.25 Cairo,sans-serif;white-space:nowrap;text-align:center;will-change:transform}
+.lbl small{display:block;font:400 10px/1.2 Cairo,sans-serif;color:#93A3AF;direction:ltr}
+.lbl.sel{background:#F5A400;color:#0B0F12;border-color:#F5A400}
+.lbl.sel small{color:#4a3500}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93A3AF;font:600 14px Cairo,sans-serif;pointer-events:none}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="msg">جاري تحميل المجسم…</div>
+<svg id="lines"></svg>
+<div id="labels"></div>
+<script type="module" src="./viewer.js"></script>
+</body>
+</html>

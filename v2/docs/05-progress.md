@@ -1,50 +1,52 @@
 # 05 — التقدم: وصلنا لفين
 
-> آخر تحديث: 2026-11-24
+> آخر تحديث: 2026-11-24. **المرحلة 1، مكتبة المكونات: خلصت ✅**
 
-## ✅ اتعمل
+## ملخص
+- **72 ملف GLB** لكل المكونات والأنواع، في `assets/models/`.
+- **29 ملف شرح أكاديمي** بالعامية المصرية في `content/`، فيهم **360 مقطع صوتي** جاهزين للتسجيل في [`../content/scripts_for_recording.md`](../content/scripts_for_recording.md).
+- صور مجمّعة ومفكوكة بالأسماء عربي وإنجليزي في `assets/renders/`، وصورة لوحة بادئ حركة كاملة: `panel_dol_showcase.jpg`.
 
-### التحليل والتخطيط
-- تحليل التطبيق الحالي (`index.html`): المحرك قوي، والمشاكل متوثقة في [`02-architecture.md`](02-architecture.md).
-- الاتفاق على الرؤية والمنصات والتقنية. شوف [`01-vision.md`](01-vision.md) و[`07-decisions.md`](07-decisions.md).
-- خط إنتاج النماذج بالكود (`lib.py` و`kit.py` و`callouts.py`).
-
-### مكتبة المكونات
-| المكون | النموذج GLB | التفكيك والأسماء | الشرح JSON | ملاحظات للتشطيب |
+## مكتبة المكونات
+| المجموعة | النماذج (GLB) | تفكيك وأسماء | الشرح | الكود |
 |---|---|---|---|---|
-| الكونتاكتور 3 بول (EC1-D09) | ✅ `contactor.glb` (10 قطع) | ✅ | ✅ 7 أقسام + 12 جزء | غرف إطفاء الشرارة، وأسلاك الكويل لـ A1/A2، وتكبير الكويل شوية. وفيه حالة "شغال" (القلب بيتسحب 3 مم) |
-| الأوفرلود الحراري (EOL-D10، من 7 لـ 10A) | ✅ `overload.glb` (12 قطعة) | ✅ | ✅ 9 أقسام + 12 جزء | |
-| البلوك المساعد 2NO+2NC (EAX-22) | ✅ `aux_block.glb` (8 قطع) | ✅ | ✅ 6 أقسام + 8 أجزاء | |
-| تايمر الهوا On-delay، من 1 لـ 30 ثانية | ✅ `pneumatic_timer.glb` (10 قطع) | ✅ | ✅ 5 أقسام + 10 أجزاء | |
-| القاطع MCB (1 و2 و3 و4 بول) | ✅ `mcb_1p` و`2p` و`3p` و`4p.glb` (11 قطعة) | ✅ (1 بول) | ✅ 9 أقسام + 11 جزء | مبين الحالة مستخبي ورا الذراع |
-| قاطع التسرب الأرضي RCCB، 2 بول، 63A، 30mA (ERC1-63) | ✅ `rccb.glb` (11 قطعة) | ✅ | ✅ 7 أقسام + 11 جزء | |
-| قاطع حماية المحرك MPCB، من 20 لـ 25A، بمقبض دوار (EMS2-25) | ✅ `mpcb.glb` (11 قطعة) | ✅ | ✅ 8 أقسام + 11 جزء | |
-| الضواغط XB2: معدن، وبلاستيك، وبارز، ومزدوج | ✅ `pb_*.glb` (7 قطع) | ✅ | ✅ `pushbutton.json` | |
-| الطوارئ: عادي، وبمفتاح، وعلبة صفرا | ✅ `estop*.glb` | ✅ | ✅ `estop.json` | |
-| السليكتور بوضعين | ✅ `selector.glb` | ✅ | ✅ `selector.json` | |
-| لمبات البيان AD16: أخضر وأحمر وأصفر | ✅ `lamp_*.glb` (6 قطع) | ✅ | ✅ `pilot_lamp.json` | |
-| علب الضواغط بفتحتين و3 فتحات | ✅ `station_*.glb` | ✅ | ✅ `pb_station.json` | |
-| ريلاي مساعد 4 تحويلة (14 رجل) + قاعدة | ✅ `relay_my4.glb` (8 قطع) | ✅ | ✅ `control_relay.json` | |
-| ريلاي مدوّر 11 رجل + قواعد 8 و11 رجل | ✅ `relay_mk3p`، `socket_8pin`، `socket_11pin` | — | ضمن `control_relay.json` | |
-| تايمر إلكتروني 8 رجل (ST3P) | ✅ `timer_st3p.glb` (7 قطع) | ✅ | ✅ `timer.json` | |
-| تايمر مودولار، وتايمر ستار دلتا | ✅ `timer_din`، `timer_star_delta` | — | ضمن `timer.json` | |
-| الكونتاكتور العاكس + انترلوك ميكانيكي + كباري القوى | ✅ `reversing_contactor.glb` | ✅ | ✅ | |
-| حساس حثي M18 + سعوي M30 + مربع + ضوئي | ✅ `prox_*`، `photo_sensor` | ✅ (الحثي) | ✅ `proximity_sensor.json` | |
-| ليميت سويتش: بكرة، وذراع، وسوستة، وبلنجر | ✅ `limit_*` | ✅ (البكرة) | ✅ `limit_switch.json` | |
-| عوامة + بريشر سويتش | ✅ `float_switch`، `pressure_switch` | — | ✅ `float_pressure.json` | |
-| صمام كهربي نحاس NC | ✅ `solenoid_valve.glb` | ✅ | ✅ `solenoid_valve.json` | |
-| لمبة تحذير دوارة + سارينة + برج إشارة | ✅ `beacon`، `siren`، `signal_tower` | — | ✅ `signaling.json` | |
-| أميتر وفولتميتر 72x72 | ✅ `ammeter`، `voltmeter` | ✅ | ✅ `panel_meter.json` | |
-| محول تيار 100/5A | ✅ `current_transformer.glb` | ✅ | ✅ `current_transformer.json` | |
-| مفتاح تحويل 1-0-2، وسليكتور فولتميتر، وسكينة رئيسية | ✅ `cam_switch`، `voltmeter_selector`، `main_isolator` | ✅ (الكام) | ✅ `rotary_switches.json` | |
-| ريلاي فقد وتتابع الفازات، ومراقب جهد، وحماية جهد وتيار، وعداد kWh، وعداد نبضات | ✅ | — | ✅ `electronic_protection.json` | |
-| فيوز 10x38 وحامل | ✅ `fuse_holder.glb` | ✅ | ✅ `fuse.json` | |
+| الكونتاكتور | `contactor` | ✅ | `contactor.json` | `contactor.py` |
+| الأوفرلود الحراري | `overload` | ✅ | `overload.json` | `overload.py` |
+| البلوك المساعد، وتايمر الهوا | `aux_block`، `pneumatic_timer` | ✅ | `aux_block.json`، `pneumatic_timer.json` | `addons.py` |
+| القواطع MCB من 1 لـ 4 بول | `mcb_1p` … `mcb_4p` | ✅ | `mcb.json` | `mcb.py` |
+| قاطع التسرب الأرضي RCCB | `rccb` | ✅ | `rccb.json` | `rccb.py` |
+| قاطع حماية المحرك MPCB | `mpcb` | ✅ | `mpcb.json` | `mpcb.py` |
+| الضواغط XB2: معدن، وبلاستيك، وبارز، ومزدوج | `pb_*` | ✅ | `pushbutton.json` | `door.py` |
+| الطوارئ: عادي، وبمفتاح، وعلبة | `estop`، `estop_key`، `estop_box` | ✅ | `estop.json` | `door.py` |
+| السليكتور | `selector` | ✅ | `selector.json` | `door.py` |
+| لمبات AD16 | `lamp_green`، `lamp_red`، `lamp_amber` | ✅ | `pilot_lamp.json` | `door.py` |
+| علب الضواغط | `station_2`، `station_3` | ✅ | `pb_station.json` | `door.py` |
+| ريلاي 14 رجل + قاعدة، وريلاي 11 رجل، وقواعد 8 و11 | `relay_my4`، `relay_mk3p`، `socket_*` | ✅ (الـ 14 رجل) | `control_relay.json` | `relays.py` |
+| تايمر 8 رجل، ومودولار، وستار دلتا | `timer_st3p`، `timer_din`، `timer_star_delta` | ✅ (الـ 8 رجل) | `timer.json` | `relays.py` |
+| الكونتاكتور العاكس + الانترلوك | `reversing_contactor` | ✅ | `reversing_contactor.json` | `reversing.py` |
+| الحساسات: حثي، وسعوي، ومربع، وضوئي | `prox_*`، `photo_sensor` | ✅ (الحثي) | `proximity_sensor.json` | `field.py` |
+| الليميت سويتش: بكرة، وذراع، وسوستة، وبلنجر | `limit_*` | ✅ (البكرة) | `limit_switch.json` | `field.py` |
+| العوامة والبريشر سويتش | `float_switch`، `pressure_switch` | — | `float_pressure.json` | `field.py` |
+| الصمام الكهربي | `solenoid_valve` | ✅ | `solenoid_valve.json` | `field.py` |
+| لمبة تحذير، وسارينة، وبرج إشارة | `beacon`، `siren`، `signal_tower` | — | `signaling.json` | `field.py` |
+| أميتر وفولتميتر 72x72 | `ammeter`، `voltmeter` | ✅ | `panel_meter.json` | `meters.py` |
+| محول التيار CT | `current_transformer` | ✅ | `current_transformer.json` | `meters.py` |
+| مفتاح تحويل 1-0-2، وسليكتور فولتميتر، وسكينة | `cam_switch`، `voltmeter_selector`، `main_isolator` | ✅ (الكام) | `rotary_switches.json` | `meters.py` |
+| ريلاي الفازات، ومراقب الجهد، وحماية V-A، وعداد kWh، وعداد نبضات | `phase_relay`، `voltage_monitor`، `va_protector`، `kwh_meter`، `counter` | — | `electronic_protection.json` | `meters.py` |
+| الفيوز 10x38 وحامله | `fuse_holder` | ✅ | `fuse.json` | `meters.py` |
+| الدين ريل، والمجاري، والترامل، والجلب، والأطراف | `din_rail`، `wire_duct`، `terminal_block`، `terminal_strip`، `ferrules_lugs` | ✅ (الترمينال والمجرى) | `installation.json` | `install.py` |
+| المحرك التلات فاز + علبة الترامل ستار ودلتا | `motor`، `motor_tbox_delta`، `motor_tbox_star` | ✅ | `motor.json` | `motor.py` |
+| أدوات المتدرب | `multimeter`، `clamp_meter`، `test_leads`، `wire_stripper`، `ferrule_crimper`، `screwdriver` | — | `tools.json` | `tools.py` |
+| صندوق اللوحة + عرض لوحة DOL كاملة | `enclosure` | ✅ | `enclosure.json` | `enclosure.py` |
 
-الصور كلها في [`../assets/renders/`](../assets/renders/).
+## ⚠️ تحسينات معروفة (مش مانعة، تتعمل وقت التشطيب)
+- **ملفات GLB تقيلة** (من 1 لـ 6 ميجا، والإجمالي حوالي 85 ميجا). لازم تخفيف بـ gltf-transform (meshopt أو draco) ونسخة LOD للمعمل.
+- **نماذج مبسطة محتاجة تفاصيل أكتر:** القصافة، وكماشة الجلب، والترامل (اتجاه الكاميرا بيبيّن الجنب)، والعوامة.
+- **الكونتاكتور:** غرف إطفاء الشرارة وأسلاك الكويل الداخلية.
+- **مبين حالة القاطع MCB** مستخبي ورا الذراع.
+- **تفكيك المحرك:** لوحة الترامل بتفضل جوه العلبة.
+- **صور التفكيك الثابتة:** الأسهم أحيانًا بتتقاطع. والتطبيق هيرسمها تفاعليًا.
+- **مراجعة المحتوى:** مدرب يراجع الـ 29 ملف قبل التسجيل، وخصوصًا الأرقام المتعلّم عليها في `review_note`.
 
-## 🔜 الخطوة الجاية بالظبط
-1. التمديدات، والمحرك، والأدوات، وصندوق اللوحة (الدفعة 10 لـ 13) حسب [`06-roadmap.md`](06-roadmap.md).
-
-## ⚠️ مشاكل معروفة
-- ملفات GLB تقيلة (من 1 لـ 4 ميجا)، ومحتاجة تخفيف قبل التطبيق.
-- في صور التفكيك، الأسهم أحيانًا بتتقاطع. التطبيق هيرسمها تفاعليًا، فدي مشكلة في الصور الثابتة بس.
+## 🔜 الخطوة الجاية
+**المرحلة 2 و3** في [`06-roadmap.md`](06-roadmap.md): مراجعة المحتوى والتسجيل الصوتي، وبالتوازي تجربة Flutter (عرض GLB، واختيار قطعة باللمس، وتفكيك، وصوت) على Windows وAndroid.

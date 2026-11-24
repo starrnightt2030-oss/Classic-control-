@@ -43,6 +43,13 @@ def patch_windows() -> None:
     s = re.sub(r'window\.Create\(L"[^"]*"', 'window.Create(L"Classic Control Lab"', s)
     s = re.sub(r"Win32Window::Size size\(\d+, \d+\)", "Win32Window::Size size(1360, 860)", s)
     main_cpp.write_text(s, encoding="utf-8")
+    cm = APP / "windows/CMakeLists.txt"
+    t = cm.read_text(encoding="utf-8")
+    flag = "add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)"
+    if flag not in t:
+        # flutter_inappwebview_windows still uses <experimental/coroutine>; newer MSVC turns that into an error
+        t = re.sub(r"(project\([^)]*\)\r?\n)", r"\1" + flag + "\n", t, count=1)
+        cm.write_text(t, encoding="utf-8")
     ico = APP / "windows/runner/resources/app_icon.ico"
     if ico.parent.exists():
         shutil.copy2(ICON / "app_icon.ico", ico)

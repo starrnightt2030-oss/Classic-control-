@@ -27,11 +27,11 @@ def analyze(lines):
 
 
 def tail(lines):
-    interesting = [l for l in lines if re.search(r"error|Error|FAILURE|failed|Exception|What went wrong|\.dart:\d+", l)]
-    chunk = (interesting[-60:] if interesting else lines[-60:])
+    lines = [l for l in lines if l.strip() and not l.startswith("Running Gradle") and "Downloading" not in l]
+    chunk = lines[-130:]
     # GitHub keeps 10 error annotations per step: pack into a few big ones
-    for i in range(0, len(chunk), 15):
-        print("::error title=build log::" + esc("\n".join(chunk[i:i + 15])[:3800]))
+    for i in range(0, len(chunk), 14):
+        print("::error title=build log::" + esc("\n".join(chunk[i:i + 14])[:3900]))
 
 
 if __name__ == "__main__":

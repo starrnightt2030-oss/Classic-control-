@@ -9,6 +9,7 @@ import 'icons.dart';
 import 'library_page.dart';
 import 'section_pages.dart';
 import 'sim_pages.dart';
+import '../lab/lab_page.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -40,9 +41,8 @@ class _HomePageState extends State<HomePage> {
             CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات', child: DiagramsPage())),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر', '17 دائرة كلاسيكية تعمل حيًّا: الضواغط والكونتاكتورات والمؤقتات والمحرك، ومهام بالترتيب',
             CcIcons.bolt, CC.green, (_) => const CircuitListPage()),
-        _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'ركّب المكونات على الريل ووصّل الأسلاك وشغّل الدايرة', CcIcons.lab, CC.cyan,
-            (_) => const SoonPage(title: 'معمل اللوحة', image: 'assets/images/cards/lab.webp'),
-            soon: true),
+        _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'لوحة حقيقية بقضبان أوميجا ومجاري أسلاك: ركّب ووصّل وشغّل، ومولّد أعطال للتدريب',
+            CcIcons.lab, CC.cyan, (_) => const LabPage()),
         _Section('assets/images/cards/quiz.webp', 'اختبر نفسك', 'أسئلة وأعطال عملية على كل مكوّن ودايرة', CcIcons.quiz, CC.red,
             (_) => const SoonPage(title: 'الاختبارات', image: 'assets/images/cards/quiz.webp'),
             soon: true),

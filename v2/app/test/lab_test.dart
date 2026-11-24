@@ -1,0 +1,137 @@
+import 'package:classic_control/lab/faults.dart';
+import 'package:classic_control/lab/model.dart';
+import 'package:classic_control/lab/templates.dart';
+import 'package:classic_control/sim/engine.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void press(Lab l, String id, {double hold = 0.3}) {
+  l.actuate(id, 'press', true);
+  l.run(hold);
+  l.actuate(id, 'press', false);
+}
+
+bool until(Lab l, bool Function() cond, {double timeout = 15}) {
+  var t = 0.0;
+  while (t < timeout) {
+    if (cond()) return true;
+    l.run(0.1);
+    t += 0.1;
+  }
+  return cond();
+}
+
+Lab dol() => dolTemplate().toLab()..setPower(true);
+
+void main() {
+  test('DOL panel template: start, lamps, stop', () {
+    final l = dol();
+    expect(l.events.any((e) => e.t == 'short'), isFalse);
+    expect(l['H2'].s.v, greaterThan(200), reason: 'stop lamp through the aux NC 61-62');
+    expect(l['H1'].s.v, lessThan(1));
+    press(l, 'S1');
+    expect(until(l, () => motorRunning(l, 'M1')), isTrue);
+    expect(l['H1'].s.v, greaterThan(200));
+    expect(l['H2'].s.v, lessThan(1));
+    l.run(5);
+    expect(l['F2'].s.trip, isFalse);
+    press(l, 'S0');
+    expect(until(l, () => motorStopped(l, 'M1')), isTrue);
+    press(l, 'S1');
+    until(l, () => motorRunning(l, 'M1'));
+    l.actuate('S00', 'estop');
+    expect(until(l, () => motorStopped(l, 'M1')), isTrue);
+  });
+
+  test('document JSON round trip keeps parts, attachments and wires', () {
+    final d = dolTemplate();
+    final e = LabDoc.fromJsonString(d.toJsonString());
+    expect(e.parts.length, d.parts.length);
+    expect(e.wires.length, d.wires.length);
+    expect(e.byId('F2')!.attach, 'K1');
+    expect(e.netNumbers().isNotEmpty, isTrue);
+  });
+
+  test('injected faults change the behaviour', () {
+    // coil open: contactor never pulls in
+    var l = dolTemplate().toLab();
+    FaultSession('coil_open', partId: 'K1').applyTo(l);
+    l.setPower(true);
+    press(l, 'S1');
+    l.run(2);
+    expect(isOn(l, 'K1'), isFalse);
+
+    // welded contacts: motor keeps running after stop
+    l = dolTemplate().toLab();
+    FaultSession('weld', partId: 'K1').applyTo(l);
+    l.setPower(true);
+    l.run(3);
+    expect(motorRunning(l, 'M1'), isTrue);
+
+    // phase loss at the source: single phasing
+    l = dolTemplate().toLab();
+    FaultSession('phase_loss', partId: 'X0').applyTo(l);
+    l.setPower(true);
+    press(l, 'S1');
+    l.run(1);
+    expect(l['M1'].s.mode, 'single');
+
+    // broken control wire K1.14 → A1: no start
+    final d = dolTemplate();
+    final i = d.wires.indexWhere((w) => w.a == 'K1.14' && w.b == 'K1.A1');
+    l = d.toLab();
+    FaultSession('wire', wireIndex: i, wireKey: 'K1.14|K1.A1').applyTo(l);
+    l.setPower(true);
+    press(l, 'S1');
+    l.run(1);
+    expect(isOn(l, 'K1'), isFalse);
+
+    // overload set far below the motor current: trips while running
+    l = dolTemplate().toLab();
+    FaultSession('ol_set', partId: 'F2').applyTo(l);
+    l.setPower(true);
+    press(l, 'S1');
+    expect(until(l, () => l['F2'].s.trip, timeout: 40), isTrue);
+  });
+
+  test('fault generator picks something present on the panel', () {
+    for (var i = 0; i < 30; i++) {
+      final f = FaultSession.create(dolTemplate());
+      expect(f, isNotNull);
+      final l = dolTemplate().toLab();
+      f!.applyTo(l);
+      l.setPower(true);
+      l.run(0.5);
+    }
+  });
+
+  test('lab devices: 24 V supply, star-delta timer, MPCB, phase relay', () {
+    final l = Lab();
+    l.comps.addAll([
+      Comp('X0', 'sup'),
+      Comp('G1', 'psu'),
+      Comp('K1', 'kc', p: {'coilV': 24.0}),
+      Comp('KF', 'phr'),
+      Comp('KT', 'tsd', p: {'T': 2.0}),
+      Comp('Q1', 'mpcb', p: {'set': 2.0}),
+      Comp('M1', 'motor'),
+    ]);
+    l.wires.addAll([
+      const Wire('X0.L1', 'G1.L'), const Wire('X0.N', 'G1.N'),
+      const Wire('G1.P', 'K1.A1'), const Wire('G1.M', 'K1.A2'),
+      const Wire('X0.L1', 'KF.L1'), const Wire('X0.L2', 'KF.L2'), const Wire('X0.L3', 'KF.L3'),
+      const Wire('X0.L1', 'KT.A1'), const Wire('X0.N', 'KT.A2'),
+      const Wire('X0.L1', 'Q1.1'), const Wire('X0.L2', 'Q1.3'), const Wire('X0.L3', 'Q1.5'),
+      const Wire('Q1.2', 'M1.U1'), const Wire('Q1.4', 'M1.V1'), const Wire('Q1.6', 'M1.W1'),
+    ]);
+    l.solve();
+    l.setPower(true);
+    expect(isOn(l, 'K1'), isTrue, reason: '24 V coil fed from the power supply');
+    expect(l['KF'].s.on, isTrue, reason: 'all three phases in the right order');
+    final nets = l.nets!;
+    expect(nets.same('KT.17', 'KT.18'), isTrue, reason: 'star output first');
+    l.run(2.2);
+    expect(l.nets!.same('KT.17', 'KT.28'), isTrue, reason: 'then delta after the pause');
+    expect(until(l, () => l['Q1'].s.trip, timeout: 40), isTrue, reason: 'MPCB set at 2 A trips a 8.5 A motor');
+    expect(isOn(l, 'Q1'), isFalse);
+  });
+}

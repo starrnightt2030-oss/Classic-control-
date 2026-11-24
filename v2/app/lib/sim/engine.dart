@@ -142,6 +142,53 @@ final Map<String, CompType> kTypes = {
             'star' => [['U2', 'V2'], ['V2', 'W2']],
             _ => <List<String>>[],
           }),
+  // ---- Panel Lab devices
+  'mcb2': CompType(
+      key: 'mcb2', nameAr: 'قاطع ثنائي الأقطاب', w: 80, h: 124, breaker: true, rating: 10,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('3', 0, 0, 't'), Term('2', 0, 0, 'b'), Term('4', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['3', '4']] : []),
+  'mcb4': CompType(
+      key: 'mcb4', nameAr: 'قاطع رباعي الأقطاب', w: 150, h: 124, breaker: true, rating: 20,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('3', 0, 0, 't'), Term('5', 0, 0, 't'), Term('7', 0, 0, 't'), Term('2', 0, 0, 'b'), Term('4', 0, 0, 'b'), Term('6', 0, 0, 'b'), Term('8', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['3', '4'], ['5', '6'], ['7', '8']] : []),
+  'fuse': CompType(
+      key: 'fuse', nameAr: 'مصهر', w: 40, h: 124, breaker: true, rating: 2,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2']] : []),
+  'rccb': CompType(
+      key: 'rccb', nameAr: 'قاطع التسرب الأرضي', w: 80, h: 124, breaker: true, rating: 25,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('N', 0, 0, 't'), Term('2', 0, 0, 'b'), Term('N2', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['N', 'N2']] : []),
+  'mpcb': CompType(
+      key: 'mpcb', nameAr: 'قاطع حماية المحرك', w: 90, h: 124, breaker: true, rating: 12,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('3', 0, 0, 't'), Term('5', 0, 0, 't'), Term('2', 0, 0, 'b'), Term('4', 0, 0, 'b'), Term('6', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['3', '4'], ['5', '6']] : []),
+  'aux': CompType(
+      key: 'aux', nameAr: 'بلوك مساعد', w: 80, h: 60,
+      terms: (_) => _t(const [Term('53', 0, 0, 't'), Term('61', 0, 0, 't'), Term('71', 0, 0, 't'), Term('83', 0, 0, 't'), Term('54', 0, 0, 'b'), Term('62', 0, 0, 'b'), Term('72', 0, 0, 'b'), Term('84', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['53', '54'], ['83', '84']] : [['61', '62'], ['71', '72']]),
+  'tsd': CompType(
+      key: 'tsd', nameAr: 'مؤقت ستار دلتا', w: 80, h: 120, coil: const ['A1', 'A2'], rated: (_) => 230, wide: true,
+      terms: (_) => _t(const [Term('A1', 0, 0, 't'), Term('A2', 0, 0, 'b'), Term('17', 0, 0, 't'), Term('18', 0, 0, 'b'), Term('28', 0, 0, 'b')]),
+      links: (c) {
+        if (!c.s.on) return [];
+        final tm = c.num_('T');
+        if (c.s.el < tm) return [['17', '18']];
+        if (c.s.el >= tm + 0.06) return [['17', '28']];
+        return [];
+      }),
+  'psu': CompType(
+      key: 'psu', nameAr: 'مزوّد قدرة 24 فولت', w: 120, h: 130,
+      terms: (_) => _t(const [Term('L', 0, 0, 't'), Term('N', 0, 0, 't'), Term('PE', 0, 0, 't'), Term('P', 0, 0, 'b'), Term('P2', 0, 0, 'b'), Term('M', 0, 0, 'b'), Term('M2', 0, 0, 'b')]),
+      links: (_) => [['P', 'P2'], ['M', 'M2']]),
+  'phr': CompType(
+      key: 'phr', nameAr: 'مرحّل مراقبة الأطوار', w: 80, h: 120,
+      terms: (_) => _t(const [Term('L1', 0, 0, 't'), Term('L2', 0, 0, 't'), Term('L3', 0, 0, 't'), Term('11', 0, 0, 'b'), Term('12', 0, 0, 'b'), Term('14', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['11', '14']] : [['11', '12']]),
+  'tb': CompType(
+      key: 'tb', nameAr: 'طرف توصيل', w: 20, h: 60,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
+      links: (_) => [['1', '2']]),
 };
 
 // ---------------------------------------------------------------- components
@@ -167,8 +214,10 @@ class CompState {
   int dir = 0;
   List<double> vw = const [0, 0, 0];
   bool load = false;
-  // transformer
+  // transformer / power supply
   double k = 0;
+  // injected fault (free lab): coil_open · weld · nc_open · no_close · lamp_dead · phase_loss
+  String? fault;
 }
 
 class Comp {
@@ -180,8 +229,17 @@ class Comp {
   Comp(this.id, this.type, {Map<String, Object?>? p, this.attach, this.x = 0, this.y = 0}) : p = {...?p} {
     switch (type) {
       case 'mcb1':
+      case 'mcb2':
       case 'mcb3':
+      case 'mcb4':
+      case 'fuse':
+      case 'rccb':
         s.on = true;
+      case 'mpcb':
+        s.on = true;
+        this.p['set'] ??= 8.5;
+      case 'tsd':
+        this.p['T'] ??= 5.0;
       case 'timer':
         this.p['mode'] ??= 'on';
         this.p['T'] ??= 3.0;
@@ -289,6 +347,34 @@ class Nets {
 class Lab {
   final List<Comp> comps = [];
   final List<Wire> wires = [];
+  /// wires with an injected break (free-lab faults): drawn, but carry nothing
+  final Set<Wire> brokenWires = {};
+
+  /// contact pairs of [c] including injected faults
+  List<List<String>> linksOf(Comp c) {
+    final f = c.s.fault;
+    final ty = c.t;
+    if (ty.links == null) return const [];
+    if (f == 'weld' && (c.type == 'kc' || c.type == 'relay')) {
+      final was = c.s.on;
+      c.s.on = true;
+      final l = ty.links!(c);
+      c.s.on = was;
+      return l;
+    }
+    var l = ty.links!(c);
+    if (f == 'nc_open') {
+      const nc = {'95-96', '11-12', '21-22', '61-62', '71-72', '15-16'};
+      l = [for (final x in l) if (!nc.contains('${x[0]}-${x[1]}')) x];
+    }
+    if (f == 'no_close') {
+      const no = {'13-14', '53-54', '83-84', '15-18', '11-14', '23-24'};
+      l = [for (final x in l) if (!no.contains('${x[0]}-${x[1]}')) x];
+    }
+    if (f == 'open_pole' && l.isNotEmpty) l = l.sublist(1);
+    return l;
+  }
+
   final List<List<String>> mech = []; // mechanical interlock pairs
   Track? track;
   bool power = false;
@@ -319,12 +405,12 @@ class Lab {
   Nets buildNets({String? exclude}) {
     final uf = _UF();
     for (final w in wires) {
-      uf.u(w.a, w.b);
+      if (!brokenWires.contains(w)) uf.u(w.a, w.b);
     }
     for (final c in comps) {
       final ty = c.t;
       if (ty.links != null && exclude != c.id) {
-        for (final l in ty.links!(c)) {
+        for (final l in linksOf(c)) {
           uf.u('${c.id}.${l[0]}', '${c.id}.${l[1]}');
         }
       }
@@ -341,10 +427,18 @@ class Lab {
     void add(String term, String g, Ph ph, String key) => (src[uf.f(term)] ??= []).add(_Src(g, ph, key));
     if (power) {
       for (final s in comps.where((c) => c.type == 'sup')) {
-        kPhase.forEach((k, v) => add('${s.id}.$k', 'M', Ph.polar(v[0], v[1]), k));
+        kPhase.forEach((k, v) {
+          if (s.s.fault == 'phase_loss' && k == (s.p['lost'] ?? 'L3')) return;
+          add('${s.id}.$k', 'M', Ph.polar(v[0], v[1]), k);
+        });
       }
     }
     for (final c in comps) {
+      if (c.type == 'psu' && c.s.k > 0.05) {
+        final g = 'D:${c.id}';
+        add('${c.id}.M', g, const Ph(0, 0), '0V');
+        add('${c.id}.P', g, const Ph(24, 0), '24V');
+      }
       if (c.type == 'trafo' && c.s.k > 0.05) {
         final g = 'T:${c.id}';
         add('${c.id}.S0', g, const Ph(0, 0), 'S0');
@@ -418,6 +512,36 @@ class Lab {
           changed = true;
         }
       }
+      for (final c in comps.where((c) => c.type == 'psu')) {
+        final v = n.vAcross('${c.id}.L', '${c.id}.N');
+        final k = (v > 85 && v < 270) ? 1.0 : 0.0;
+        if (k != c.s.k) {
+          c.s.k = k;
+          changed = true;
+        }
+      }
+      for (final c in comps.where((c) => c.type == 'phr')) {
+        final p1 = n.pot('${c.id}.L1'), p2 = n.pot('${c.id}.L2'), p3 = n.pot('${c.id}.L3');
+        var ok = false;
+        if (p1 != null && p2 != null && p3 != null && p1.g == 'M' && p2.g == 'M' && p3.g == 'M') {
+          final all = (p1.ph - p2.ph).abs > 330 && (p2.ph - p3.ph).abs > 330 && (p3.ph - p1.ph).abs > 330;
+          final d = ((p2.ph.angle - p1.ph.angle) + 360) % 360;
+          ok = all && d > 180;
+        }
+        if (ok != c.s.on) {
+          c.s.on = ok;
+          changed = true;
+          emit(SimEvent(ok ? 'kon' : 'koff', c.id, {'type': 'relay'}));
+        }
+      }
+      for (final c in comps.where((c) => c.type == 'aux')) {
+        final host = c.attach == null ? null : byId(c.attach!);
+        final on = host?.s.on ?? false;
+        if (on != c.s.on) {
+          c.s.on = on;
+          changed = true;
+        }
+      }
       if (changed) continue;
       final want = <String, bool>{};
       for (final c in comps) {
@@ -426,7 +550,7 @@ class Lab {
         final v = n.vAcross('${c.id}.${coil[0]}', '${c.id}.${coil[1]}');
         c.s.v = v;
         final w = coilWindow(c);
-        final ok = !c.s.dead && v >= w[0] && v <= w[1] * 1.3;
+        final ok = !c.s.dead && c.s.fault != 'coil_open' && v >= w[0] && v <= w[1] * 1.3;
         want[c.id] = ok;
         c.s.hum = !c.s.dead && !ok && v > w[0] * 0.35;
         c.s.blocked = false;
@@ -491,7 +615,7 @@ class Lab {
     for (final c in comps) {
       if (c.type == 'lamp') {
         final v = n.vAcross('${c.id}.X1', '${c.id}.X2');
-        c.s.v = c.s.dead ? 0 : v;
+        c.s.v = (c.s.dead || c.s.fault == 'lamp_dead') ? 0 : v;
         if (!c.s.dead && v > c.num_('V') * 1.4) {
           c.s.dead = true;
           c.s.v = 0;
@@ -607,10 +731,23 @@ class Lab {
           c.s.burn = 0;
         }
       }
+      if (c.type == 'tsd') {
+        final tm = c.num_('T');
+        if (c.s.on) {
+          final before = c.s.el;
+          c.s.el += dt;
+          if ((before < tm && c.s.el >= tm) || (before < tm + 0.06 && c.s.el >= tm + 0.06)) {
+            dirty = true;
+            emit(SimEvent('tsw', c.id));
+          }
+        } else {
+          c.s.el = 0;
+        }
+      }
       if (c.type == 'motor') dirty = _motorTick(c, dt) || dirty;
     }
     for (final c in comps) {
-      if (c.type == 'ol' && c.s.trip) c.s.heat = math.max(0.0, c.s.heat - 25 * dt);
+      if ((c.type == 'ol' || c.type == 'mpcb') && c.s.trip) c.s.heat = math.max(0.0, c.s.heat - 25 * dt);
     }
     final tr = track;
     if (tr != null) {
@@ -663,7 +800,7 @@ class Lab {
     Comp? ol;
     if (n != null) {
       for (final o in comps) {
-        if (o.type != 'ol') continue;
+        if (o.type != 'ol' && o.type != 'mpcb') continue;
         if (['2', '4', '6'].any((t) => ['U1', 'V1', 'W1'].any((u) => n.same('${o.id}.$t', '${c.id}.$u')))) {
           ol = o;
           break;
@@ -681,6 +818,7 @@ class Lab {
       if (ol.s.heat > 150 && !ol.s.trip) {
         ol.s.trip = true;
         ol.s.heat = 150;
+        if (ol.type == 'mpcb') ol.s.on = false;
         dirty = true;
         emit(SimEvent('oltrip', ol.id));
       }

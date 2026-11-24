@@ -1,11 +1,5 @@
 {
  "order": [
-  "selector/block_contacts.mp3",
-  "selector/closing.mp3",
-  "pilot_lamp/opening.mp3",
-  "pilot_lamp/intro.mp3",
-  "pilot_lamp/lesson_colors.mp3",
-  "pilot_lamp/lesson_voltage.mp3",
   "pilot_lamp/lesson_ghost.mp3",
   "pilot_lamp/nut.mp3",
   "pilot_lamp/body.mp3",
@@ -21,8 +15,12 @@
   "control_relay/led.mp3",
   "control_relay/socket.mp3",
   "timer/opening.mp3",
-  "timer/intro.mp3"
+  "timer/intro.mp3",
+  "timer/lesson_functions.mp3",
+  "timer/lesson_range.mp3",
+  "timer/lesson_terminals.mp3",
+  "timer/lesson_star_delta.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3784
+ "chars": 3880
 }

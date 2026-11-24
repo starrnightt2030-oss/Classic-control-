@@ -1,9 +1,5 @@
 {
  "order": [
-  "timer/lesson_functions.mp3",
-  "timer/lesson_range.mp3",
-  "timer/lesson_terminals.mp3",
-  "timer/lesson_star_delta.mp3",
   "timer/lesson_vs_pneumatic.mp3",
   "timer/case.mp3",
   "timer/dial.mp3",
@@ -17,8 +13,13 @@
   "reversing_contactor/intro.mp3",
   "reversing_contactor/lesson_principle.mp3",
   "reversing_contactor/lesson_mechanical.mp3",
-  "reversing_contactor/lesson_electrical.mp3"
+  "reversing_contactor/lesson_electrical.mp3",
+  "reversing_contactor/lesson_modes.mp3",
+  "reversing_contactor/lesson_wiring.mp3",
+  "reversing_contactor/contactor_fwd.mp3",
+  "reversing_contactor/contactor_rev.mp3",
+  "reversing_contactor/interlock_housing.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3849
+ "chars": 3840
 }

@@ -1,7 +1,5 @@
 {
  "order": [
-  "overload/bimetal_heaters.mp3",
-  "overload/compensation.mp3",
   "overload/base_housing.mp3",
   "aux_block/opening.mp3",
   "aux_block/lesson_principle.mp3",
@@ -11,8 +9,13 @@
   "aux_block/bridges.mp3",
   "aux_block/slide.mp3",
   "aux_block/spring.mp3",
-  "aux_block/plunger.mp3"
+  "aux_block/plunger.mp3",
+  "aux_block/clip.mp3",
+  "aux_block/base.mp3",
+  "aux_block/closing.mp3",
+  "pneumatic_timer/opening.mp3",
+  "pneumatic_timer/intro.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3803
+ "chars": 3949
 }

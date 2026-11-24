@@ -1,12 +1,5 @@
 {
  "order": [
-  "solenoid_valve/intro.mp3",
-  "solenoid_valve/lesson_selection.mp3",
-  "solenoid_valve/tube.mp3",
-  "solenoid_valve/diaphragm.mp3",
-  "solenoid_valve/body.mp3",
-  "solenoid_valve/closing.mp3",
-  "signaling/opening.mp3",
   "signaling/intro.mp3",
   "signaling/lesson_colors.mp3",
   "signaling/lesson_wiring.mp3",
@@ -22,8 +15,15 @@
   "panel_meter/scale.mp3",
   "panel_meter/pointer.mp3",
   "panel_meter/movement.mp3",
-  "panel_meter/zero.mp3"
+  "panel_meter/zero.mp3",
+  "panel_meter/terminals.mp3",
+  "current_transformer/opening.mp3",
+  "current_transformer/intro.mp3",
+  "current_transformer/lesson_ratio.mp3",
+  "current_transformer/lesson_danger.mp3",
+  "current_transformer/lesson_polarity.mp3",
+  "current_transformer/lesson_classes.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3889
+ "chars": 3994
 }

@@ -1,13 +1,5 @@
 {
  "order": [
-  "motor/fan_cover.mp3",
-  "motor/closing.mp3",
-  "tools/opening.mp3",
-  "tools/intro.mp3",
-  "tools/lesson_multimeter.mp3",
-  "tools/lesson_clamp.mp3",
-  "tools/lesson_safety.mp3",
-  "tools/closing.mp3",
   "enclosure/opening.mp3",
   "enclosure/lesson_layout.mp3",
   "enclosure/lesson_earthing.mp3",
@@ -23,8 +15,14 @@
   "control_transformer/intro.mp3",
   "control_transformer/lesson_principle.mp3",
   "control_transformer/lesson_taps.mp3",
-  "control_transformer/lesson_rating.mp3"
+  "control_transformer/lesson_rating.mp3",
+  "control_transformer/lesson_protection.mp3",
+  "control_transformer/core.mp3",
+  "control_transformer/primary.mp3",
+  "control_transformer/secondary.mp3",
+  "control_transformer/bobbin.mp3",
+  "control_transformer/terminals.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3978
+ "chars": 3912
 }

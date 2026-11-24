@@ -163,6 +163,8 @@ def main():
         if ok[ci]:
             st = max(snap_before(ci), last_end)
             en = snap_after(ci)
+            if en - st < 0.4:          # no clean room for this clip between its neighbours
+                continue
             bounds[ci] = (st, en)
             last_end = en
     n_ok = len(bounds)

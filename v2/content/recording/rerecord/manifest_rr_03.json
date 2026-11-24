@@ -1,6 +1,5 @@
 {
  "order": [
-  "overload/lesson_principle.mp3",
   "overload/lesson_phase_loss.mp3",
   "overload/lesson_compensation.mp3",
   "overload/lesson_setting.mp3",
@@ -8,8 +7,10 @@
   "overload/lesson_terminals.mp3",
   "overload/front_cover.mp3",
   "overload/test_button.mp3",
-  "overload/reset_button.mp3"
+  "overload/reset_button.mp3",
+  "overload/bimetal_heaters.mp3",
+  "overload/compensation.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 3539
+ "chars": 3935
 }

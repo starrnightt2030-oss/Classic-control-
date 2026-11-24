@@ -1,0 +1,13 @@
+{
+ "order": [
+  "motor_1ph/lesson_safety.mp3",
+  "motor_1ph/stator.mp3",
+  "motor_1ph/terminal_box.mp3",
+  "motor_1ph/run_capacitor.mp3",
+  "motor_1ph/start_capacitor.mp3",
+  "motor_1ph/centrifugal_switch.mp3",
+  "motor_1ph/closing.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1352
+}

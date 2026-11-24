@@ -1,0 +1,12 @@
+{
+ "order": [
+  "estop/lesson_reset.mp3",
+  "estop/lesson_wiring.mp3",
+  "estop/lesson_box.mp3",
+  "estop/cap.mp3",
+  "estop/bezel.mp3",
+  "estop/head_spring.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1355
+}

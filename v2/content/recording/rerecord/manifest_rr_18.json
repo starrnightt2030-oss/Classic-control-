@@ -1,0 +1,11 @@
+{
+ "order": [
+  "mcb/mechanism.mp3",
+  "mcb/contacts.mp3",
+  "mcb/arc_chute.mp3",
+  "rccb/opening.mp3",
+  "rccb/intro.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1383
+}

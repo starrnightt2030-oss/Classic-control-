@@ -1,0 +1,13 @@
+{
+ "order": [
+  "limit_switch/opening.mp3",
+  "limit_switch/intro.mp3",
+  "limit_switch/lesson_actuators.mp3",
+  "limit_switch/lesson_snap.mp3",
+  "limit_switch/lever.mp3",
+  "limit_switch/head.mp3",
+  "limit_switch/cover.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1384
+}

@@ -1,0 +1,14 @@
+{
+ "order": [
+  "pilot_lamp/opening.mp3",
+  "pilot_lamp/intro.mp3",
+  "pilot_lamp/lesson_colors.mp3",
+  "pilot_lamp/lesson_voltage.mp3",
+  "pilot_lamp/lesson_ghost.mp3",
+  "pilot_lamp/nut.mp3",
+  "pilot_lamp/body.mp3",
+  "pb_station/opening.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1426
+}

@@ -1,0 +1,17 @@
+{
+ "order": [
+  "tools/lesson_safety.mp3",
+  "tools/closing.mp3",
+  "enclosure/opening.mp3",
+  "enclosure/lesson_layout.mp3",
+  "enclosure/lesson_earthing.mp3",
+  "enclosure/body.mp3",
+  "enclosure/door.mp3",
+  "enclosure/gasket.mp3",
+  "enclosure/lock.mp3",
+  "enclosure/plate.mp3",
+  "enclosure/glands.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1473
+}

@@ -1,0 +1,15 @@
+{
+ "order": [
+  "pb_station/intro.mp3",
+  "pb_station/gasket.mp3",
+  "pb_station/screws.mp3",
+  "pb_station/body.mp3",
+  "pb_station/gland.mp3",
+  "control_relay/intro.mp3",
+  "control_relay/cover.mp3",
+  "control_relay/coil.mp3",
+  "control_relay/led.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1377
+}

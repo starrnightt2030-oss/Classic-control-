@@ -1,0 +1,12 @@
+{
+ "order": [
+  "timer/socket.mp3",
+  "timer/closing.mp3",
+  "reversing_contactor/opening.mp3",
+  "reversing_contactor/intro.mp3",
+  "reversing_contactor/lesson_principle.mp3",
+  "reversing_contactor/lesson_mechanical.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1261
+}

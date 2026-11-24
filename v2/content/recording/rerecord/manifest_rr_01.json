@@ -22,19 +22,8 @@
   "fb/time_up.mp3",
   "fb/motor_running.mp3",
   "fb/motor_reverse.mp3",
-  "contactor/opening.mp3",
-  "contactor/intro.mp3",
-  "contactor/lesson_definition.mp3",
-  "contactor/lesson_selection.mp3",
-  "contactor/lesson_coil_data.mp3",
-  "contactor/front_housing.mp3",
-  "contactor/terminal_screw.mp3",
-  "contactor/fixed_bottom.mp3",
-  "contactor/moving_contacts.mp3",
-  "contactor/silver_tip.mp3",
-  "contactor/carrier.mp3",
-  "contactor/armature.mp3"
+  "contactor/opening.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 5954
+ "chars": 1307
 }

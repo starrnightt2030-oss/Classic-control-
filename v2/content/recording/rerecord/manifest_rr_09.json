@@ -1,39 +1,9 @@
 {
  "order": [
-  "pilot_lamp/intro.mp3",
-  "pilot_lamp/lesson_colors.mp3",
-  "pilot_lamp/lesson_voltage.mp3",
-  "pilot_lamp/lesson_ghost.mp3",
-  "pilot_lamp/nut.mp3",
-  "pilot_lamp/body.mp3",
-  "pb_station/opening.mp3",
-  "pb_station/intro.mp3",
-  "pb_station/gasket.mp3",
-  "pb_station/screws.mp3",
-  "pb_station/body.mp3",
-  "pb_station/gland.mp3",
-  "control_relay/intro.mp3",
-  "control_relay/cover.mp3",
-  "control_relay/coil.mp3",
-  "control_relay/led.mp3",
-  "control_relay/socket.mp3",
-  "timer/opening.mp3",
-  "timer/intro.mp3",
-  "timer/lesson_functions.mp3",
-  "timer/lesson_range.mp3",
-  "timer/lesson_terminals.mp3",
-  "timer/lesson_star_delta.mp3",
-  "timer/lesson_vs_pneumatic.mp3",
-  "timer/case.mp3",
-  "timer/dial.mp3",
-  "timer/pcb.mp3",
-  "timer/range_sw.mp3",
-  "timer/relay.mp3",
-  "timer/base.mp3",
-  "timer/socket.mp3",
-  "timer/closing.mp3",
-  "reversing_contactor/opening.mp3"
+  "overload/test_button.mp3",
+  "overload/reset_button.mp3",
+  "overload/bimetal_heaters.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 5927
+ "chars": 1211
 }

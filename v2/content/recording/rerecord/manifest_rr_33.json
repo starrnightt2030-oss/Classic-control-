@@ -1,0 +1,14 @@
+{
+ "order": [
+  "selector/opening.mp3",
+  "selector/intro.mp3",
+  "selector/lesson_positions.mp3",
+  "selector/lesson_cam.mp3",
+  "selector/lesson_diagram.mp3",
+  "selector/cap.mp3",
+  "selector/bezel.mp3",
+  "selector/head_spring.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1394
+}

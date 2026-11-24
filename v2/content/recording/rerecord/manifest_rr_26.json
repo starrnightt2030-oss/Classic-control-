@@ -1,0 +1,13 @@
+{
+ "order": [
+  "mpcb/contacts.mp3",
+  "mpcb/arc_chambers.mp3",
+  "mpcb/base.mp3",
+  "mpcb/closing.mp3",
+  "fuse/opening.mp3",
+  "fuse/intro.mp3",
+  "fuse/lesson_principle.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1490
+}

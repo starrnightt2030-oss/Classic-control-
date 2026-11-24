@@ -1,0 +1,11 @@
+{
+ "order": [
+  "selector/ring_nut.mp3",
+  "selector/base.mp3",
+  "selector/block.mp3",
+  "selector/block_contacts.mp3",
+  "selector/closing.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1413
+}

@@ -1,0 +1,12 @@
+{
+ "order": [
+  "enclosure/earth.mp3",
+  "enclosure/closing.mp3",
+  "control_transformer/opening.mp3",
+  "control_transformer/intro.mp3",
+  "control_transformer/lesson_principle.mp3",
+  "control_transformer/lesson_taps.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1192
+}

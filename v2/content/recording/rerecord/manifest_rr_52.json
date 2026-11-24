@@ -1,0 +1,13 @@
+{
+ "order": [
+  "electronic_protection/lesson_kwh.mp3",
+  "electronic_protection/lesson_counter.mp3",
+  "electronic_protection/closing.mp3",
+  "installation/opening.mp3",
+  "installation/intro.mp3",
+  "installation/bar.mp3",
+  "installation/clamps.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1279
+}

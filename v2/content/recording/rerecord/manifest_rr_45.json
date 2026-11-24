@@ -1,0 +1,15 @@
+{
+ "order": [
+  "limit_switch/switch.mp3",
+  "limit_switch/body.mp3",
+  "limit_switch/gland.mp3",
+  "float_pressure/opening.mp3",
+  "float_pressure/intro.mp3",
+  "float_pressure/lesson_pressure.mp3",
+  "float_pressure/lesson_wiring.mp3",
+  "float_pressure/closing.mp3",
+  "solenoid_valve/opening.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1359
+}

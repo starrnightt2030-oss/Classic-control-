@@ -1,0 +1,14 @@
+{
+ "order": [
+  "control_transformer/terminals.mp3",
+  "control_transformer/bracket.mp3",
+  "control_transformer/label.mp3",
+  "control_transformer/closing.mp3",
+  "power_supply_24v/opening.mp3",
+  "power_supply_24v/intro.mp3",
+  "power_supply_24v/lesson_principle.mp3",
+  "power_supply_24v/lesson_selection.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1409
+}

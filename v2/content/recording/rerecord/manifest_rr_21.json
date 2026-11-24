@@ -1,0 +1,11 @@
+{
+ "order": [
+  "rccb/test_resistor.mp3",
+  "rccb/toroid.mp3",
+  "rccb/trip_relay.mp3",
+  "rccb/mechanism.mp3",
+  "rccb/contacts.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1470
+}

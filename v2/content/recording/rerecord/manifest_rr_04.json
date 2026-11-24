@@ -1,28 +1,9 @@
 {
  "order": [
-  "pneumatic_timer/lesson_setting.mp3",
-  "pneumatic_timer/lesson_terminals.mp3",
-  "pneumatic_timer/lesson_accuracy.mp3",
-  "pneumatic_timer/dial.mp3",
-  "pneumatic_timer/cover.mp3",
-  "pneumatic_timer/needle.mp3",
-  "pneumatic_timer/filter.mp3",
-  "pneumatic_timer/bellows.mp3",
-  "pneumatic_timer/spring.mp3",
-  "pneumatic_timer/fixed.mp3",
-  "pneumatic_timer/bridges.mp3",
-  "pneumatic_timer/plunger.mp3",
-  "pneumatic_timer/base.mp3",
-  "pneumatic_timer/closing.mp3",
-  "mcb/opening.mp3",
-  "mcb/intro.mp3",
-  "mcb/lesson_magnetic.mp3",
-  "mcb/lesson_selection.mp3",
-  "mcb/housing_left.mp3",
-  "mcb/housing_right.mp3",
-  "mcb/handle.mp3",
-  "mcb/mechanism.mp3"
+  "contactor/fixed_bottom.mp3",
+  "contactor/silver_tip.mp3",
+  "contactor/carrier.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 5947
+ "chars": 1317
 }

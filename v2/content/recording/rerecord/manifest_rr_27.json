@@ -1,0 +1,15 @@
+{
+ "order": [
+  "fuse/lesson_types.mp3",
+  "fuse/lesson_rules.mp3",
+  "fuse/holder.mp3",
+  "fuse/carrier.mp3",
+  "fuse/fuse.mp3",
+  "fuse/element.mp3",
+  "fuse/clips.mp3",
+  "fuse/closing.mp3",
+  "pushbutton/opening.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1246
+}

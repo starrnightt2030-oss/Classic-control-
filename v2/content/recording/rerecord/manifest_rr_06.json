@@ -1,28 +1,11 @@
 {
  "order": [
-  "rccb/load_terminals.mp3",
-  "rccb/closing.mp3",
-  "mpcb/opening.mp3",
-  "mpcb/intro.mp3",
-  "mpcb/lesson_definition.mp3",
-  "mpcb/lesson_vs.mp3",
-  "mpcb/lesson_thermal.mp3",
-  "mpcb/lesson_magnetic.mp3",
-  "mpcb/lesson_breaking.mp3",
-  "mpcb/lesson_handle.mp3",
-  "mpcb/lesson_coordination.mp3",
-  "mpcb/lesson_wiring.mp3",
-  "mpcb/front_cover.mp3",
-  "mpcb/rotary_knob.mp3",
-  "mpcb/setting_dial.mp3",
-  "mpcb/mechanism.mp3",
-  "mpcb/trip_bar.mp3",
-  "mpcb/bimetals.mp3",
-  "mpcb/magnetic.mp3",
-  "mpcb/contacts.mp3",
-  "mpcb/arc_chambers.mp3",
-  "mpcb/base.mp3"
+  "contactor/base.mp3",
+  "contactor/closing.mp3",
+  "overload/opening.mp3",
+  "overload/intro.mp3",
+  "overload/lesson_definition.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 5945
+ "chars": 1269
 }

@@ -1,0 +1,14 @@
+{
+ "order": [
+  "current_transformer/intro.mp3",
+  "current_transformer/lesson_ratio.mp3",
+  "current_transformer/lesson_danger.mp3",
+  "current_transformer/lesson_polarity.mp3",
+  "current_transformer/lesson_classes.mp3",
+  "current_transformer/case.mp3",
+  "current_transformer/core.mp3",
+  "current_transformer/winding.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1467
+}

@@ -1,22 +1,9 @@
 {
  "order": [
-  "contactor/return_springs.mp3",
-  "contactor/coil.mp3",
-  "contactor/fixed_core.mp3",
-  "contactor/base.mp3",
-  "contactor/closing.mp3",
-  "overload/opening.mp3",
-  "overload/intro.mp3",
-  "overload/lesson_definition.mp3",
-  "overload/lesson_principle.mp3",
-  "overload/lesson_phase_loss.mp3",
-  "overload/lesson_compensation.mp3",
-  "overload/lesson_setting.mp3",
-  "overload/lesson_standard.mp3",
-  "overload/lesson_terminals.mp3",
-  "overload/front_cover.mp3",
-  "overload/test_button.mp3"
+  "contactor/intro.mp3",
+  "contactor/lesson_definition.mp3",
+  "contactor/lesson_selection.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 5846
+ "chars": 1228
 }

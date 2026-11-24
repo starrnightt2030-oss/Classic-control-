@@ -1,0 +1,11 @@
+{
+ "order": [
+  "mpcb/setting_dial.mp3",
+  "mpcb/mechanism.mp3",
+  "mpcb/trip_bar.mp3",
+  "mpcb/bimetals.mp3",
+  "mpcb/magnetic.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1490
+}

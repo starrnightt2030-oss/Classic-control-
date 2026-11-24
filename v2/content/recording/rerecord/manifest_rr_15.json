@@ -1,16 +1,12 @@
 {
  "order": [
-  "motor_1ph/lesson_types.mp3",
-  "motor_1ph/lesson_caps.mp3",
-  "motor_1ph/lesson_reverse.mp3",
-  "motor_1ph/lesson_safety.mp3",
-  "motor_1ph/stator.mp3",
-  "motor_1ph/terminal_box.mp3",
-  "motor_1ph/run_capacitor.mp3",
-  "motor_1ph/start_capacitor.mp3",
-  "motor_1ph/centrifugal_switch.mp3",
-  "motor_1ph/closing.mp3"
+  "pneumatic_timer/needle.mp3",
+  "pneumatic_timer/filter.mp3",
+  "pneumatic_timer/bellows.mp3",
+  "pneumatic_timer/spring.mp3",
+  "pneumatic_timer/fixed.mp3",
+  "pneumatic_timer/bridges.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 2310
+ "chars": 1480
 }

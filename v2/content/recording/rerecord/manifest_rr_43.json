@@ -1,0 +1,14 @@
+{
+ "order": [
+  "proximity_sensor/lesson_photo.mp3",
+  "proximity_sensor/sensing_face.mp3",
+  "proximity_sensor/coil_core.mp3",
+  "proximity_sensor/housing.mp3",
+  "proximity_sensor/nuts.mp3",
+  "proximity_sensor/led.mp3",
+  "proximity_sensor/connector.mp3",
+  "proximity_sensor/closing.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1377
+}

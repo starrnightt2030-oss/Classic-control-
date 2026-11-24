@@ -1,0 +1,12 @@
+{
+ "order": [
+  "rccb/line_terminals.mp3",
+  "rccb/load_terminals.mp3",
+  "rccb/closing.mp3",
+  "mpcb/opening.mp3",
+  "mpcb/intro.mp3",
+  "mpcb/lesson_definition.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1281
+}

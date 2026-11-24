@@ -1,0 +1,12 @@
+{
+ "order": [
+  "pushbutton/block.mp3",
+  "pushbutton/block_contacts.mp3",
+  "pushbutton/closing.mp3",
+  "estop/opening.mp3",
+  "estop/intro.mp3",
+  "estop/lesson_definition.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1436
+}

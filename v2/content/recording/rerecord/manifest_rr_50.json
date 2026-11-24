@@ -1,0 +1,14 @@
+{
+ "order": [
+  "current_transformer/terminals.mp3",
+  "current_transformer/closing.mp3",
+  "rotary_switches/intro.mp3",
+  "rotary_switches/lesson_cam.mp3",
+  "rotary_switches/lesson_voltmeter.mp3",
+  "rotary_switches/lesson_isolator.mp3",
+  "rotary_switches/lesson_safety.mp3",
+  "rotary_switches/front_plate.mp3"
+ ],
+ "pause_marker": "\n\n.\n\n",
+ "chars": 1460
+}

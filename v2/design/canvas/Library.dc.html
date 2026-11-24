@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>المكتبة — موبايل</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3FD5E8}a:hover{color:#8BE6F1}
+.ic{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+button,input{font-family:inherit}
+input::placeholder{color:#7F909C}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #0B0F12; color: #E8EEF2; font-family: Cairo, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 18px 18px 6px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 26px; font-weight: 800">المكتبة</h1>
+      <button aria-label="عرض كقائمة" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: grid; place-items: center; padding: 0">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"></path><path d="M4 6h.01M4 12h.01M4 18h.01"></path></svg>
+      </button>
+    </div>
+    <label style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 14px; background: #131A1F; border: 1px solid #26323C">
+      <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="color: #93A3AF"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">ابحث في المكونات</span>
+      <input type="search" placeholder="ابحث بالاسم أو الكود… مثلاً A1 أو MCB" style="flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: #E8EEF2; font-size: 14px">
+    </label>
+    <div style="display: flex; gap: 8px; overflow: hidden">
+      <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
+        <button style="{{ c.style }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <main style="flex: 1; min-height: 0; overflow: hidden; padding: 10px 18px 0">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{ items }}" as="it" hint-placeholder-count="8">
+        <a href="Viewer.dc.html" style="text-decoration: none; color: #E8EEF2; background-color: #131A1F; background-image: radial-gradient(#1D2830 1px, transparent 1px); background-size: 12px 12px; border: 1px solid #26323C; border-radius: 18px; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; height: 196px; box-sizing: border-box; position: relative">
+          <span style="position: absolute; top: 10px; left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: #C9D4DB; background: #1F2930; border: 1px solid #2E3B46; border-radius: 4px; padding: 0 5px; direction: ltr">{{ it.code }}</span>
+          <img src="{{ it.img }}" alt="{{ it.name }}" style="width: 120px; height: 120px; object-fit: contain; align-self: center; margin-top: 2px">
+          <span style="font-size: 14px; font-weight: 700; line-height: 1.35">{{ it.name }}</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #93A3AF">
+            <svg class="ic" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: #3FD5E8"><path d="M4 10v4h3l4 3V7l-4 3z"></path><path d="M15 9a4 4 0 0 1 0 6"></path></svg>
+            {{ it.parts }}
+          </span>
+        </a>
+      </sc-for>
+    </div>
+  </main>
+
+  <nav aria-label="التنقل الرئيسي" style="flex: none; height: 76px; background: #0F1418; border-top: 1px solid #1F2830; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0 6px 6px">
+    <a href="Main.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5a.5.5 0 0 1-.5.5H15v-5.5H9V20H4.5a.5.5 0 0 1-.5-.5z"></path></svg>
+      الرئيسية
+    </a>
+    <a href="Library.dc.html" aria-current="page" style="position: relative; text-decoration: none; color: #F5A400; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 700">
+      <span style="position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: #F5A400"></span>
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="5" height="14" rx="1"></rect><rect x="9.5" y="5" width="5" height="14" rx="1"></rect><rect x="16" y="5" width="5" height="14" rx="1"></rect><path d="M2 12h20"></path></svg>
+      المكتبة
+    </a>
+    <a href="LabLand.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><path d="M7.5 7h9M7.5 11h4"></path><path d="M14 11c0 4 3 3 3 7"></path><circle cx="14" cy="11" r="1"></circle></svg>
+      المعمل
+    </a>
+    <a href="Ladder.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18M20 3v18M4 9h4M10 9h3M17 9h3M8 6.5v5M10 6.5v5M4 16h16"></path><circle cx="15" cy="9" r="2"></circle></svg>
+      المخطط
+    </a>
+    <a href="#" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8.5 8.5l1.5 1.5 2.5-3M8.5 15l1.5 1.5 2.5-3M15 9h1.5M15 15.5h1.5"></path></svg>
+      الاختبارات
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = 'flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #F5A400; background: #F5A400; color: #0B0F12; font-size: 13px; font-weight: 700';
+    const off = 'flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #26323C; background: #131A1F; color: #C9D4DB; font-size: 13px; font-weight: 600';
+    const cats = ['الكل', 'الحماية', 'التحكم', 'الأزرار والإشارة', 'الحساسات', 'المحركات'].map((label, i) => ({ label, style: i === 0 ? on : off }));
+    const b = '/_blob/';
+    const items = [
+      { name: 'الكونتاكتور', code: 'EC1-D09', img: b + 'a482b6234efa90d772a0c5806998a21e', parts: '12 جزء بشرح صوتي' },
+      { name: 'الأوفرلود الحراري', code: 'EOL-D10', img: b + '9ec1590ff76a63e56c07c43219e50351', parts: 'شرح صوتي لكل جزء' },
+      { name: 'القاطع المصغّر MCB', code: 'EB1-63', img: b + '7c76733ec09b1f88fd8166dea675362b', parts: 'شرح صوتي لكل جزء' },
+      { name: 'قاطع حماية المحرك', code: 'EMS2-25', img: b + 'e2f9b5a73bb556ae08dc28ce6b2d3f20', parts: 'شرح صوتي لكل جزء' },
+      { name: 'مفتاح التسرّب RCCB', code: 'ERC1-63', img: b + '09ef36e7f7c4b8441e64aae2d5149eea', parts: 'شرح صوتي لكل جزء' },
+      { name: 'ريلاي التحكم', code: 'MY4', img: b + 'e0aa4f39baaba7f779c500e29478441b', parts: 'شرح صوتي لكل جزء' },
+      { name: 'التايمر', code: 'ST3P', img: b + 'a28378f944daf5f534a039f3147de348', parts: 'شرح صوتي لكل جزء' },
+      { name: 'زر الطوارئ', code: 'ISO 13850', img: b + '3767a206bd83cb6ac0071830ed0309ce', parts: 'شرح صوتي لكل جزء' }
+    ];
+    return { cats, items };
+  }
+}
+</script>
+</body>
+</html>

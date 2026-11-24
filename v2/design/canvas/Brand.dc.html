@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>الهوية البصرية</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3FD5E8}a:hover{color:#8BE6F1}
+button{font-family:inherit}
+</style>
+</helmet>
+<div dir="rtl" style="width: 1440px; height: 900px; box-sizing: border-box; background: #0B0F12; color: #E8EEF2; font-family: Cairo, sans-serif; padding: 56px 64px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 28px; row-gap: 28px; align-content: start">
+
+  <div style="grid-column: span 12; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #F5A400; letter-spacing: 0.08em; direction: ltr; text-align: right">GRAPHITE · SIGNAL</div>
+      <h1 style="margin: 4px 0 0; font-size: 46px; font-weight: 800; line-height: 1.2">جرافيت وإشارة</h1>
+      <p style="margin: 6px 0 0; font-size: 17px; color: #93A3AF; max-width: 760px; line-height: 1.7">خلفية غامقة زي جوه الطبلون، والألوان مش زينة: كل لون ليه معنى كهربائي ثابت، نفس منطق ألوان اللمبات والزراير في IEC 60073.</p>
+    </div>
+  </div>
+
+  <section aria-label="الألوان" style="grid-column: span 7; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+    <sc-for list="{{ sw }}" as="s" hint-placeholder-count="8">
+      <div style="border-radius: 16px; border: 1px solid #26323C; overflow: hidden; background: #131A1F">
+        <div style="{{ s.chip }}"></div>
+        <div style="padding: 10px 12px">
+          <div style="font-size: 14px; font-weight: 700">{{ s.name }}</div>
+          <div style="font-size: 12px; color: #93A3AF; line-height: 1.5">{{ s.role }}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #C9D4DB; direction: ltr; text-align: right; margin-top: 4px">{{ s.hex }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </section>
+
+  <section aria-label="الخطوط" style="grid-column: span 5; display: flex; flex-direction: column; gap: 14px; background: #131A1F; border: 1px solid #26323C; border-radius: 20px; padding: 24px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <span style="font-size: 14px; color: #93A3AF">الخط الأساسي</span>
+      <span style="font-size: 14px; font-weight: 700">Cairo</span>
+    </div>
+    <div style="font-size: 40px; font-weight: 800; line-height: 1.25">الكونتاكتور</div>
+    <div style="font-size: 22px; font-weight: 700; line-height: 1.4">نظرية التشغيل</div>
+    <div style="font-size: 16px; line-height: 1.8; color: #D5DEE4">أول ما توصل الجهد على A1 و A2، الكويل يعمل مجال مغناطيسي يشد القلب المتحرك، فالنقط تقفل.</div>
+    <div style="height: 1px; background: #26323C"></div>
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <span style="font-size: 14px; color: #93A3AF">الأكواد والترامل</span>
+      <span style="font-size: 14px; font-weight: 700">JetBrains Mono</span>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; direction: ltr; justify-content: flex-end">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: #E8EEF2; color: #0B0F12; border-radius: 5px; padding: 2px 8px">A1</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: #E8EEF2; color: #0B0F12; border-radius: 5px; padding: 2px 8px">A2</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: #3FD5E8; color: #0B0F12; border-radius: 5px; padding: 2px 8px">13 NO</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: #1F2930; color: #E8EEF2; border: 1px solid #33414C; border-radius: 5px; padding: 1px 8px">95-96</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: #1F2930; color: #E8EEF2; border: 1px solid #33414C; border-radius: 5px; padding: 1px 8px">-KM1</span>
+    </div>
+    <div style="font-size: 13px; color: #93A3AF; line-height: 1.6">علامات الترامل بشكل «جلبة السلك» المطبوعة: نفس اللي الطالب هيشوفه على السلك في اللوحة الحقيقية.</div>
+  </section>
+
+  <section aria-label="الأزرار" style="grid-column: span 7; display: flex; flex-direction: column; gap: 14px; background: #131A1F; border: 1px solid #26323C; border-radius: 20px; padding: 24px">
+    <div style="font-size: 14px; color: #93A3AF">الأزرار والحالات</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+      <button style="height: 48px; padding: 0 22px; border-radius: 12px; border: none; background: #F5A400; color: #0B0F12; font-size: 15px; font-weight: 800">ابدأ الشرح</button>
+      <button style="height: 48px; padding: 0 22px; border-radius: 12px; border: 1px solid #26323C; background: #0B0F12; color: #E8EEF2; font-size: 15px; font-weight: 700">فك وتركيب</button>
+      <button style="height: 48px; padding: 0 22px; border-radius: 12px; border: none; background: #3DDC84; color: #08240F; font-size: 15px; font-weight: 800">S1 تشغيل</button>
+      <button style="height: 48px; padding: 0 22px; border-radius: 12px; border: none; background: #FF5A4F; color: #2A0806; font-size: 15px; font-weight: 800">S0 إيقاف</button>
+      <span style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 10px; background: #0F2A2E; border: 1px solid #1E4A52; color: #8BE6F1; font-size: 14px; font-weight: 700"><span style="width: 9px; height: 9px; border-radius: 50%; background: #3FD5E8"></span>عليه جهد</span>
+      <span style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 10px; background: #1E1A0E; border: 1px solid #4A3A10; color: #F3E3BE; font-size: 14px; font-weight: 700"><span style="width: 9px; height: 9px; border-radius: 50%; background: #F5A400"></span>تحذير سلامة</span>
+    </div>
+  </section>
+
+  <section aria-label="المبادئ" style="grid-column: span 5; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; gap: 12px; align-items: flex-start; background: #131A1F; border: 1px solid #26323C; border-radius: 16px; padding: 14px 16px">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #F5A400">01</span>
+      <span style="font-size: 14.5px; line-height: 1.7"><b>المجسم هو البطل.</b> الواجهة غامقة وهادية عشان المكوّن الحقيقي يبان.</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; background: #131A1F; border: 1px solid #26323C; border-radius: 16px; padding: 14px 16px">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #F5A400">02</span>
+      <span style="font-size: 14.5px; line-height: 1.7"><b>السماوي يعني جهد.</b> أي سلك أو نقطة أو كويل عليه كهربا بيتلوّن سماوي في اللوحة والمخطط مع بعض.</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; background: #131A1F; border: 1px solid #26323C; border-radius: 16px; padding: 14px 16px">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #F5A400">03</span>
+      <span style="font-size: 14.5px; line-height: 1.7"><b>بالعربي أولاً، والإنجليزي جنبه.</b> كل اسم جزء بالعربي ومعاه الاسم الإنجليزي والكود.</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const S = [
+      ['جرافيت', 'الخلفية', '#0B0F12', 'background: #0B0F12; border-bottom: 1px solid #26323C'],
+      ['لوح', 'الكروت واللوحات', '#131A1F', 'background: #131A1F; border-bottom: 1px solid #26323C'],
+      ['خط', 'الحدود والفواصل', '#26323C', 'background: #26323C'],
+      ['نص', 'النص الأساسي', '#E8EEF2', 'background: #E8EEF2'],
+      ['كهرماني', 'الفعل والتحذير', '#F5A400', 'background: #F5A400'],
+      ['سماوي', 'عليه جهد / شغّال', '#3FD5E8', 'background: #3FD5E8'],
+      ['أخضر', 'تشغيل · IEC 60073', '#3DDC84', 'background: #3DDC84'],
+      ['أحمر', 'إيقاف وطوارئ', '#FF5A4F', 'background: #FF5A4F']
+    ];
+    const sw = S.map(([name, role, hex, c]) => ({ name, role, hex, chip: 'height: 84px; ' + c }));
+    return { sw };
+  }
+}
+</script>
+</body>
+</html>

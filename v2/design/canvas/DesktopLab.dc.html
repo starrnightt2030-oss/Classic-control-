@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>المعمل والمخطط — ويندوز</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0F12}
+a{color:#3FD5E8}a:hover{color:#8BE6F1}
+.ic{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+button,input{font-family:inherit}
+input::placeholder{color:#7F909C}
+.lv{stroke:#3FD5E8;stroke-width:2.5;fill:none;stroke-linecap:round}
+.ld{stroke:#55636F;stroke-width:2;fill:none;stroke-linecap:round}
+.tg{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;fill:#E8EEF2}
+.tn{font-family:'JetBrains Mono',monospace;font-size:10px;fill:#93A3AF}
+.rail a{width:64px;min-height:60px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#93A3AF;font-size:11.5px;font-weight:600}
+.rail a:hover{background:#151C22;color:#E8EEF2}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 900px; box-sizing: border-box; background: #0B0F12; color: #E8EEF2; font-family: Cairo, sans-serif; display: flex; flex-direction: column">
+
+  <header style="height: 60px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid #1F2830; background: #0F1418; flex-wrap: wrap">
+    <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" style="flex: none">
+      <rect x="0.5" y="0.5" width="39" height="39" rx="11" fill="#151C22" stroke="#26323C"></rect>
+      <path d="M9 9v22M31 9v22" stroke="#5B6B78" stroke-width="2" stroke-linecap="round"></path>
+      <path d="M9 20h5M18 20h3.5M28.5 20H31M14 15.5v9M18 15.5v9" stroke="#F5A400" stroke-width="2.2" stroke-linecap="round"></path>
+      <circle cx="25" cy="20" r="3.5" fill="none" stroke="#3FD5E8" stroke-width="2.2"></circle>
+    </svg>
+    <span style="font-size: 16px; font-weight: 800">معمل الكلاسيك كنترول</span>
+    <nav aria-label="الملفات المفتوحة" style="display: flex; gap: 4px; margin-right: 18px">
+      <a href="#" aria-current="page" style="height: 36px; padding: 0 14px; border-radius: 10px; background: #1A232A; color: #E8EEF2; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700">
+        <span style="width: 7px; height: 7px; border-radius: 50%; background: #3FD5E8"></span>تشغيل مباشر · لوحة + مخطط
+      </a>
+      <a href="#" style="height: 36px; padding: 0 14px; border-radius: 10px; color: #93A3AF; text-decoration: none; display: flex; align-items: center; font-size: 13px; font-weight: 600">عكس اتجاه</a>
+      <a href="#" style="height: 36px; padding: 0 14px; border-radius: 10px; color: #93A3AF; text-decoration: none; display: flex; align-items: center; font-size: 13px; font-weight: 600">ستار دلتا</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <label style="display: flex; align-items: center; gap: 8px; height: 38px; width: 260px; max-width: 100%; padding: 0 12px; border-radius: 10px; background: #131A1F; border: 1px solid #26323C">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="color: #93A3AF"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">بحث</span>
+      <input type="search" placeholder="ابحث عن مكوّن أو ترمينال" style="flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: #E8EEF2; font-size: 13px">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #93A3AF; border: 1px solid #33414C; border-radius: 5px; padding: 0 5px; direction: ltr">Ctrl K</span>
+    </label>
+    <button style="height: 38px; padding: 0 14px; border-radius: 10px; border: none; background: #F5A400; color: #0B0F12; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800">
+      <svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"></path><path d="M5 13v6.5h14V13"></path></svg>
+      تصدير
+    </button>
+  </header>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch; min-height: 0">
+
+    <nav class="rail" aria-label="الأقسام" style="flex: 0 0 auto; width: 84px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; border-left: 1px solid #1F2830; background: #0F1418; box-sizing: border-box">
+      <a href="#"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5a.5.5 0 0 1-.5.5H15v-5.5H9V20H4.5a.5.5 0 0 1-.5-.5z"></path></svg>الرئيسية</a>
+      <a href="DesktopLibrary.dc.html"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="5" height="14" rx="1"></rect><rect x="9.5" y="5" width="5" height="14" rx="1"></rect><rect x="16" y="5" width="5" height="14" rx="1"></rect><path d="M2 12h20"></path></svg>المكتبة</a>
+      <a href="#" aria-current="page" style="background: #2A2210; color: #F5A400"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><path d="M7.5 7h9M7.5 11h4"></path><path d="M14 11c0 4 3 3 3 7"></path><circle cx="14" cy="11" r="1"></circle></svg>المعمل</a>
+      <a href="#"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18M20 3v18M4 9h4M10 9h3M17 9h3M8 6.5v5M10 6.5v5M4 16h16"></path><circle cx="15" cy="9" r="2"></circle></svg>المخطط</a>
+      <a href="#"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8.5 8.5l1.5 1.5 2.5-3M8.5 15l1.5 1.5 2.5-3M15 9h1.5M15 15.5h1.5"></path></svg>الاختبارات</a>
+      <div style="flex: 1"></div>
+      <a href="#"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"></path><circle cx="15" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg>الإعدادات</a>
+    </nav>
+
+    <aside aria-label="المكونات" style="flex: 1 1 220px; max-width: 250px; padding: 14px; border-left: 1px solid #1F2830; background: #10161B; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 800">المكونات</div>
+      <div style="font-size: 12px; color: #93A3AF; line-height: 1.6">اسحب أي مكوّن على الريل جوه اللوحة</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{ tray }}" as="t" hint-placeholder-count="10">
+          <button style="height: 100px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #C9D4DB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; font-size: 12px; font-weight: 600">
+            <img src="{{ t.img }}" alt="" style="width: 64px; height: 64px; object-fit: contain">
+            {{ t.name }}
+          </button>
+        </sc-for>
+      </div>
+    </aside>
+
+    <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 14px; box-sizing: border-box">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <div role="group" aria-label="وضع المعمل" style="display: flex; background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 3px">
+          <button style="height: 34px; padding: 0 14px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 13px; font-weight: 600">تركيب</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 13px; font-weight: 600">توصيل</button>
+          <button aria-pressed="true" style="height: 34px; padding: 0 14px; border-radius: 9px; border: none; background: #3FD5E8; color: #0B0F12; font-size: 13px; font-weight: 800">محاكاة</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 13px; font-weight: 600">قياس</button>
+        </div>
+        <span style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 10px; background: #0F2A2E; border: 1px solid #1E4A52; color: #8BE6F1; font-size: 12.5px; font-weight: 700">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #3FD5E8"></span>
+          الكهربا واصلة · اللوحة والمخطط متزامنين
+        </span>
+        <div style="flex: 1"></div>
+        <button style="height: 38px; padding: 0 16px; border-radius: 10px; border: none; background: #3DDC84; color: #08240F; font-size: 13px; font-weight: 800">S1 تشغيل</button>
+        <button style="height: 38px; padding: 0 16px; border-radius: 10px; border: none; background: #FF5A4F; color: #2A0806; font-size: 13px; font-weight: 800">S0 إيقاف</button>
+        <button style="height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #4A3A10; background: #1E1A0E; color: #F5A400; font-size: 13px; font-weight: 700">اعمل عطل</button>
+      </div>
+
+      <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 12px">
+        <section aria-label="اللوحة" style="flex: 1 1 380px; min-height: 560px; border-radius: 18px; overflow: hidden; background: #36373B; border: 1px solid #222C35; position: relative">
+          <img src="/_blob/846763cffd899f9a0800cee3d31e8d26" alt="اللوحة بعد تركيب مكونات التشغيل المباشر" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 45%">
+          <span style="position: absolute; top: 12px; right: 12px; font-size: 12px; font-weight: 700; background: #0B0F12; border: 1px solid #26323C; border-radius: 8px; padding: 3px 10px">اللوحة 3D</span>
+        </section>
+        <section aria-label="المخطط السلمي" style="flex: 1 1 380px; min-height: 560px; border-radius: 18px; border: 1px solid #222C35; background-color: #0F1519; background-image: linear-gradient(#151E24 1px, transparent 1px), linear-gradient(90deg, #151E24 1px, transparent 1px); background-size: 20px 20px; position: relative; overflow: hidden">
+          <span style="position: absolute; top: 12px; right: 12px; font-size: 12px; font-weight: 700; background: #0B0F12; border: 1px solid #26323C; border-radius: 8px; padding: 3px 10px">المخطط السلمي · IEC 60617</span>
+          <svg role="img" aria-label="مخطط تشغيل مباشر مع نقطة مسك ولمبات إشارة" viewBox="0 0 368 400" style="position: absolute; top: 56px; left: 4%; width: 92%; height: auto" dir="ltr">
+            <text x="22" y="16" class="tg" text-anchor="middle">L</text>
+            <text x="346" y="16" class="tg" text-anchor="middle">N</text>
+            <path d="M22 24V380M346 24V380" class="lv"></path>
+            <path d="M22 70H62M62 60v20M74 60v20M58 80l20-20M74 70H122M122 60v20M134 60v20M118 80l20-20M134 70H168" class="lv"></path>
+            <text x="68" y="52" class="tg" text-anchor="middle">F2</text><text x="68" y="95" class="tn" text-anchor="middle">95-96</text>
+            <text x="128" y="44" class="tg" text-anchor="middle">S0</text><text x="128" y="95" class="tn" text-anchor="middle">11-12</text>
+            <circle cx="168" cy="70" r="3" fill="#3FD5E8"></circle>
+            <path d="M168 70H184M184 60v20M196 60v20M196 70H214" class="ld"></path>
+            <text x="190" y="44" class="tg" text-anchor="middle">S1</text>
+            <circle cx="214" cy="70" r="3" fill="#3FD5E8"></circle>
+            <path d="M214 70H272M304 70H346M168 70V130H184M184 120v20M196 120v20M196 130H214V70" class="lv"></path>
+            <circle cx="288" cy="70" r="16" fill="rgba(63,213,232,.18)" stroke="#3FD5E8" stroke-width="2.5"></circle>
+            <text x="288" y="44" class="tg" text-anchor="middle">KM1</text>
+            <text x="190" y="158" class="tg" text-anchor="middle">KM1 13-14</text>
+            <path d="M22 230H150M150 220v20M162 220v20M162 230H272M304 230H346" class="lv"></path>
+            <text x="156" y="212" class="tg" text-anchor="middle">KM1</text>
+            <circle cx="288" cy="230" r="16" fill="#3DDC84" fill-opacity="0.25" stroke="#3DDC84" stroke-width="2.5"></circle>
+            <path d="M277 219l22 22M299 219l-22 22" stroke="#3DDC84" stroke-width="2"></path>
+            <text x="288" y="204" class="tg" text-anchor="middle">H1</text>
+            <path d="M22 320H62M304 320H346" class="lv"></path>
+            <path d="M62 310v20M74 310v20M74 320H272" class="ld"></path>
+            <text x="68" y="302" class="tg" text-anchor="middle">F2 97-98</text>
+            <circle cx="288" cy="320" r="16" fill="none" stroke="#55636F" stroke-width="2"></circle>
+            <path d="M277 309l22 22M299 309l-22 22" stroke="#55636F" stroke-width="2"></path>
+            <text x="288" y="294" class="tg" text-anchor="middle">H2</text>
+          </svg>
+        </section>
+      </div>
+    </main>
+
+    <aside aria-label="خصائص العنصر المختار" style="flex: 1 1 280px; max-width: 320px; padding: 16px; border-right: 1px solid #1F2830; background: #10161B; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 12px; align-items: center">
+        <img src="/_blob/a482b6234efa90d772a0c5806998a21e" alt="" style="width: 72px; height: 72px; object-fit: contain; background: #131A1F; border-radius: 14px; border: 1px solid #26323C">
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #3FD5E8">-KM1</div>
+          <div style="font-size: 16px; font-weight: 800">الكونتاكتور</div>
+          <div style="font-size: 12px; color: #93A3AF; direction: ltr; text-align: right">EC1-D09 · coil 220 V AC</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <div style="background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 10px">
+          <div style="font-size: 11px; color: #93A3AF">الكويل</div>
+          <div style="font-size: 15px; font-weight: 800; color: #3FD5E8">شاد</div>
+        </div>
+        <div style="background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 10px">
+          <div style="font-size: 11px; color: #93A3AF">نقطة المسك 13–14</div>
+          <div style="font-size: 15px; font-weight: 800; color: #3FD5E8">مقفولة</div>
+        </div>
+      </div>
+      <div style="font-size: 13px; font-weight: 700">الترامل</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; direction: ltr">
+        <sc-for list="{{ terms }}" as="t" hint-placeholder-count="12">
+          <span style="{{ t.style }}">{{ t.label }}</span>
+        </sc-for>
+      </div>
+      <div style="height: 1px; background: #26323C"></div>
+      <div style="display: flex; align-items: center; gap: 10px; background: #131A1F; border: 1px solid #26323C; border-radius: 14px; padding: 10px">
+        <button aria-label="تشغيل شرح الكونتاكتور" style="flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; background: #3FD5E8; display: grid; place-items: center; padding: 0">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="transform: scaleX(-1)"><path d="M7 4.5l13 7.5-13 7.5z" fill="#0B0F12"></path></svg>
+        </button>
+        <div style="font-size: 12.5px; line-height: 1.6">اسمع إزاي نقطة المسك بتخلي الموتور شغال بعد ما تسيب زرار التشغيل</div>
+      </div>
+      <a href="DesktopLibrary.dc.html" style="font-size: 13px; font-weight: 700; text-decoration: none">افتح الكونتاكتور في العارض ←</a>
+    </aside>
+  </div>
+
+  <footer style="height: 32px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 16px; border-top: 1px solid #1F2830; background: #0F1418; font-size: 12px; color: #93A3AF; font-family: 'JetBrains Mono', Cairo, monospace; flex-wrap: wrap">
+    <span style="color: #3FD5E8">● KM1 ON</span><span style="color: #3DDC84">● H1 ON</span><span>○ H2 OFF</span><span>F2 OK</span>
+    <span style="flex: 1"></span><span>3 rungs · 9 wires</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const b = '/_blob/';
+    const tray = [
+      ['كونتاكتور', 'a482b6234efa90d772a0c5806998a21e'], ['أوفرلود', '9ec1590ff76a63e56c07c43219e50351'],
+      ['MCB', '7c76733ec09b1f88fd8166dea675362b'], ['MPCB', 'e2f9b5a73bb556ae08dc28ce6b2d3f20'],
+      ['RCCB', '09ef36e7f7c4b8441e64aae2d5149eea'], ['ريلاي', 'e0aa4f39baaba7f779c500e29478441b'],
+      ['تايمر', 'a28378f944daf5f534a039f3147de348'], ['زرار', 'fb3c053dce8456631bf43e2fcec78689'],
+      ['طوارئ', '3767a206bd83cb6ac0071830ed0309ce'], ['محول تحكم', 'd44af7f6c9bc4ca4165ccf5b39cca75b']
+    ].map(([name, id]) => ({ name, img: b + id }));
+    const live = { 'A1': 1, '1/L1': 1, '3/L2': 1, '5/L3': 1, '2/T1': 1, '4/T2': 1, '6/T3': 1, '13': 1, '14': 1 };
+    const terms = ['A1', 'A2', '13', '14', '1/L1', '3/L2', '5/L3', 'NO', '2/T1', '4/T2', '6/T3', ''].map((label) => ({
+      label: label || '·',
+      style: 'height: 30px; border-radius: 6px; display: grid; place-items: center; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; ' +
+        (live[label] ? 'background: #0F2A2E; color: #8BE6F1; border: 1px solid #1E4A52' : 'background: #131A1F; color: #93A3AF; border: 1px solid #26323C')
+    }));
+    return { tray, terms };
+  }
+}
+</script>
+</body>
+</html>

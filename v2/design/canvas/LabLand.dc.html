@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>معمل اللوحة — موبايل عرضي</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3FD5E8}a:hover{color:#8BE6F1}
+.ic{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+button{font-family:inherit}
+</style>
+</helmet>
+<div dir="rtl" style="width: 844px; height: 390px; box-sizing: border-box; background: #0B0F12; color: #E8EEF2; font-family: Cairo, sans-serif; display: flex; overflow: hidden">
+
+  <aside aria-label="المكونات" style="width: 150px; flex: none; background: #131A1F; border-left: 1px solid #222C35; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 6px; padding: 10px 10px 6px">
+      <a href="Main.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #26323C; color: #E8EEF2; display: grid; place-items: center; flex: none">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+      <span style="font-size: 14px; font-weight: 800">المكونات</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 4px 8px 8px; overflow: hidden">
+      <sc-for list="{{ tray }}" as="t" hint-placeholder-count="8">
+        <button aria-label="{{ t.name }}" style="height: 74px; border-radius: 12px; border: 1px solid #26323C; background: #0F1519; color: #C9D4DB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 2px; font-size: 10.5px; font-weight: 600">
+          <img src="{{ t.img }}" alt="" style="width: 50px; height: 50px; object-fit: contain">
+          {{ t.short }}
+        </button>
+      </sc-for>
+    </div>
+  </aside>
+
+  <section aria-label="لوحة التوصيل" style="flex: 1; position: relative; background: #36373B; overflow: hidden">
+    <img src="/_blob/846763cffd899f9a0800cee3d31e8d26" alt="لوحة كهربا مفتوحة فيها مكونات تشغيل مباشر" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 45%">
+    <div dir="ltr" style="position: absolute; left: 236px; top: 138px; width: 70px; height: 74px; border: 2px dashed #3FD5E8; border-radius: 8px"></div>
+    <span dir="ltr" style="position: absolute; left: 236px; top: 116px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; background: #3FD5E8; color: #0B0F12; border-radius: 4px; padding: 0 6px">KM1 · A1</span>
+
+    <div style="position: absolute; top: 10px; right: 10px; left: 10px; display: flex; justify-content: space-between; align-items: center">
+      <div role="group" aria-label="وضع المعمل" style="display: flex; background: #0B0F12; border: 1px solid #26323C; border-radius: 12px; padding: 3px">
+        <button style="height: 34px; padding: 0 12px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 12.5px; font-weight: 600">تركيب</button>
+        <button aria-pressed="true" style="height: 34px; padding: 0 12px; border-radius: 9px; border: none; background: #F5A400; color: #0B0F12; font-size: 12.5px; font-weight: 800">توصيل</button>
+        <button style="height: 34px; padding: 0 12px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 12.5px; font-weight: 600">قياس</button>
+      </div>
+      <button style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid #5A2420; background: #2A0F0D; color: #FFB3AC; display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #FF5A4F"></span>
+        الكهربا مفصولة
+      </button>
+    </div>
+  </section>
+
+  <aside aria-label="المهمة والسلك" style="width: 240px; flex: none; background: #131A1F; border-right: 1px solid #222C35; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+    <div>
+      <div style="font-size: 11px; color: #93A3AF">المهمة 2 من 4</div>
+      <div style="font-size: 15px; font-weight: 800; line-height: 1.4">وصّل دايرة التحكم</div>
+    </div>
+    <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px">
+      <li style="display: flex; gap: 8px; align-items: center; color: #93A3AF"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3DDC84; color: #08240F; display: grid; place-items: center; flex: none"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 3"><path d="M5 12l5 5 9-10"></path></svg></span>F1 ← القاطع للكونتاكتور</li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #E8EEF2; font-weight: 700"><span style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #F5A400; flex: none; box-sizing: border-box"></span>S0 (11) ← KM1 (A1)</li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #93A3AF"><span style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #33414C; flex: none; box-sizing: border-box"></span>نقطة المسك 13–14</li>
+    </ol>
+    <div style="height: 1px; background: #26323C"></div>
+    <div style="font-size: 12px; color: #93A3AF">لون السلك · IEC 60445</div>
+    <div role="radiogroup" aria-label="لون السلك" style="display: flex; gap: 6px">
+      <sc-for list="{{ wires }}" as="w" hint-placeholder-count="6">
+        <button role="radio" aria-checked="{{ w.on }}" aria-label="{{ w.name }}" style="{{ w.style }}"></button>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 6px">
+      <button style="flex: 1; height: 36px; border-radius: 10px; border: 1px solid #26323C; background: #0F1519; color: #C9D4DB; font-family: 'JetBrains Mono', monospace; font-size: 12px">1.0 mm²</button>
+      <button aria-pressed="true" style="flex: 1; height: 36px; border-radius: 10px; border: 1px solid #F5A400; background: #2A2210; color: #F5A400; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700">1.5 mm²</button>
+      <button style="flex: 1; height: 36px; border-radius: 10px; border: 1px solid #26323C; background: #0F1519; color: #C9D4DB; font-family: 'JetBrains Mono', monospace; font-size: 12px">2.5 mm²</button>
+    </div>
+    <div style="flex: 1"></div>
+    <a href="Ladder.dc.html" style="height: 44px; border-radius: 12px; border: 1px solid #1E4A52; background: #0F2A2E; color: #3FD5E8; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-size: 13px; font-weight: 700">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18M20 3v18M4 9h4M10 9h3M17 9h3M8 6.5v5M10 6.5v5M4 16h16"></path><circle cx="15" cy="9" r="2"></circle></svg>
+      افتح المخطط جنب اللوحة
+    </a>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":844,"height":390}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const b = '/_blob/';
+    const tray = [
+      ['كونتاكتور', 'الكونتاكتور', 'a482b6234efa90d772a0c5806998a21e'],
+      ['أوفرلود', 'الأوفرلود', '9ec1590ff76a63e56c07c43219e50351'],
+      ['MCB', 'القاطع المصغر', '7c76733ec09b1f88fd8166dea675362b'],
+      ['MPCB', 'قاطع حماية المحرك', 'e2f9b5a73bb556ae08dc28ce6b2d3f20'],
+      ['ريلاي', 'ريلاي التحكم', 'e0aa4f39baaba7f779c500e29478441b'],
+      ['تايمر', 'التايمر', 'a28378f944daf5f534a039f3147de348'],
+      ['زرار', 'ضاغط تشغيل', 'fb3c053dce8456631bf43e2fcec78689'],
+      ['لمبة', 'لمبة إشارة', '7b04678d9825a1849e6f1184a7e4fc75']
+    ].map(([short, name, id]) => ({ short, name, img: b + id }));
+    const W = [['L1 بني', '#8B5A2B'], ['L2 أسود', '#1A1A1A'], ['L3 رمادي', '#8E959B'], ['N أزرق', '#2F6FD6'], ['PE أخضر وأصفر', 'repeating-linear-gradient(45deg,#2BB24C 0 5px,#F2D21B 5px 10px)'], ['تحكم أحمر', '#D6302B']];
+    const wires = W.map(([name, c], i) => ({
+      name, on: i === 5 ? 'true' : 'false',
+      style: 'width: 30px; height: 30px; border-radius: 50%; padding: 0; background: ' + c + '; border: ' + (i === 5 ? '3px solid #F5A400; box-shadow: 0 0 0 2px #131A1F inset' : '2px solid #33414C')
+    }));
+    return { tray, wires };
+  }
+}
+</script>
+</body>
+</html>

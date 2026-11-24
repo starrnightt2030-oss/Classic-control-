@@ -5,6 +5,10 @@ name: v2 voice (Gemini TTS)
 # Run from Actions → "v2 voice (Gemini TTS)" → Run workflow. Safe to re-run: it continues.
 
 on:
+  # editing v2/audio/voice_request.json on v2-rebuild starts a run (no UI needed)
+  push:
+    branches: [v2-rebuild]
+    paths: ['v2/audio/voice_request.json']
   workflow_dispatch:
     inputs:
       voice:
@@ -43,7 +47,13 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python v2/audio/gemini_tts.py --verify --voice "${{ inputs.voice }}" --model "${{ inputs.model }}" --max "${{ inputs.max_clips }}"
+          VOICE="${{ inputs.voice }}"; MODEL="${{ inputs.model }}"; MAX="${{ inputs.max_clips }}"
+          if [ -z "$VOICE" ]; then
+            VOICE=$(python -c "import json;print(json.load(open('v2/audio/voice_request.json')).get('voice','Charon'))")
+            MODEL=$(python -c "import json;print(json.load(open('v2/audio/voice_request.json')).get('model','auto'))")
+            MAX=$(python -c "import json;print(json.load(open('v2/audio/voice_request.json')).get('max_clips',400))")
+          fi
+          python v2/audio/gemini_tts.py --verify --voice "$VOICE" --model "$MODEL" --max "$MAX"
       - name: Commit clips
         if: always()
         run: |

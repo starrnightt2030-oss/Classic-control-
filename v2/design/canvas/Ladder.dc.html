@@ -44,7 +44,10 @@ button{font-family:inherit}
       <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 9px; border: none; background: #3FD5E8; color: #0B0F12; font-size: 13px; font-weight: 800">محاكاة</button>
     </div>
     <div style="flex: 1"></div>
-    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #93A3AF; direction: ltr">220 V AC · 50 Hz</span>
+    <div role="tablist" aria-label="نوع المخطط" style="display: flex; background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 3px">
+      <a href="Power.dc.html" role="tab" aria-selected="false" style="height: 36px; padding: 0 12px; border-radius: 9px; color: #C9D4DB; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center">القوى</a>
+      <span role="tab" aria-selected="true" style="height: 36px; padding: 0 12px; border-radius: 9px; background: #26323C; color: #E8EEF2; font-size: 13px; font-weight: 800; display: flex; align-items: center">التحكم</span>
+    </div>
   </div>
 
   <section aria-label="مخطط التحكم" style="flex: 1; min-height: 0; margin: 0 10px; border-radius: 20px; border: 1px solid #222C35; background-color: #0F1519; background-image: linear-gradient(#151E24 1px, transparent 1px), linear-gradient(90deg, #151E24 1px, transparent 1px); background-size: 20px 20px; position: relative; overflow: hidden">

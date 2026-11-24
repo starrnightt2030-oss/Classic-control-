@@ -116,6 +116,65 @@ def schematic():
 SVG_BODY = schematic()
 
 
+def power():
+    xs = (122, 172, 222)
+    bus = (40, 56, 72)
+    PE = 88
+    G = "#2BB24C"
+    o = ['<rect x="0" y="0" width="368" height="520" fill="none"></rect>']
+    for i, (x, y) in enumerate(zip(xs, bus)):
+        o.append(ln(20, y, 348, y, LIVE, 2.4)); o.append(txt(14, y + 4, f"L{i+1}", "tg", "end"))
+        o.append(dot(x, y, LIVE)); o.append(ln(x, y, x, 112, LIVE))
+    o.append(ln(20, PE, 348, PE, G, 2.4)); o.append(ln(20, PE, 348, PE, "#F2D21B", 2.4, "6 6"))
+    o.append(txt(14, PE + 4, "PE", "tg", "end"))
+    o.append(txt(348, 24, "3~ 400 V 50 Hz", "tn", "end"))
+    nums = (("1", "2"), ("3", "4"), ("5", "6"))
+    # -Q1 motor protection breaker (closed), x-mark = circuit-breaker function
+    for x, (a, b) in zip(xs, nums):
+        o.append(closed(x, 112, 142))
+        o.append(ln(x - 3.5, 108.5, x + 3.5, 115.5, LIVE, 1.8)); o.append(ln(x + 3.5, 108.5, x - 3.5, 115.5, LIVE, 1.8))
+        o.append(txt(x - 8, 116, a, "tn", "end")); o.append(txt(x - 8, 146, b, "tn", "end"))
+        o.append(ln(x, 142, x, 192, LIVE))
+    o.append(ln(xs[0] - 2.5, 127, xs[2] + 22, 127, LIVE, 1.3, "3 3"))
+    o.append(f'<path d="M{xs[2]+22} 121h4v12h-4" stroke="{LIVE}" stroke-width="1.6" fill="none"></path>')
+    o.append(txt(xs[2] + 32, 131, "-Q1", "tg"))
+    # -KM1 main contacts (closed), half-circle = contactor function
+    for x, (a, b) in zip(xs, nums):
+        o.append(closed(x, 192, 222))
+        o.append(f'<path d="M{x-4} 192a4 4 0 0 0 8 0" stroke="{LIVE}" stroke-width="1.8" fill="none"></path>')
+        o.append(txt(x - 8, 196, a, "tn", "end")); o.append(txt(x - 8, 226, b, "tn", "end"))
+        o.append(ln(x, 222, x, 266, LIVE))
+    o.append(ln(xs[0] - 2.5, 207, xs[2] + 26, 207, LIVE, 1.3, "3 3"))
+    o.append(txt(xs[2] + 32, 211, "-KM1", "tg"))
+    # -F2 thermal overload heaters
+    for x, (a, b) in zip(xs, nums):
+        o.append(f'<path d="M{x} 266v7h8v14h-8v9" stroke="{LIVE}" stroke-width="2.2" fill="none" stroke-linejoin="round"></path>')
+        o.append(txt(x - 8, 270, a, "tn", "end")); o.append(txt(x - 8, 300, b, "tn", "end"))
+    o.append(ln(xs[0] + 8, 280, xs[2] + 26, 280, LIVE, 1.3, "3 3"))
+    o.append(txt(xs[2] + 32, 284, "-F2", "tg"))
+    # -M1 three-phase motor
+    cx, cy, r = 172, 410, 34
+    o.append(ln(xs[0], 296, xs[0], 352, LIVE)); o.append(ln(xs[0], 352, cx - 20, cy - 27.5, LIVE))
+    o.append(ln(xs[1], 296, xs[1], cy - r, LIVE))
+    o.append(ln(xs[2], 296, xs[2], 352, LIVE)); o.append(ln(xs[2], 352, cx + 20, cy - 27.5, LIVE))
+    o.append(txt(cx - 30, 362, "U1", "tn", "end")); o.append(txt(cx + 5, 366, "V1")); o.append(txt(cx + 30, 362, "W1"))
+    o.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="rgba(63,213,232,.10)" stroke="{LIVE}" stroke-width="2.4"></circle>')
+    o.append(f'<text x="{cx}" y="{cy+2}" class="tg" text-anchor="middle" style="font-size: 20px">M</text>')
+    o.append(f'<text x="{cx}" y="{cy+20}" class="tg" text-anchor="middle">3~</text>')
+    o.append(txt(cx - r - 10, cy + 4, "-M1", "tg", "end"))
+    # PE to motor frame
+    o.append(dot(300, PE, G)); o.append(ln(300, PE, 300, cy, G)); o.append(ln(300, cy, cx + r, cy, G))
+    o.append(ln(300, PE, 300, cy, "#F2D21B", 2.2, "6 6")); o.append(ln(300, cy, cx + r, cy, "#F2D21B", 2.2, "6 6"))
+    o.append(txt(304, cy - 6, "PE", "tn"))
+    # cross reference
+    o.append(txt(20, 480, "-KM1 كويل ‹ مخطط التحكم، مسار 1", "tn"))
+    o.append(txt(20, 496, "-F2 95-96 ‹ مخطط التحكم، مسار 1", "tn"))
+    return "".join(o)
+
+
+POWER_BODY = power()
+
+
 def patch(path, start_marker, end_marker, new):
     p = pathlib.Path(path)
     s = p.read_text(encoding="utf-8")

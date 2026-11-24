@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>مخطط القوى — موبايل</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3FD5E8}a:hover{color:#8BE6F1}
+.ic{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+button{font-family:inherit}
+.lv{stroke:#3FD5E8;stroke-width:2.5;fill:none;stroke-linecap:round}
+.ld{stroke:#55636F;stroke-width:2;fill:none;stroke-linecap:round}
+.tg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;fill:#E8EEF2}
+.tn{font-family:'JetBrains Mono',monospace;font-size:9px;fill:#93A3AF}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #0B0F12; color: #E8EEF2; font-family: Cairo, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 10px; padding: 16px 14px 8px">
+    <div style="flex: 1; min-width: 0">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3">تشغيل مباشر بزرارين</h1>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #93A3AF">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #3DDC84"></span>
+        متزامن مع اللوحة في المعمل
+      </div>
+    </div>
+    <button aria-label="تراجع" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: grid; place-items: center; padding: 0">
+      <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7h-6a5 5 0 0 0 0 10h7"></path><path d="M12 4l3 3-3 3" transform="translate(0 0)"></path></svg>
+    </button>
+    <button aria-label="المزيد" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: grid; place-items: center; padding: 0">
+      <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6h.01M12 12h.01M12 18h.01"></path></svg>
+    </button>
+  </header>
+
+  <div style="display: flex; gap: 8px; padding: 4px 14px 10px; align-items: center">
+    <div role="group" aria-label="الوضع" style="display: flex; background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 3px">
+      <button style="height: 36px; padding: 0 14px; border-radius: 9px; border: none; background: transparent; color: #C9D4DB; font-size: 13px; font-weight: 600">تحرير</button>
+      <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 9px; border: none; background: #3FD5E8; color: #0B0F12; font-size: 13px; font-weight: 800">محاكاة</button>
+    </div>
+    <div style="flex: 1"></div>
+    <div role="tablist" aria-label="نوع المخطط" style="display: flex; background: #131A1F; border: 1px solid #26323C; border-radius: 12px; padding: 3px">
+      <span role="tab" aria-selected="true" style="height: 36px; padding: 0 12px; border-radius: 9px; background: #26323C; color: #E8EEF2; font-size: 13px; font-weight: 800; display: flex; align-items: center">القوى</span>
+      <a href="Ladder.dc.html" role="tab" aria-selected="false" style="height: 36px; padding: 0 12px; border-radius: 9px; color: #C9D4DB; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center">التحكم</a>
+    </div>
+  </div>
+
+  <section aria-label="مخطط التحكم" style="flex: 1; min-height: 0; margin: 0 10px; border-radius: 20px; border: 1px solid #222C35; background-color: #0F1519; background-image: linear-gradient(#151E24 1px, transparent 1px), linear-gradient(90deg, #151E24 1px, transparent 1px); background-size: 20px 20px; position: relative; overflow: hidden">
+    <svg role="img" aria-label="مخطط القوى لتشغيل موتور 3 فاز مباشر" viewBox="0 0 368 520" style="position: absolute; top: 10px; left: 0; width: 368px; height: 446px" dir="ltr"><rect x="0" y="0" width="368" height="520" fill="none"></rect><path d="M20 40L348 40" stroke="#3FD5E8" stroke-width="2.4" fill="none" stroke-linecap="round"></path><text x="14" y="44" class="tg" text-anchor="end">L1</text><circle cx="122" cy="40" r="3.2" fill="#3FD5E8"></circle><path d="M122 40L122 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M20 56L348 56" stroke="#3FD5E8" stroke-width="2.4" fill="none" stroke-linecap="round"></path><text x="14" y="60" class="tg" text-anchor="end">L2</text><circle cx="172" cy="56" r="3.2" fill="#3FD5E8"></circle><path d="M172 56L172 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M20 72L348 72" stroke="#3FD5E8" stroke-width="2.4" fill="none" stroke-linecap="round"></path><text x="14" y="76" class="tg" text-anchor="end">L3</text><circle cx="222" cy="72" r="3.2" fill="#3FD5E8"></circle><path d="M222 72L222 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M20 88L348 88" stroke="#2BB24C" stroke-width="2.4" fill="none" stroke-linecap="round"></path><path d="M20 88L348 88" stroke="#F2D21B" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-dasharray="6 6"></path><text x="14" y="92" class="tg" text-anchor="end">PE</text><text x="348" y="24" class="tn" text-anchor="end">3~ 400 V 50 Hz</text><path d="M122 142L117 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M117 112L122 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M118.5 108.5L125.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><path d="M125.5 108.5L118.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><text x="114" y="116" class="tn" text-anchor="end">1</text><text x="114" y="146" class="tn" text-anchor="end">2</text><path d="M122 142L122 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M172 142L167 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M167 112L172 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M168.5 108.5L175.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><path d="M175.5 108.5L168.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><text x="164" y="116" class="tn" text-anchor="end">3</text><text x="164" y="146" class="tn" text-anchor="end">4</text><path d="M172 142L172 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M222 142L217 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M217 112L222 112" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M218.5 108.5L225.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><path d="M225.5 108.5L218.5 115.5" stroke="#3FD5E8" stroke-width="1.8" fill="none" stroke-linecap="round"></path><text x="214" y="116" class="tn" text-anchor="end">5</text><text x="214" y="146" class="tn" text-anchor="end">6</text><path d="M222 142L222 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M119.5 127L244 127" stroke="#3FD5E8" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-dasharray="3 3"></path><path d="M244 121h4v12h-4" stroke="#3FD5E8" stroke-width="1.6" fill="none"></path><text x="254" y="131" class="tg" text-anchor="start">-Q1</text><path d="M122 222L117 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M117 192L122 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M118 192a4 4 0 0 0 8 0" stroke="#3FD5E8" stroke-width="1.8" fill="none"></path><text x="114" y="196" class="tn" text-anchor="end">1</text><text x="114" y="226" class="tn" text-anchor="end">2</text><path d="M122 222L122 266" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M172 222L167 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M167 192L172 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M168 192a4 4 0 0 0 8 0" stroke="#3FD5E8" stroke-width="1.8" fill="none"></path><text x="164" y="196" class="tn" text-anchor="end">3</text><text x="164" y="226" class="tn" text-anchor="end">4</text><path d="M172 222L172 266" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M222 222L217 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M217 192L222 192" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M218 192a4 4 0 0 0 8 0" stroke="#3FD5E8" stroke-width="1.8" fill="none"></path><text x="214" y="196" class="tn" text-anchor="end">5</text><text x="214" y="226" class="tn" text-anchor="end">6</text><path d="M222 222L222 266" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M119.5 207L248 207" stroke="#3FD5E8" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-dasharray="3 3"></path><text x="254" y="211" class="tg" text-anchor="start">-KM1</text><path d="M122 266v7h8v14h-8v9" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linejoin="round"></path><text x="114" y="270" class="tn" text-anchor="end">1</text><text x="114" y="300" class="tn" text-anchor="end">2</text><path d="M172 266v7h8v14h-8v9" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linejoin="round"></path><text x="164" y="270" class="tn" text-anchor="end">3</text><text x="164" y="300" class="tn" text-anchor="end">4</text><path d="M222 266v7h8v14h-8v9" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linejoin="round"></path><text x="214" y="270" class="tn" text-anchor="end">5</text><text x="214" y="300" class="tn" text-anchor="end">6</text><path d="M130 280L248 280" stroke="#3FD5E8" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-dasharray="3 3"></path><text x="254" y="284" class="tg" text-anchor="start">-F2</text><path d="M122 296L122 352" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M122 352L152 382.5" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M172 296L172 376" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M222 296L222 352" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M222 352L192 382.5" stroke="#3FD5E8" stroke-width="2.2" fill="none" stroke-linecap="round"></path><text x="142" y="362" class="tn" text-anchor="end">U1</text><text x="177" y="366" class="tn" text-anchor="start">V1</text><text x="202" y="362" class="tn" text-anchor="start">W1</text><circle cx="172" cy="410" r="34" fill="rgba(63,213,232,.10)" stroke="#3FD5E8" stroke-width="2.4"></circle><text x="172" y="412" class="tg" text-anchor="middle" style="font-size: 20px">M</text><text x="172" y="430" class="tg" text-anchor="middle">3~</text><text x="128" y="414" class="tg" text-anchor="end">-M1</text><circle cx="300" cy="88" r="3.2" fill="#2BB24C"></circle><path d="M300 88L300 410" stroke="#2BB24C" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M300 410L206 410" stroke="#2BB24C" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M300 88L300 410" stroke="#F2D21B" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="6 6"></path><path d="M300 410L206 410" stroke="#F2D21B" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="6 6"></path><text x="304" y="404" class="tn" text-anchor="start">PE</text><text x="20" y="480" class="tn" text-anchor="start">-KM1 كويل ‹ مخطط التحكم، مسار 1</text><text x="20" y="496" class="tn" text-anchor="start">-F2 95-96 ‹ مخطط التحكم، مسار 1</text></svg>
+
+    <div style="position: absolute; right: 12px; bottom: 12px; left: 12px; display: flex; gap: 8px">
+      <button style="flex: 1; height: 48px; border-radius: 14px; border: none; background: #3DDC84; color: #08240F; font-size: 14px; font-weight: 800">S1 تشغيل</button>
+      <button style="flex: 1; height: 48px; border-radius: 14px; border: none; background: #FF5A4F; color: #2A0806; font-size: 14px; font-weight: 800">S0 إيقاف</button>
+      <button aria-label="محاكاة فصل الأوفرلود" style="width: 48px; height: 48px; border-radius: 14px; border: 1px solid #4A3A10; background: #1E1A0E; color: #F5A400; display: grid; place-items: center; padding: 0">
+        <svg class="ic" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"></path></svg>
+      </button>
+    </div>
+  </section>
+
+  <section aria-label="الرموز" style="flex: none; padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 8px">
+    <span style="font-size: 12px; color: #93A3AF">رموز القوى — IEC 60617</span>
+    <div style="display: flex; gap: 6px">
+      <button aria-label="قاطع حماية المحرك" style="flex: 1; height: 62px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; padding: 0"><svg class="ic" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2v8M14 26v-8M14 18l-5-8"></path><path d="M11.5 7.5l5 5M16.5 7.5l-5 5"></path></svg>قاطع</button>
+      <button aria-label="نقط الكونتاكتور الرئيسية" style="flex: 1; height: 62px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; padding: 0"><svg class="ic" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2v8M14 26v-8M14 18l-5-8"></path><path d="M10 10a4 4 0 0 0 8 0"></path></svg>كونتاكتور</button>
+      <button aria-label="عنصر الأوفرلود الحراري" style="flex: 1; height: 62px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; padding: 0"><svg class="ic" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2v6h6v10h-6v8"></path></svg>أوفرلود</button>
+      <button aria-label="فيوز" style="flex: 1; height: 62px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; padding: 0"><svg class="ic" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2v24"></path><rect x="10" y="7" width="8" height="14"></rect></svg>فيوز</button>
+      <button aria-label="موتور 3 فاز" style="flex: 1; height: 62px; border-radius: 12px; border: 1px solid #26323C; background: #131A1F; color: #E8EEF2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; padding: 0"><svg class="ic" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2v5M7 4l3 5M21 4l-3 5"></path><circle cx="14" cy="17" r="8"></circle><path d="M11 20v-6l3 3 3-3v6"></path></svg>موتور</button>
+    </div>
+  </section>
+
+  <nav aria-label="التنقل الرئيسي" style="flex: none; height: 76px; background: #0F1418; border-top: 1px solid #1F2830; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0 6px 6px">
+    <a href="Main.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5a.5.5 0 0 1-.5.5H15v-5.5H9V20H4.5a.5.5 0 0 1-.5-.5z"></path></svg>
+      الرئيسية
+    </a>
+    <a href="Library.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="5" height="14" rx="1"></rect><rect x="9.5" y="5" width="5" height="14" rx="1"></rect><rect x="16" y="5" width="5" height="14" rx="1"></rect><path d="M2 12h20"></path></svg>
+      المكتبة
+    </a>
+    <a href="LabLand.dc.html" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><path d="M7.5 7h9M7.5 11h4"></path><path d="M14 11c0 4 3 3 3 7"></path><circle cx="14" cy="11" r="1"></circle></svg>
+      المعمل
+    </a>
+    <a href="Ladder.dc.html" aria-current="page" style="position: relative; text-decoration: none; color: #F5A400; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 700">
+      <span style="position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: #F5A400"></span>
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18M3 20h18M9 4v3.5M9 11.5l-3-4M9 11.5V13M9 17v3"></path><rect x="6.5" y="13" width="5" height="4"></rect><path d="M16 4v5.5M16 14.5V20"></path><circle cx="16" cy="12" r="2.5"></circle></svg>
+      المخطط
+    </a>
+    <a href="#" style="text-decoration: none; color: #93A3AF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; font-weight: 600">
+      <svg class="ic" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8.5 8.5l1.5 1.5 2.5-3M8.5 15l1.5 1.5 2.5-3M15 9h1.5M15 15.5h1.5"></path></svg>
+      الاختبارات
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

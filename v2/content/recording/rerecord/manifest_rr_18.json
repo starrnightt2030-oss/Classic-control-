@@ -1,11 +1,30 @@
 {
  "order": [
-  "mcb/mechanism.mp3",
-  "mcb/contacts.mp3",
-  "mcb/arc_chute.mp3",
-  "rccb/opening.mp3",
-  "rccb/intro.mp3"
+  "panel_meter/terminals.mp3",
+  "current_transformer/opening.mp3",
+  "current_transformer/intro.mp3",
+  "current_transformer/lesson_ratio.mp3",
+  "current_transformer/lesson_danger.mp3",
+  "current_transformer/lesson_polarity.mp3",
+  "current_transformer/lesson_classes.mp3",
+  "current_transformer/case.mp3",
+  "current_transformer/core.mp3",
+  "current_transformer/winding.mp3",
+  "current_transformer/terminals.mp3",
+  "current_transformer/closing.mp3",
+  "rotary_switches/intro.mp3",
+  "rotary_switches/lesson_cam.mp3",
+  "rotary_switches/lesson_voltmeter.mp3",
+  "rotary_switches/lesson_isolator.mp3",
+  "rotary_switches/lesson_safety.mp3",
+  "rotary_switches/front_plate.mp3",
+  "rotary_switches/knob.mp3",
+  "rotary_switches/shaft.mp3",
+  "rotary_switches/decks.mp3",
+  "rotary_switches/terminals.mp3",
+  "rotary_switches/closing.mp3",
+  "electronic_protection/opening.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1383
+ "chars": 3842
 }

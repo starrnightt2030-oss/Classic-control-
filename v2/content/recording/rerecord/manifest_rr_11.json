@@ -1,10 +1,22 @@
 {
  "order": [
-  "aux_block/lesson_terminals.mp3",
-  "aux_block/cover.mp3",
-  "aux_block/fixed.mp3",
-  "aux_block/bridges.mp3"
+  "pushbutton/bezel.mp3",
+  "pushbutton/head_spring.mp3",
+  "pushbutton/ring_nut.mp3",
+  "pushbutton/base.mp3",
+  "pushbutton/block.mp3",
+  "pushbutton/block_contacts.mp3",
+  "pushbutton/closing.mp3",
+  "estop/opening.mp3",
+  "estop/intro.mp3",
+  "estop/lesson_definition.mp3",
+  "estop/lesson_reset.mp3",
+  "estop/lesson_wiring.mp3",
+  "estop/lesson_box.mp3",
+  "estop/cap.mp3",
+  "estop/bezel.mp3",
+  "estop/head_spring.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1289
+ "chars": 3956
 }

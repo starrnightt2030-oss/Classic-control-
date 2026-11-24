@@ -1,10 +1,24 @@
 {
  "order": [
-  "pneumatic_timer/lesson_terminals.mp3",
-  "pneumatic_timer/lesson_accuracy.mp3",
-  "pneumatic_timer/dial.mp3",
-  "pneumatic_timer/cover.mp3"
+  "timer/lesson_functions.mp3",
+  "timer/lesson_range.mp3",
+  "timer/lesson_terminals.mp3",
+  "timer/lesson_star_delta.mp3",
+  "timer/lesson_vs_pneumatic.mp3",
+  "timer/case.mp3",
+  "timer/dial.mp3",
+  "timer/pcb.mp3",
+  "timer/range_sw.mp3",
+  "timer/relay.mp3",
+  "timer/base.mp3",
+  "timer/socket.mp3",
+  "timer/closing.mp3",
+  "reversing_contactor/opening.mp3",
+  "reversing_contactor/intro.mp3",
+  "reversing_contactor/lesson_principle.mp3",
+  "reversing_contactor/lesson_mechanical.mp3",
+  "reversing_contactor/lesson_electrical.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1354
+ "chars": 3849
 }

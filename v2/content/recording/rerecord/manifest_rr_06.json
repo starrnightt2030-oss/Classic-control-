@@ -1,11 +1,21 @@
 {
  "order": [
-  "contactor/base.mp3",
-  "contactor/closing.mp3",
-  "overload/opening.mp3",
-  "overload/intro.mp3",
-  "overload/lesson_definition.mp3"
+  "pneumatic_timer/bellows.mp3",
+  "pneumatic_timer/spring.mp3",
+  "pneumatic_timer/fixed.mp3",
+  "pneumatic_timer/bridges.mp3",
+  "pneumatic_timer/plunger.mp3",
+  "pneumatic_timer/base.mp3",
+  "pneumatic_timer/closing.mp3",
+  "mcb/opening.mp3",
+  "mcb/intro.mp3",
+  "mcb/lesson_magnetic.mp3",
+  "mcb/lesson_selection.mp3",
+  "mcb/housing_left.mp3",
+  "mcb/housing_right.mp3",
+  "mcb/handle.mp3",
+  "mcb/mechanism.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1269
+ "chars": 3787
 }

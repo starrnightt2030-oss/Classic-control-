@@ -1,12 +1,22 @@
 {
  "order": [
-  "pneumatic_timer/needle.mp3",
-  "pneumatic_timer/filter.mp3",
-  "pneumatic_timer/bellows.mp3",
-  "pneumatic_timer/spring.mp3",
-  "pneumatic_timer/fixed.mp3",
-  "pneumatic_timer/bridges.mp3"
+  "reversing_contactor/lesson_modes.mp3",
+  "reversing_contactor/lesson_wiring.mp3",
+  "reversing_contactor/contactor_fwd.mp3",
+  "reversing_contactor/contactor_rev.mp3",
+  "reversing_contactor/interlock_housing.mp3",
+  "reversing_contactor/interlock_rocker.mp3",
+  "reversing_contactor/interlock_contacts.mp3",
+  "reversing_contactor/power_links.mp3",
+  "reversing_contactor/closing.mp3",
+  "proximity_sensor/opening.mp3",
+  "proximity_sensor/intro.mp3",
+  "proximity_sensor/lesson_inductive.mp3",
+  "proximity_sensor/lesson_distance.mp3",
+  "proximity_sensor/lesson_wiring.mp3",
+  "proximity_sensor/lesson_capacitive.mp3",
+  "proximity_sensor/lesson_photo.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1480
+ "chars": 3899
 }

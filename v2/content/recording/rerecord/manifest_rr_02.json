@@ -1,9 +1,17 @@
 {
  "order": [
-  "contactor/intro.mp3",
-  "contactor/lesson_definition.mp3",
-  "contactor/lesson_selection.mp3"
+  "contactor/fixed_bottom.mp3",
+  "contactor/silver_tip.mp3",
+  "contactor/carrier.mp3",
+  "contactor/return_springs.mp3",
+  "contactor/coil.mp3",
+  "contactor/fixed_core.mp3",
+  "contactor/base.mp3",
+  "contactor/closing.mp3",
+  "overload/opening.mp3",
+  "overload/intro.mp3",
+  "overload/lesson_definition.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1228
+ "chars": 3982
 }

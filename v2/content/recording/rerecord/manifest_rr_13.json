@@ -1,11 +1,28 @@
 {
  "order": [
-  "pneumatic_timer/opening.mp3",
-  "pneumatic_timer/intro.mp3",
-  "pneumatic_timer/lesson_definition.mp3",
-  "pneumatic_timer/lesson_principle.mp3",
-  "pneumatic_timer/lesson_setting.mp3"
+  "selector/block_contacts.mp3",
+  "selector/closing.mp3",
+  "pilot_lamp/opening.mp3",
+  "pilot_lamp/intro.mp3",
+  "pilot_lamp/lesson_colors.mp3",
+  "pilot_lamp/lesson_voltage.mp3",
+  "pilot_lamp/lesson_ghost.mp3",
+  "pilot_lamp/nut.mp3",
+  "pilot_lamp/body.mp3",
+  "pb_station/opening.mp3",
+  "pb_station/intro.mp3",
+  "pb_station/gasket.mp3",
+  "pb_station/screws.mp3",
+  "pb_station/body.mp3",
+  "pb_station/gland.mp3",
+  "control_relay/intro.mp3",
+  "control_relay/cover.mp3",
+  "control_relay/coil.mp3",
+  "control_relay/led.mp3",
+  "control_relay/socket.mp3",
+  "timer/opening.mp3",
+  "timer/intro.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1452
+ "chars": 3784
 }

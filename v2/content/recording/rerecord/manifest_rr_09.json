@@ -1,9 +1,20 @@
 {
  "order": [
-  "overload/test_button.mp3",
-  "overload/reset_button.mp3",
-  "overload/bimetal_heaters.mp3"
+  "mpcb/lesson_magnetic.mp3",
+  "mpcb/lesson_breaking.mp3",
+  "mpcb/lesson_handle.mp3",
+  "mpcb/lesson_coordination.mp3",
+  "mpcb/lesson_wiring.mp3",
+  "mpcb/front_cover.mp3",
+  "mpcb/rotary_knob.mp3",
+  "mpcb/setting_dial.mp3",
+  "mpcb/mechanism.mp3",
+  "mpcb/trip_bar.mp3",
+  "mpcb/bimetals.mp3",
+  "mpcb/magnetic.mp3",
+  "mpcb/contacts.mp3",
+  "mpcb/arc_chambers.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1211
+ "chars": 3956
 }

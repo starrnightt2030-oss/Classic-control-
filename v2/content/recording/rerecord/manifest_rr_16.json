@@ -1,12 +1,29 @@
 {
  "order": [
-  "pneumatic_timer/plunger.mp3",
-  "pneumatic_timer/base.mp3",
-  "pneumatic_timer/closing.mp3",
-  "mcb/opening.mp3",
-  "mcb/intro.mp3",
-  "mcb/lesson_magnetic.mp3"
+  "proximity_sensor/sensing_face.mp3",
+  "proximity_sensor/coil_core.mp3",
+  "proximity_sensor/housing.mp3",
+  "proximity_sensor/nuts.mp3",
+  "proximity_sensor/led.mp3",
+  "proximity_sensor/connector.mp3",
+  "proximity_sensor/closing.mp3",
+  "limit_switch/opening.mp3",
+  "limit_switch/intro.mp3",
+  "limit_switch/lesson_actuators.mp3",
+  "limit_switch/lesson_snap.mp3",
+  "limit_switch/lever.mp3",
+  "limit_switch/head.mp3",
+  "limit_switch/cover.mp3",
+  "limit_switch/switch.mp3",
+  "limit_switch/body.mp3",
+  "limit_switch/gland.mp3",
+  "float_pressure/opening.mp3",
+  "float_pressure/intro.mp3",
+  "float_pressure/lesson_pressure.mp3",
+  "float_pressure/lesson_wiring.mp3",
+  "float_pressure/closing.mp3",
+  "solenoid_valve/opening.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1153
+ "chars": 3811
 }

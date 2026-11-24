@@ -1,9 +1,18 @@
 {
  "order": [
-  "contactor/fixed_bottom.mp3",
-  "contactor/silver_tip.mp3",
-  "contactor/carrier.mp3"
+  "overload/bimetal_heaters.mp3",
+  "overload/compensation.mp3",
+  "overload/base_housing.mp3",
+  "aux_block/opening.mp3",
+  "aux_block/lesson_principle.mp3",
+  "aux_block/lesson_terminals.mp3",
+  "aux_block/cover.mp3",
+  "aux_block/fixed.mp3",
+  "aux_block/bridges.mp3",
+  "aux_block/slide.mp3",
+  "aux_block/spring.mp3",
+  "aux_block/plunger.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1317
+ "chars": 3803
 }

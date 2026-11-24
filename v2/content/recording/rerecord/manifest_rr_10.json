@@ -1,10 +1,27 @@
 {
  "order": [
-  "overload/compensation.mp3",
-  "overload/base_housing.mp3",
-  "aux_block/opening.mp3",
-  "aux_block/lesson_principle.mp3"
+  "mpcb/base.mp3",
+  "mpcb/closing.mp3",
+  "fuse/opening.mp3",
+  "fuse/intro.mp3",
+  "fuse/lesson_principle.mp3",
+  "fuse/lesson_types.mp3",
+  "fuse/lesson_rules.mp3",
+  "fuse/holder.mp3",
+  "fuse/carrier.mp3",
+  "fuse/fuse.mp3",
+  "fuse/element.mp3",
+  "fuse/clips.mp3",
+  "fuse/closing.mp3",
+  "pushbutton/opening.mp3",
+  "pushbutton/intro.mp3",
+  "pushbutton/lesson_types.mp3",
+  "pushbutton/lesson_colors.mp3",
+  "pushbutton/lesson_numbering.mp3",
+  "pushbutton/lesson_rating.mp3",
+  "pushbutton/lesson_mounting.mp3",
+  "pushbutton/cap.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1194
+ "chars": 3878
 }

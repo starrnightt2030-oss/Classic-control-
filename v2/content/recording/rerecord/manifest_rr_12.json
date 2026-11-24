@@ -1,12 +1,22 @@
 {
  "order": [
-  "aux_block/slide.mp3",
-  "aux_block/spring.mp3",
-  "aux_block/plunger.mp3",
-  "aux_block/clip.mp3",
-  "aux_block/base.mp3",
-  "aux_block/closing.mp3"
+  "estop/ring_nut.mp3",
+  "estop/base.mp3",
+  "estop/block.mp3",
+  "estop/block_contacts.mp3",
+  "estop/closing.mp3",
+  "selector/opening.mp3",
+  "selector/intro.mp3",
+  "selector/lesson_positions.mp3",
+  "selector/lesson_cam.mp3",
+  "selector/lesson_diagram.mp3",
+  "selector/cap.mp3",
+  "selector/bezel.mp3",
+  "selector/head_spring.mp3",
+  "selector/ring_nut.mp3",
+  "selector/base.mp3",
+  "selector/block.mp3"
  ],
  "pause_marker": "\n\n.\n\n",
- "chars": 1413
+ "chars": 3807
 }

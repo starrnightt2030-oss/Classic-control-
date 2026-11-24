@@ -1,0 +1,42 @@
+{
+ "stage/lab_intro.mp3": {
+  "recall": 0.56,
+  "precision": 0.25,
+  "attempt": 2,
+  "ok": false,
+  "voice": "Charon",
+  "model": "gemini-3.8-flash-tts"
+ },
+ "warn/sim_short_circuit.mp3": {
+  "recall": 0.53,
+  "precision": 0.17,
+  "attempt": 2,
+  "ok": false,
+  "voice": "Charon",
+  "model": "gemini-3.8-flash-tts"
+ },
+ "warn/sim_wrong_coil_voltage.mp3": {
+  "recall": 0.85,
+  "precision": 0.24,
+  "attempt": 2,
+  "ok": false,
+  "voice": "Charon",
+  "model": "gemini-3.8-flash-tts"
+ },
+ "warn/sim_overload_trip.mp3": {
+  "recall": 0.71,
+  "precision": 0.24,
+  "attempt": 1,
+  "ok": false,
+  "voice": "Charon",
+  "model": "gemini-3.8-flash-tts"
+ },
+ "warn/sim_phase_loss.mp3": {
+  "recall": 0.36,
+  "precision": 0.09,
+  "attempt": 2,
+  "ok": false,
+  "voice": "Charon",
+  "model": "gemini-3.8-flash-tts"
+ }
+}

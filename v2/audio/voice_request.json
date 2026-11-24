@@ -1,1 +1,1 @@
-{"engine":"azure","voice":"ar-EG-ShakirNeural","all":true,"max_clips":600}
+{"engine":"azure","voice":"ar-EG-ShakirNeural","only":"fb/correct_alt.mp3"}

@@ -45,6 +45,8 @@ jobs:
           flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
           cat analyze.txt
           python3 tool/ci_report.py analyze.txt
+      - name: Fixed test signing key (updates install over older builds)
+        run: mkdir -p ~/.android && cp tool/signing/debug.keystore ~/.android/debug.keystore
       - name: Unit tests (simulation engine + catalog)
         shell: bash
         run: |

@@ -1,7 +1,7 @@
 name: classic_control
 description: "Control Academy — أكاديمية التحكم الكهربائي (Classic Control Lab v2)"
 publish_to: 'none'
-version: 2.1.0+2
+version: 2.2.0+3
 
 environment:
   sdk: ">=3.5.0 <4.0.0"

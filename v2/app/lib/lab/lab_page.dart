@@ -17,7 +17,8 @@ import 'model.dart';
 import 'paint.dart';
 import 'templates.dart';
 
-const _prefKey = 'lab_doc_v1';
+const _prefKey = 'lab_doc_v2';
+const showUiBottom = 100.0;
 
 class LabPage extends StatefulWidget {
   /// 0 normal · 1 start the DOL demo running · 2 open the library (CI screenshots)
@@ -59,6 +60,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   // faults (free mode)
   FaultSession? fault;
+
+  // multimeter
+  bool meter = false;
+  String? probeRed, probeBlack;
 
   Timer? _save;
 
@@ -163,8 +168,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     final sz = context.size;
     if (sz == null) return;
     final w = doc.plateW * kPx, h = doc.plateH * kPx;
-    final s = math.min(sz.width / (w + 80), sz.height / (h + 160));
-    final dx = (sz.width - w * s) / 2, dy = (sz.height - h * s) / 2;
+    const top = 70.0, bottom = showUiBottom;
+    final s = math.min((sz.width - 40) / w, (sz.height - top - bottom) / h);
+    final dx = (sz.width - w * s) / 2, dy = top + (sz.height - top - bottom - h * s) / 2;
     tc.value = Matrix4.identity()
       ..translate(dx, dy)
       ..scale(s);
@@ -242,6 +248,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _down(PointerDownEvent e) {
     final mm = e.localPosition / kPx;
     if (running) {
+      if (meter) {
+        final t = _termAt(mm);
+        if (t != null) {
+          _probe(t);
+          return;
+        }
+      }
       final p = _partAt(mm);
       if (p != null) _runPress(p, e.pointer, true);
       return;
@@ -317,6 +330,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   void _tap(Offset mm) {
     final t = _termAt(mm);
+    if (t != null && meter) {
+      _probe(t);
+      return;
+    }
     if (t != null) {
       _terminalTap(t);
       return;
@@ -377,6 +394,60 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     AudioService.instance.sfx('screw_tighten');
     pending = null;
     _changed();
+  }
+
+  void _probe(String t) {
+    AudioService.instance.sfx('meter_beep');
+    setState(() {
+      if (probeRed == null || (probeRed != null && probeBlack != null)) {
+        probeRed = t;
+        probeBlack = null;
+      } else {
+        probeBlack = t;
+      }
+    });
+  }
+
+  /// what the multimeter shows between the two probes
+  (String, String) _reading() {
+    final a = probeRed, b = probeBlack;
+    if (a == null || b == null) return ('- - -', 'ضع المجسّ الأحمر ثم الأسود على طرفين');
+    if (running) {
+      final n = sim!.nets!;
+      final v = n.vAcross(a, b);
+      final g = n.group(a) ?? n.group(b) ?? 'M';
+      final dc = g.startsWith('D:');
+      return ('${v.toStringAsFixed(v < 100 ? 1 : 0)} V ${dc ? 'DC' : 'AC'}', 'قياس الجهد: ${_pretty(a)} ↔ ${_pretty(b)}');
+    }
+    final l = doc.toLab();
+    fault?.applyTo(l);
+    final n = l.buildNets();
+    if (n.same(a, b)) return ('0.0 Ω', 'توصيل: ${_pretty(a)} ↔ ${_pretty(b)}');
+    final ia = a.indexOf('.'), ib = b.indexOf('.');
+    final pa = a.substring(0, ia), ta = a.substring(ia + 1), tb = b.substring(ib + 1);
+    if (pa == b.substring(0, ib)) {
+      final c = l.byId(pa);
+      final pair = {ta, tb};
+      if (c != null && c.t.coil != null && pair.containsAll(c.t.coil!)) {
+        if (c.s.fault == 'coil_open' || c.s.dead) return ('OL', 'الملف مقطوع: ${_pretty(a)} ↔ ${_pretty(b)}');
+        final r = c.type == 'timer' || c.type == 'tsd' ? 'electronic' : (((c.p['coilV'] as num?) ?? 220) < 50 ? '68' : '580');
+        return (r == 'electronic' ? '— —' : '$r Ω', r == 'electronic' ? 'مدخل إلكتروني: لا يُقاس بالأوم' : 'مقاومة الملف ${c.id}');
+      }
+      if (c != null && c.type == 'lamp' && pair.containsAll(const ['X1', 'X2'])) {
+        return c.s.fault == 'lamp_dead' ? ('OL', 'اللمبة مفتوحة') : ('1.2 kΩ', 'مقاومة اللمبة ${c.id}');
+      }
+      if (c != null && c.type == 'motor') {
+        const w = [{'U1', 'U2'}, {'V1', 'V2'}, {'W1', 'W2'}];
+        if (w.any((x) => x.containsAll(pair))) return ('2.4 Ω', 'مقاومة ملف المحرك ${c.id}');
+      }
+    }
+    return ('OL', 'لا يوجد توصيل (دائرة مفتوحة)');
+  }
+
+  String _pretty(String key) {
+    final i = key.indexOf('.');
+    final p = doc.byId(key.substring(0, i));
+    return '${key.substring(0, i)}:${p?.d.printed(key.substring(i + 1)) ?? key.substring(i + 1)}';
   }
 
   String _autoColor(String a, String b) {
@@ -950,7 +1021,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                     ),
                   ),
                 ),
-                Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: TermPainter(doc, pending, !running && (pending != null || libOpen == false), _hiddenTerms())))),
+                Positioned.fill(
+                    child: IgnorePointer(
+                        child: CustomPaint(
+                            painter: TermPainter(doc, pending, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack)))),
                 Positioned.fill(
                   child: Listener(
                     behavior: HitTestBehavior.translucent,
@@ -997,7 +1071,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 2.2 * kPx, vertical: 0.2 * kPx),
           decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx), boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 2))]),
-          child: Text('-${p.id}', style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
+          child: Text('-${p.id}', textDirection: TextDirection.ltr, style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
         ),
       ),
     ));
@@ -1212,6 +1286,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         width: 320,
         child: _library(),
       ),
+      if (meter) _meterPanel(bottom),
       // bottom toolbar
       Positioned(
         left: 12,
@@ -1227,6 +1302,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 _tool(Icons.add_rounded, 'المكونات', () => setState(() => libOpen = !libOpen), active: libOpen),
                 _colorTool(),
                 _PowerButton(on: running, onTap: _power),
+                _tool(Icons.speed_rounded, 'جهاز القياس', () => setState(() {
+                      meter = !meter;
+                      pending = null;
+                      if (!meter) {
+                        probeRed = null;
+                        probeBlack = null;
+                      }
+                    }), active: meter),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),
@@ -1239,6 +1322,49 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         ),
       ),
     ];
+  }
+
+  Widget _meterPanel(double bottom) {
+    final (value, note) = _reading();
+    return Positioned(
+      left: 12,
+      bottom: bottom + 92,
+      child: Glass(
+        radius: 22,
+        tint: const Color(0xF0141A22),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: SizedBox(
+          width: 250,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+            Row(children: [
+              const Icon(Icons.speed_rounded, color: Color(0xFFF5C518), size: 20),
+              const SizedBox(width: 6),
+              Text(running ? 'جهد V~' : 'توصيل Ω', style: const TextStyle(color: Color(0xFFF5C518), fontWeight: FontWeight.w700)),
+              const Spacer(),
+              InkWell(
+                  onTap: () => setState(() {
+                        probeRed = null;
+                        probeBlack = null;
+                      }),
+                  child: const Icon(Icons.restart_alt_rounded, color: CC.muted, size: 20)),
+            ]),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFF9FB59A), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF2A2F35), width: 3)),
+              child: Text(value,
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(fontFamily: CC.mono, fontSize: 30, fontWeight: FontWeight.w700, color: Color(0xFF1C2420))),
+            ),
+            const SizedBox(height: 6),
+            Text(note, style: const TextStyle(fontSize: 12.5, color: CC.text2, height: 1.5)),
+            if (!running)
+              const Text('اللوحة مفصولة: القياس بالأوم آمن. شغّل التغذية لقياس الجهد.', style: TextStyle(fontSize: 11.5, color: CC.muted, height: 1.5)),
+          ]),
+        ),
+      ),
+    );
   }
 
   Widget _tool(IconData i, String tip, VoidCallback? onTap, {bool active = false, bool danger = false}) => Padding(

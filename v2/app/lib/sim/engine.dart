@@ -341,6 +341,9 @@ class Nets {
 
   /// phase key of the net (L1/L2/L3/N/PE…) or null
   String? phaseOf(String term) => pot(term)?.key;
+
+  /// source group of the net: 'M' mains, 'T:<id>' transformer, 'D:<id>' 24 V DC supply
+  String? group(String term) => pot(term)?.g;
 }
 
 // ---------------------------------------------------------------- lab

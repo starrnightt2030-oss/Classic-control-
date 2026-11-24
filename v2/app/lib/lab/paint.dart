@@ -371,7 +371,8 @@ class TermPainter extends CustomPainter {
   final String? pending;
   final bool wiring;
   final Set<String> hidden;
-  TermPainter(this.doc, this.pending, this.wiring, this.hidden);
+  final String? probeRed, probeBlack;
+  TermPainter(this.doc, this.pending, this.wiring, this.hidden, {this.probeRed, this.probeBlack});
 
   @override
   void paint(Canvas c, Size size) {
@@ -391,6 +392,14 @@ class TermPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 3
             ..color = const Color(0xFF3D8BFF));
+        } else if (key == probeRed || key == probeBlack) {
+          final col = key == probeRed ? const Color(0xFFE53935) : const Color(0xFF15181B);
+          c.drawCircle(o, 4.4 * kPx, Paint()..color = col.withValues(alpha: 0.35));
+          c.drawLine(o, o + Offset(9 * kPx, -14 * kPx), Paint()
+            ..color = col
+            ..strokeWidth = 2.6 * kPx
+            ..strokeCap = StrokeCap.round);
+          c.drawCircle(o, 1.6 * kPx, Paint()..color = const Color(0xFFDADFE3));
         } else if (wiring) {
           final n = used[key] ?? 0;
           c.drawCircle(o, 3.0 * kPx, Paint()

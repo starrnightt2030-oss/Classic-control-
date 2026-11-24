@@ -9,8 +9,9 @@ void placeAttached(Placed child, Placed host) {
     child.x = host.x + (ht?.$1 ?? 0) - (ct?.$1 ?? 0);
     child.y = host.y + (ht?.$2 ?? host.size.height * 0.75) - 5;
   } else if (child.def == 'aux') {
-    child.x = host.x + (host.size.width - child.size.width) / 2;
-    child.y = host.y - child.size.height + 7;
+    // side-mounted auxiliary contact block, clipped to the contactor's left flank
+    child.x = host.x - child.size.width + 3;
+    child.y = host.y + (host.size.height - child.size.height) / 2;
   }
 }
 

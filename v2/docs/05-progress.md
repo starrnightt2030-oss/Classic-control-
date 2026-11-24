@@ -34,11 +34,16 @@
 | عوامة + بريشر سويتش | ✅ `float_switch`، `pressure_switch` | — | ✅ `float_pressure.json` | |
 | صمام كهربي نحاس NC | ✅ `solenoid_valve.glb` | ✅ | ✅ `solenoid_valve.json` | |
 | لمبة تحذير دوارة + سارينة + برج إشارة | ✅ `beacon`، `siren`، `signal_tower` | — | ✅ `signaling.json` | |
+| أميتر وفولتميتر 72x72 | ✅ `ammeter`، `voltmeter` | ✅ | ✅ `panel_meter.json` | |
+| محول تيار 100/5A | ✅ `current_transformer.glb` | ✅ | ✅ `current_transformer.json` | |
+| مفتاح تحويل 1-0-2، وسليكتور فولتميتر، وسكينة رئيسية | ✅ `cam_switch`، `voltmeter_selector`، `main_isolator` | ✅ (الكام) | ✅ `rotary_switches.json` | |
+| ريلاي فقد وتتابع الفازات، ومراقب جهد، وحماية جهد وتيار، وعداد kWh، وعداد نبضات | ✅ | — | ✅ `electronic_protection.json` | |
+| فيوز 10x38 وحامل | ✅ `fuse_holder.glb` | ✅ | ✅ `fuse.json` | |
 
 الصور كلها في [`../assets/renders/`](../assets/renders/).
 
 ## 🔜 الخطوة الجاية بالظبط
-1. أجهزة القياس والحماية والمفاتيح الرئيسية والفيوز (الدفعة 8 و9)، وبعدين باقي المكتبة حسب [`06-roadmap.md`](06-roadmap.md).
+1. التمديدات، والمحرك، والأدوات، وصندوق اللوحة (الدفعة 10 لـ 13) حسب [`06-roadmap.md`](06-roadmap.md).
 
 ## ⚠️ مشاكل معروفة
 - ملفات GLB تقيلة (من 1 لـ 4 ميجا)، ومحتاجة تخفيف قبل التطبيق.

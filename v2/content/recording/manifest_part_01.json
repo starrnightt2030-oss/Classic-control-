@@ -73,10 +73,8 @@
   "overload/lesson_definition.mp3",
   "overload/lesson_principle.mp3",
   "overload/lesson_phase_loss.mp3",
-  "overload/lesson_compensation.mp3",
-  "overload/lesson_setting.mp3",
-  "overload/lesson_standard.mp3"
+  "overload/lesson_compensation.mp3"
  ],
  "pause_marker": "\\n\\n.\\n\\n",
- "chars": 14583
+ "chars": 14490
 }

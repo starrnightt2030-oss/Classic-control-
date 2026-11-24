@@ -1,5 +1,12 @@
 {
  "order": [
+  "pneumatic_timer/fixed.mp3",
+  "pneumatic_timer/bridges.mp3",
+  "pneumatic_timer/plunger.mp3",
+  "pneumatic_timer/base.mp3",
+  "pneumatic_timer/closing.mp3",
+  "mcb/opening.mp3",
+  "mcb/intro.mp3",
   "mcb/lesson_definition.mp3",
   "mcb/lesson_thermal.mp3",
   "mcb/lesson_magnetic.mp3",
@@ -47,15 +54,8 @@
   "mpcb/lesson_definition.mp3",
   "mpcb/lesson_vs.mp3",
   "mpcb/lesson_thermal.mp3",
-  "mpcb/lesson_magnetic.mp3",
-  "mpcb/lesson_breaking.mp3",
-  "mpcb/lesson_handle.mp3",
-  "mpcb/lesson_coordination.mp3",
-  "mpcb/lesson_wiring.mp3",
-  "mpcb/front_cover.mp3",
-  "mpcb/rotary_knob.mp3",
-  "mpcb/setting_dial.mp3"
+  "mpcb/lesson_magnetic.mp3"
  ],
  "pause_marker": "\\n\\n.\\n\\n",
- "chars": 15720
+ "chars": 15798
 }

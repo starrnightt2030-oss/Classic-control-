@@ -53,6 +53,11 @@ def all_clips():
     return out
 
 
+def text_hash(t):
+    import hashlib
+    return hashlib.sha1(t.encode("utf8")).hexdigest()[:12]
+
+
 def missing_clips():
     out = []
     for part in range(1, 100):
@@ -165,6 +170,8 @@ def main():
     ap.add_argument("--max", type=int, default=400)
     ap.add_argument("--delay", type=float, default=7.0, help="seconds between requests (free-tier rate limits)")
     ap.add_argument("--verify", action="store_true")
+    ap.add_argument("--all", action="store_true",
+                    help="regenerate every clip whose current audio was not made with this voice from this exact text")
     a = ap.parse_args()
     if a.engine == "azure":
         key = os.environ.get("AZURE_SPEECH_KEY", "").strip()
@@ -187,15 +194,22 @@ def main():
         want = [x.strip() for x in a.only.split(",") if x.strip()]
         allc = dict(all_clips())
         todo = [(n, allc[n]) for n in want if n in allc]
+    status = json.loads(STATUS.read_text(encoding="utf8")) if STATUS.exists() else {}
+    if a.only:
+        pass
+    elif a.all:
+        todo = [(n, t) for n, t in all_clips()
+                if not (status.get(n, {}).get("ok") and status[n].get("voice") == a.voice and status[n].get("h") == text_hash(t)
+                        and (out_root / n).exists())][: a.max]
     else:
         todo = missing_clips()[: a.max]
-    print(f"model={model} voice={a.voice} missing={len(todo)}", flush=True)
+    print(f"model={model} voice={a.voice} todo={len(todo)}", flush=True)
     ver = Verifier() if a.verify else None
-    status = json.loads(STATUS.read_text(encoding="utf8")) if STATUS.exists() else {}
     quota_hits = 0
     done = 0
     for i, (name, text) in enumerate(todo, 1):
-        dst = out_root / name
+        final = out_root / name
+        dst = final.with_suffix(".new.mp3")
         ok = False
         for attempt in (1, 2):
             try:
@@ -224,14 +238,15 @@ def main():
                 rec, prec, ratio = ver.score(dst, text)
                 good = rec >= 0.5 and prec >= 0.4 and ratio <= 1.5
                 status[name] = {"recall": round(rec, 2), "precision": round(prec, 2), "attempt": attempt, "ok": good, "voice": a.voice,
-                                "model": model, "heard": ver.last}
+                                "model": model, "h": text_hash(text), "heard": ver.last}
                 if not good:
                     dst.unlink(missing_ok=True)
                     print(f"  ✗ {name} rec={rec:.2f} prec={prec:.2f} (attempt {attempt})", flush=True)
                     time.sleep(a.delay)
                     continue
             else:
-                status[name] = {"ok": True, "voice": a.voice, "model": model}
+                status[name] = {"ok": True, "voice": a.voice, "model": model, "h": text_hash(text)}
+            dst.replace(final)
             ok = True
             break
         done += ok

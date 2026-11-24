@@ -1,1 +1,1 @@
-{"engine": "azure", "voice": "ar-EG-ShakirNeural", "only": "contactor/lesson_principle.mp3,stage/lab_intro.mp3,warn/sim_short_circuit.mp3,contactor/coil.mp3", "out": "v2/audio/samples/shakir", "note": "sample for the owner"}
+{"engine":"azure","voice":"ar-EG-ShakirNeural","all":true,"max_clips":600}

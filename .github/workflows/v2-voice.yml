@@ -52,7 +52,8 @@ jobs:
           R=v2/audio/voice_request.json
           get() { python -c "import json;print(json.load(open('$R')).get('$1','$2'))"; }
           python v2/audio/gemini_tts.py --verify --engine "$(get engine gemini)" --voice "$(get voice '')" \
-            --model "$(get model auto)" --max "$(get max_clips 400)" --only "$(get only '')" --out "$(get out '')"
+            --model "$(get model auto)" --max "$(get max_clips 400)" --only "$(get only '')" --out "$(get out '')" \
+            $( [ "$(get all False)" = "True" ] && echo --all )
       - name: Commit clips
         if: always()
         run: |

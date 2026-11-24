@@ -1,5 +1,7 @@
 {
  "order": [
+  "overload/lesson_setting.mp3",
+  "overload/lesson_standard.mp3",
   "overload/lesson_terminals.mp3",
   "overload/lesson_reset.mp3",
   "overload/lesson_safety.mp3",
@@ -45,15 +47,8 @@
   "pneumatic_timer/needle.mp3",
   "pneumatic_timer/filter.mp3",
   "pneumatic_timer/bellows.mp3",
-  "pneumatic_timer/spring.mp3",
-  "pneumatic_timer/fixed.mp3",
-  "pneumatic_timer/bridges.mp3",
-  "pneumatic_timer/plunger.mp3",
-  "pneumatic_timer/base.mp3",
-  "pneumatic_timer/closing.mp3",
-  "mcb/opening.mp3",
-  "mcb/intro.mp3"
+  "pneumatic_timer/spring.mp3"
  ],
  "pause_marker": "\\n\\n.\\n\\n",
- "chars": 15882
+ "chars": 16181
 }

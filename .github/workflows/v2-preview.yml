@@ -1,0 +1,61 @@
+name: v2 lab preview (web screenshots)
+
+on:
+  push:
+    branches: [v2-rebuild]
+    paths:
+      - 'v2/app/lib/lab/**'
+      - 'v2/app/lib/sim/**'
+      - 'v2/app/lib/ui/theme.dart'
+      - 'v2/app/assets/panel/**'
+      - '.github/workflows/v2-preview.yml'
+      - 'v2/app/tool/preview/**'
+  workflow_dispatch:
+
+concurrency:
+  group: v2-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: v2/app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Sync shared assets
+        run: python3 tool/sync_assets.py
+      - name: Web platform
+        run: flutter create --platforms=web --org com.eldawly --project-name classic_control .
+      - run: flutter pub get
+      - name: Build web preview
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter build web -t lib/main_lab_preview.dart --release --no-tree-shake-icons 2>&1 | tee web.txt || { python3 tool/ci_report.py web.txt --tail; exit 1; }
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Screenshots
+        shell: bash
+        run: |
+          (cd build/web && python3 -m http.server 8080 >/dev/null 2>&1 &)
+          cd tool/preview && npm init -y >/dev/null && npm i puppeteer@24 >/dev/null 2>&1
+          mkdir -p ../../shots
+          node shoot.js http://localhost:8080/ ../../shots 2>&1 | tail -60 | sed 's/^/::notice::/' 
+          ls -la ../../shots
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2-lab-preview
+          name: Panel Lab preview (screenshots)
+          prerelease: true
+          files: v2/app/shots/*.png

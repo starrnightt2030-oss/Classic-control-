@@ -20,7 +20,9 @@ import 'templates.dart';
 const _prefKey = 'lab_doc_v1';
 
 class LabPage extends StatefulWidget {
-  const LabPage({super.key});
+  /// 0 normal · 1 start the DOL demo running · 2 open the library (CI screenshots)
+  final int demo;
+  const LabPage({super.key, this.demo = 0});
   @override
   State<LabPage> createState() => _LabPageState();
 }
@@ -81,7 +83,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   Future<void> _load() async {
     await Sprites.load();
     final prefs = await SharedPreferences.getInstance();
-    final s = prefs.getString(_prefKey);
+    final s = widget.demo > 0 ? null : prefs.getString(_prefKey);
     LabDoc d;
     try {
       d = s == null ? dolTemplate() : LabDoc.fromJsonString(s);
@@ -92,7 +94,17 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       doc = d;
       ready = true;
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fit());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fit();
+      if (widget.demo == 1) {
+        Future<void>.delayed(const Duration(milliseconds: 600), () {
+          _power();
+          sim?.actuate('S1', 'press', true);
+          Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.actuate('S1', 'press', false));
+        });
+      }
+      if (widget.demo == 2) setState(() => libOpen = true);
+    });
   }
 
   void _persist() {

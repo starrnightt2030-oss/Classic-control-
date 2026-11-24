@@ -1,64 +1,5032 @@
 {
  "stage/lab_intro.mp3": {
-  "recall": 0.85,
-  "precision": 0.82,
+  "recall": 0.93,
+  "precision": 0.93,
   "attempt": 1,
   "ok": true,
   "voice": "ar-EG-ShakirNeural",
   "model": "azure-neural",
-  "heard": "المرحله التايل ته المعمل قديمك صندوق لوحه حقيقي ركب المكونات علي الرال ووصل الاسلاك من مسمار لمسمار واختار لون ومقطع كل سلك وقبل ما تشغل راجع توصيلك بالافميته"
+  "h": "b429b13e9589",
+  "heard": "المرحله الثالثه المعمل امامك صندوق لوحه حقيقي ركب المكونات علي القضيد ووصل الاسلاك من طرف الي طرف واختر لون كل سلك ومقطع وقبل التشغيل راجع توصيلك بجهاز القياس"
  },
  "warn/sim_short_circuit.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c30a83e19d03",
+  "heard": "قصر هذا التوصيل احدث قصرا بين نقطتين عليهما جهد ففصل القاطع راجع اخر سلك والصلطه"
+ },
+ "warn/sim_wrong_coil_voltage.mp3": {
+  "recall": 0.85,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0c19159acdf4",
+  "heard": "جهد الملف غير صحيح الكنتكتوريه ولا يستطيع الجذب راجع جهد دايره التحكم"
+ },
+ "warn/sim_overload_trip.mp3": {
+  "recall": 0.75,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f5773207527f",
+  "heard": "فصلون الاو فرلون ابحث عن السبب قبل اعاده الضقط حمل زايد او فقد فاز او ضقط خاطي"
+ },
+ "warn/sim_phase_loss.mp3": {
   "recall": 1.0,
   "precision": 1.0,
   "attempt": 1,
   "ok": true,
   "voice": "ar-EG-ShakirNeural",
   "model": "azure-neural",
-  "heard": "قصر التوصيل ده عمل قصر بين نقطتين عليهم جهد والقاطع فصل راجع اخر سلك وصلته"
- },
- "warn/sim_wrong_coil_voltage.mp3": {
-  "recall": 0.62,
-  "precision": 0.33,
-  "attempt": 1,
-  "ok": false,
-  "voice": "Charon",
-  "model": "gemini-3.8-flash-tts",
-  "heard": "ريد العود وورد فورورد في اقام كلير اجيبشن اربيك تيشير وويس جهد الكويل مش مصبوط الكنتكتور بيزين ومش قدري يشد راجع جهد ديرت التحكم"
- },
- "warn/sim_overload_trip.mp3": {
-  "recall": 0.71,
-  "precision": 0.24,
-  "attempt": 1,
-  "ok": false,
-  "voice": "Charon",
-  "model": "gemini-3.8-flash-tts"
- },
- "warn/sim_phase_loss.mp3": {
-  "recall": 0.36,
-  "precision": 0.17,
-  "attempt": 2,
-  "ok": false,
-  "voice": "Charon",
-  "model": "gemini-3.8-flash-tts",
-  "heard": "ريد العود word for word in a calm clear egyptian arabic teacher voice فازا نقصه المطور بيزن ومش قدري ام وطيار وعالي افصل فورا"
+  "h": "c0f3541b4603",
+  "heard": "فقد فاز المحرك يطن ولا يستطيع الدوران وتياره مرتفع افصل فورا"
  },
  "contactor/lesson_principle.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5acfd25a0a83",
+  "heard": "نظريه التشغيل عندما نوصل جهد تحكم علي طرف الملف ا1 و a2 يمر طيار في الملف ويتكون فيد مغناطسي في القلب الحديدي الثابه هذا الفيد يجذب القلب المتحرك ويغلق الفجوه ا"
+ },
+ "contactor/coil.mp3": {
+  "recall": 0.82,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9b4ed64c45c7",
+  "heard": "هذا هو الكويل اي الملف وهو سلك نحاسي معزول ملفوف لفات كثيره علي بكره بلستيكيه ويخرج طرفاه علي الطرفين a1 وa2 بمجرد توصيل الجهد المكتوب علي اللوحه الاسميه وهو هن"
+ },
+ "global/slogan_main.mp3": {
+  "recall": 0.67,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "dda3725a88f4",
+  "heard": "اكديميه التحكم الكهربايي افهمها جيدا ووصها جيدا وعمل بامان"
+ },
+ "global/slogan_short.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f32e588e0e5d",
+  "heard": "التحكم الكلسيكي علم ومهاره وامان"
+ },
+ "global/welcome.mp3": {
+  "recall": 0.81,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "65bd364daedb",
+  "heard": "مرحبا بك في معمل التحكم الكلسيكي هنا سترك المكون من الداخل والخارد وتفقه وتركبه بيدك وتستمع الي شرح كل قطعه فيه ثم ستوصل دواير حقيقيه علي لوحه كهرباييه وتشغيلها"
+ },
+ "global/welcome_back.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ebe0c5efbd04",
+  "heard": "مرحبا بعودتك نكمل من حيث توقفنا"
+ },
+ "global/goodbye.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "00c051310342",
+  "heard": "شكرا لانك تعلمت معنا اليوم وتذكر الفني الماهر هو من يفصل الكهرباء ويتاكد قبل ان يلمس نراك في المره القادمه"
+ },
+ "stage/library_intro.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a0d7fdd1efd5",
+  "heard": "المرحله الاول مكتبه المكونا هنا ستتعرف علي كل جهاز في لوحه التحكم شكله وتركيبه الداخلي وطريقه عمله وكيف نختاره ونختبره المس اي قطعه لتستمع الي شرحها"
+ },
+ "stage/library_outro.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d5621f856d46",
+  "heard": "احسن لقد تعرفت علي المكونات الاساسيه الخطوه التاليه ان نجمعها معا في دايره"
+ },
+ "stage/ladder_intro.mp3": {
+  "recall": 0.53,
+  "precision": 0.56,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "479ee448ec7d",
+  "heard": "المرحله الثانيه المخطط سنرسم دايره تتحكم بالروموز القياسيه ونشغلها ونراينا يسر التيار وما تتفتح كل نقطه وما تتغلق"
+ },
+ "stage/ladder_outro.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7f08eed8044c",
+  "heard": "ممتاز المخطط يعمل بشكل صحيح والان ننقله الي اللوحه الحقيقيه"
+ },
+ "stage/lab_outro.mp3": {
+  "recall": 0.73,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4db5da6e51ea",
+  "heard": "اشتغلت الوحه بشكل صحيح من المره الاول هذا عمل فاني محترف"
+ },
+ "stage/faults_intro.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bf047d3b6294",
+  "heard": "مرحله الاعطال في هذه اللوحه عطل مخفي استخدم جهاز القياس المتعدد وجهاز قياس التيار بالكلابه وفكر بترتيب حتي تجدي"
+ },
+ "stage/faults_outro.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bd1dcce6c68d",
+  "heard": "وجدت العطل التفكير المنظم هو سر الصيانه الناجحه"
+ },
+ "stage/exam_intro.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1d80fd6d756e",
+  "heard": "مرحله الاختبار لا توجد مساعده ولا حل تلقايي خذ وقتك وراجع قبل ان تشغل بالتوفير"
+ },
+ "stage/exam_outro_pass.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2dcc49031f24",
+  "heard": "تهانينا لقد نجحت في الاختبار شهادهك جاهزه"
+ },
+ "stage/exam_outro_fail.mp3": {
+  "recall": 0.91,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "32e2a03c45a9",
+  "heard": "لم تصل هذه المره الي الدربه المطلوبه راجع الاخطاء الموجوده في التقرير وحاول مره اخر كل خطا ان تتعلم منه خطوه الي الامام"
+ },
+ "global/next_section.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "efe33619380c",
+  "heard": "ننتقل الي الجزء التالي"
+ },
+ "global/next_part.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f43c1d337553",
+  "heard": "القطعه التاليه"
+ },
+ "global/disassemble.mp3": {
+  "recall": 0.6,
+  "precision": 0.6,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8bec7633ab52",
+  "heard": "هيا نفق المكوان قطعه قطعه"
+ },
+ "global/assemble.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b2d6d8d23df7",
+  "heard": "والان نعيد كل قطعه الي مكانها"
+ },
+ "global/energize.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a24be58848eb",
+  "heard": "لنوصل الكهرباء ونري ما يحدث في الداخل"
+ },
+ "global/recap.mp3": {
+  "recall": 0.67,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d6e66f731cde",
+  "heard": "نلخص ما تعلمنا"
+ },
+ "global/try_yourself.mp3": {
+  "recall": 0.5,
+  "precision": 0.5,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b55109d10160",
+  "heard": "دورك الان قرب نفسك"
+ },
+ "global/between_stages.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2cae6249bb4c",
+  "heard": "انتهت هذه المرحله خبست راحه قصيره هل انت مستعد للمرحله التاليه"
+ },
+ "warn/lockout.mp3": {
+  "recall": 0.86,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c529f394bcde",
+  "heard": "تحذير قبل ان تفتح اي لوحه او تلمسايي طرف توصيل افس المفتاح رييسي واقفله بقفلك الشخصي وعلق بطاقه التحذير ثم تاكد من عدم وجود جهد بجهاز قياس سليم"
+ },
+ "warn/live_terminals.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "01cf60cdf8cd",
+  "heard": "انتبه اطراف الدخول قد يكون عليها جهد حتي لو كان الجهاز مفصولا"
+ },
+ "warn/never_bypass.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "475c5c2f923f",
+  "heard": "تحذير يمنع الغاء اي جهاز حمايه او رفع قيمته او وضع سلك مكان المصر هذه الحمايه هي التي تنقذ الارواح والاجهزه"
+ },
+ "warn/ct_open.mp3": {
+  "recall": 0.72,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c58f00195ffe",
+  "heard": "تحذير خطير يمنع فتح دايره الملاف الثانوي لمحول التيار والكابل عليه حمل اقصر الطرفين اس واحد واس اثنان اول"
+ },
+ "warn/rotating.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "09d3fb1a4e9b",
+  "heard": "انتبه للاجزاء الدواره لا تقترب من العمود او المروحه والمحرك يعمل واعد الواقعيات الي مكانها"
+ },
+ "warn/meter_category.mp3": {
   "recall": 0.76,
   "precision": 0.76,
   "attempt": 1,
   "ok": true,
   "voice": "ar-EG-ShakirNeural",
   "model": "azure-neural",
-  "heard": "نظريه التشغيل لما نوصل جهد التحكم علي طرف الكويل a1 و a2 بامر طيار في الملف ويتكون فيد مغناطسي في القلب الحديد الثابي الفيد ضهب يشد القلب المتحرك ويقفل الفراغ ا"
+  "h": "11c3ddd61465",
+  "heard": "قبل القياس تاكد ان المجسات في الاطراف الصحيحه وان في اتامان الجهاز مناصبه للمكان الذي تقيص فيه"
  },
- "contactor/coil.mp3": {
+ "warn/estop_not_routine.mp3": {
+  "recall": 0.8,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "392e1371d0d5",
+  "heard": "مفتاح الطواري للطواري فقط والاسباديلا عن ضاغط الايقاف العادي"
+ },
+ "warn/arc.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "01ac64f45113",
+  "heard": "حراره الشراره الكهرباييه تبلغ الاف الدرجه افتح الاحمال واغلقها بالاجهزه المخصصه لذلك وليس بفك الاسلام"
+ },
+ "warn/sim_interlock.mp3": {
+  "recall": 0.58,
+  "precision": 0.54,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8d7601958f62",
+  "heard": "لا يجوز تشغيل لتجاهين معا من عت داخل الكهربايي حدوف قصر بين فزين"
+ },
+ "warn/sim_live_touch.mp3": {
+  "recall": 0.56,
+  "precision": 0.56,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5f4a3d8bcf19",
+  "heard": "توقف ان تلمس طرف عليه جاهد افس الكهرباء اولا"
+ },
+ "fb/correct.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9851f4cecf64",
+  "heard": "اجابه صحيحه"
+ },
+ "fb/correct_alt.mp3": {
+  "recall": 0.0,
+  "precision": 0.0,
+  "attempt": 2,
+  "ok": false,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "245c09ba0806",
+  "heard": "احسن"
+ },
+ "fb/wrong.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8f06f275b47a",
+  "heard": "ليست هذه فكر مره اخر"
+ },
+ "fb/step_done.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "979f250bf64c",
+  "heard": "اكتملت هذه الخطوه"
+ },
+ "fb/wire_ok.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b9cec1402e29",
+  "heard": "تم توصيل السلك"
+ },
+ "fb/time_up.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "21de92063be9",
+  "heard": "انتهي الوقت"
+ },
+ "fb/motor_running.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f5ce25b621fb",
+  "heard": "اشتغل المحرك"
+ },
+ "fb/motor_reverse.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0fc908a79daa",
+  "heard": "المحرك يدور في الاتجاه العكسي"
+ },
+ "contactor/opening.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "468161bd4b4d",
+  "heard": "مرحبا بك في درس الكنتكتور سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "contactor/intro.mp3": {
+  "recall": 0.64,
+  "precision": 0.61,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5975b0b29599",
+  "heard": "الكونتكتور مفتاح يعمل بالكهرباء فبدلا من ان تغلق التلام سبيادك نغذ ملفه بجهد صغير من دايره تحكم فيجذب النقاط ويغلق دايره القول متجهه الي المحر اي اننا بدايره تح"
+ },
+ "contactor/lesson_definition.mp3": {
+  "recall": 0.86,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b67a8178fda4",
+  "heard": "التعريف الكونتكتور مفتاح كهر مغنطيسي تحكم فيه عن بعض وظيفته توصيل دايره القوه وفصلها مثل دايره المحرك بامر قادم من دايره التحكم والفرق بينه وبين القاطع ان الكون"
+ },
+ "contactor/lesson_terminals.mp3": {
+  "recall": 0.69,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4a13f8730096",
+  "heard": "ترقيم الاطراف نقاط القوه الرييسيه مرقمه برقم واحد واحد وثنان وثلاثه واربعه وخمس وست فرقم فرديه والدخول من جهه المصدر والزوبيه والخروب نحو الحمل ولذلك نجد مكتوبا"
+ },
+ "contactor/lesson_symbol.mp3": {
+  "recall": 0.84,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "66cddce766a6",
+  "heard": "الرمز في المخطط في دايره التحكم يرسم الملف مستطيلا يكتب بجانبه اسم الكنتكتور مثلي كان واحد بالترميز القديم او كواي واحد بالترميز الحديث حسب المواصفه ic 81 1346 "
+ },
+ "contactor/lesson_selection.mp3": {
+  "recall": 0.77,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "89eda9034f06",
+  "heard": "اختيار الكنتكتور لاختيار الكنتكتور صحيح تحتاج الي معرفه اربعه اشياء اولا نوع الحمل او فيه الاستخدام اسي شرطه واحد للاحمال الاوميه مثل السخانات واسي شرطه ثلاثه ل"
+ },
+ "contactor/lesson_coil_data.mp3": {
+  "recall": 0.68,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a50cde957273",
+  "heard": "خصايص الملث حسب المواصفه ic 609417141 يجب ان يجذب كنتكتور التيار المتردد بثقه اذا كان الجهد بين 85 و 110 من جهده المقنن وفي لحظه الجذب يسحب الملث طيارا كبيرا لا"
+ },
+ "contactor/lesson_safety.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a8ea1ab3e6c3",
+  "heard": "ملاحظات امان اي فحص داخل الكنتكتور او دفع للحامل بيدي يجب ان يتم والكهرباء مفصوله وموكد فصلها بجهاز القياس وانتبه الي ان اطراف الدخول قد يكون عليها جهد حتي والك"
+ },
+ "contactor/front_housing.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "84e2dae61dff",
+  "heard": "هذا هو الغطاء الامامي مصنوع من بلاستيك عازل يتحمل الحراره يحتوي بداخله علي غرف اطفاء الشراره التي تنشا عندما تفتح النقاطه وعليها حمل ومن الخارج مكتوب عليه رقم ك"
+ },
+ "contactor/terminal_screw.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d03024c0d05d",
+  "heard": "هذا مسمار طرف التوصيل واسفله ورده تمسك السلك يجب ان يدخل السلك تحت الورده وفي الطرفه جلبه مكبوسه جيدا وان يربط المسمار بالعظم الصحيح لا مرتخيا ولا مشدودا اكثر م"
+ },
+ "contactor/fixed_top.mp3": {
+  "recall": 0.89,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d1d2175a7ad8",
+  "heard": "هذه هي النقاط الثابته القادمه من اطراف الدخول كل واحده منها شريحه من النحاس طرفها الاول متصل بطرف التوصيل من الخارج وفي نهايتها قطعه من الفضه هي التي تلامس النق"
+ },
+ "contactor/fixed_bottom.mp3": {
+  "recall": 0.81,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e3e441484fba",
+  "heard": "وهذه هي النقاط ثابته في جهه الخرود 2 و 4 و 6 و منها يذهب التيار الي الاوفر لوت ثم الي المحرك اي ان كل فاز يمر علي نقطتين ثابتتين واحده في الاعلي واخر في الاسفل "
+ },
+ "contactor/moving_contacts.mp3": {
+  "recall": 0.83,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1d57342df76d",
+  "heard": "هذه هي القناطر المتحركه كلاقنطره شريحه من النحاس علي طرفها نقطتان من الفضه عندما يجذب الملث تنزل القنطره علي النقطتين ثابتتين وتصل الدخول بالخروض وخلف كل قنطره "
+ },
+ "contactor/silver_tip.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cdc234ce2c35",
+  "heard": "هذه النقاط مصنوعه من سبيكه الفضه وليس من النحاس العادي فالفضه جيده التوصيل جدا وتتحمل الشراره ويصعب ان تلتحم ببعضها ومع كل فتح وغلق تحت الحمل تنشا شراره صغيره ت"
+ },
+ "contactor/carrier.mp3": {
+  "recall": 0.82,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "068224280a41",
+  "heard": "هذا هو حامل النقاط قطعه من البلاستيك العازل مركب فيها القناه الربع ومن الخلف يتصل بالقلب المتحرك فعندما يبذ بالقلب يتحرك الحامل معه فتغلق كل النقاط معا في اللحظ"
+ },
+ "contactor/armature.mp3": {
+  "recall": 0.85,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8e0538f9499b",
+  "heard": "هذا هو القلب المتحرك حديد علي شكل حرف اذا نظرت اليه وجدته ليس قطعه واحده بل رقايق حديد كثيره متجاوره هذه رقايق تقلل التيارات الدواميه التي تسخن الحديد وبمجرد تغ"
+ },
+ "contactor/return_springs.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f27d2782c9b5",
+  "heard": "هذه هي نوابض الارجاع وظيفتها بسيطه لكنها مهمه جدا بمجرد القطاع الكهرباء عن الملف تعيد هذه النوابض القلب المتحركه الي مكانه فتنفتح النقاط المفتوحه وتنغلق النقاط "
+ },
+ "contactor/fixed_core.mp3": {
+  "recall": 0.8,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f4dfbbced106",
+  "heard": "هذا هو القلب الثابه وهو ايضا رقايق حديد علي شكله والملف مركب علي ساقه الوسط ولاحظ الحلقتين النحاسيتين الصغيرتين علي وجه وتسميان حلقات التضليل فالتيار المتردد يم"
+ },
+ "contactor/base.mp3": {
+  "recall": 0.86,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d9faad37740e",
+  "heard": "وهذه هي القاعده الجزء الخلفي الذي يحمل القلب الثابت والملاف في خلفها مشبك يركب علي قضيب التثبيت مقاس 35 مليمترا علق الجزء العلوي ثم اضغط الي الاسفل حتي تسمع صوت"
+ },
+ "contactor/closing.mp3": {
+  "recall": 0.85,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4274bc6fa603",
+  "heard": "بهذا نكون قد انهينا درس الكنتكتور جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "overload/opening.mp3": {
+  "recall": 0.94,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "29f7e8d646a8",
+  "heard": "مرحبا بك في درس الاوفر لود الحراري سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "overload/intro.mp3": {
+  "recall": 0.82,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "35d563c7ce9d",
+  "heard": "الاوفر لود الحراري جهاز يحمي المحرك من زياده الحمل فاذا سحب المحرك تيارا اكبر من تياره المقنن لمده طويله كان يكون محملا اكثر من طاقته او يكون عموده معلقا يشعر ا"
+ },
+ "overload/lesson_definition.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "671c44928246",
+  "heard": "التعريث الاوفرلود الحراري جهاز حمايه يعمل بتاثير الحراره التي يولدها التيار ويركب في دايره القوه بعد الكنتكتور مباشره ويمر بداخله التيار المتجه الي المحرك ويعطي"
+ },
+ "overload/lesson_principle.mp3": {
+  "recall": 0.85,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6ac8e0feeb51",
+  "heard": "مضاريه التشغيل يوجد داخل الاوفر لدل كل فاز شريحه ثناييه المعدن اي معدنان ملتصقان مختلفان في معامل التمدد ويمر الطيار في ملف تسخين ملفوف حول الشريحه فعندما يزيد "
+ },
+ "overload/lesson_phase_loss.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7db79ce40c15",
+  "heard": "الحمايه من فقد الفاز المسترت في الاوفرلود الحديث مسترتان متراكبتان فاذا قطع فاز برضت شريحته وعدت الي الخلف بينما تسخن شريحتان الاخرين اكثر من المعتاد وتنحنيان ا"
+ },
+ "overload/lesson_compensation.mp3": {
+  "recall": 0.91,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d4266e6e736e",
+  "heard": "تعويد حراره الجو توجد شريحه ثناييه المعدن اخري لا يمر فيها التيار وتنحني فقط مع حراره اللوحه نفسها ووظيفتها تعويد تاثير الجو فاذا سخنت اللوحه في الصيف لا يفس ال"
+ },
+ "overload/lesson_setting.mp3": {
+  "recall": 0.88,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cad9ce953106",
+  "heard": "الضب نضبط القرص علي تيار الحمل الكامل المكتوب علي اللوحه الاسميه للمحرك عند الجهد الذي يعمل عليه المحرك ويجب ان اختار اوفلود يقع هذا التيار ضمن مضي ضبته فمحرك ت"
+ },
+ "overload/lesson_standard.mp3": {
+  "recall": 0.71,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3a5bda7359ea",
+  "heard": "حدود الفصل حسب المواصفه تنص المواصفه القياسيه علي ان الاوفر لود عند واحد وخمسه من ميه ضعف طيار ضط لا يفصل خلال ساعه و هو بارد و عند واحد وعشرين من ميه ضعف يجب ا"
+ },
+ "overload/lesson_terminals.mp3": {
   "recall": 0.66,
+  "precision": 0.69,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ad82baebb9f1",
+  "heard": "الاطراف والرمز يركوب الاوفر لود اسفي للكنتكتور وتدخل اصابعه النحاسيه في الاطراف 2 و4 و6 للكنتكتور ويخرج الي المحرك من الاطراف 2 t1 و4 t2 و6 t3 والنقطه المغلقه ر"
+ },
+ "overload/lesson_reset.mp3": {
+  "recall": 0.77,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e6a28bb26060",
+  "heard": "اعاده الضط يدوي وتلقايي لزر اعاده الضط ريسات وضعان اتش اي يدوي واي اي تلقايي في الوضع اليدوي بعد الفصل يجب ان يذهب شخص ويضغط ريسات بيده وهذا هو الوضع الاكثر اما"
+ },
+ "overload/lesson_safety.mp3": {
+  "recall": 0.71,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c2d43bf41b2a",
+  "heard": "ملاحظات مهمه الاوفر لود لا يحمي من القصر فالقصر يجب ان يحم منه بقاطع او مصر قبل الكنتكتور وزر الاختبار تستيحدث فصل تجريبا لتاكد ان النقاط ودايره التحكم تعمل بشك"
+ },
+ "overload/front_cover.mp3": {
+  "recall": 0.84,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c107f8ab5c49",
+  "heard": "هذا هو الغطاء الامامي وعليه كل ما يحتاجه المستخدم قرص الضبط ومكتوب حوله مدي التيار وزر الاختبار وزر اعاده الضبط ونافذه بيان الفصل واطراف النقاط المساعده 95 و96 "
+ },
+ "overload/setting_dial.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "628ab3127ae6",
+  "heard": "هذا هو قرص الضق عندما تديره تدور معه كمه لا مركزيه في الداخل وهذه الكامه تقرب اليه الفصل من المستره او تبعدها عنها اي انها تغير المسافه التي يجب ان تنحنيها شريح"
+ },
+ "overload/test_button.mp3": {
+  "recall": 0.82,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a0adb2cf653a",
+  "heard": "زر الاختبار يدفع اليه الفصل ميكنيكيا كان الاوفر لوت سخ وفصل فعندما تضغطه والمحرك يعمل يجب ان يفصل الكنتكتور وتضيي لنبه الفصل ويتغير لون نافظه البيان وبذلك تتاكد"
+ },
+ "overload/reset_button.mp3": {
+  "recall": 0.84,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "00ef20404e05",
+  "heard": "هذا هو زر اعاده الضط بعد ان يفصل الاوفر لود وتبرد الشريحه اضغطه لتعيد النقاط الي وضعها الطبيعي وتديره لتختار الوضع اليدويه اتش او التلقايي ايه وفي معظم الاعمال "
+ },
+ "overload/trip_flag.mp3": {
+  "recall": 0.86,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6597cd8822f6",
+  "heard": "هذه النافذه الصغيره تبين لك حاله الاوفر لود دون اجهزه فاللون طبيعي يعني انه جاهز واذا فصل يظهر لون اخر او علامه فعندما تفتح الوحه وتجد محرك متوقفا تخبرك نظره وا"
+ },
+ "overload/contactor_pins.mp3": {
+  "recall": 0.72,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fdb332c1e990",
+  "heard": "هذه هي الاصابع النحاسيه الثلاثه في الاعل تدخل مباشره في الاطراف 2 و 4 و 6 للكنتكتور وتربط بمسميره وبذلك يصبح الاوفر لود والكنتكتور واحده واحده تسمي بادي الحركه "
+ },
+ "overload/bimetal_heaters.mp3": {
+  "recall": 0.86,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "07f4595f5e93",
+  "heard": "هذا هو قلب الاوفر لود ثلاث شراحه ثناييه المعدن وعحده لكل فاز كل شريحه مصموعه من معدنين ملتصقين يتمدد احدهم اكثر من الاخر عند تسخين فتنحن الشريحه وملفوف عليها سل"
+ },
+ "overload/differential.mp3": {
+  "recall": 0.79,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "462bd375fd2f",
+  "heard": "هاتان مسترطان متراكبتان تدفعهما اطراف الشرايح الثلاث فاذا انحنت الشرايح الثلاث بالتساوي تحركت المسترطان معا اما اذا قطع فاز فان شريحته تعود الي الخلف وتتقدم شري"
+ },
+ "overload/compensation.mp3": {
+  "recall": 0.9,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6fded00a1486",
+  "heard": "هذه شريحه ثناييه المعدن اخر لكن الطيار لا يمر فيها فهي تنحني فقط مع حراره الجو داخل اللوحه وفي الاتجاه الذي يلغي تاثيرها علي الشرايح الاساسيه وبذلك يفصل الاوفر "
+ },
+ "overload/trip_mechanism.mp3": {
+  "recall": 0.81,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f74386f2a071",
+  "heard": "هذه هي اليه الفصل وفيها ماسك ونابد سريع للانطلاق فعندما تدفع المستره الماسك الي نقطه معينه ينطلق النابد ضفعه واحده فتتحرك النقاط المساعده بسرعه لا ببطء مع انحنا"
+ },
+ "overload/aux_contacts.mp3": {
+  "recall": 0.8,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c6088c1edda6",
+  "heard": "هاتان قانطراتان صغيرهان الاول للنقطه المغلقه من 95 الي 96 وتواصل علي التوالي مع ملف الكنتكتور فبمجرد ان يفصل الاوفر الودي انقطع الملف ويتوقف المحرك والثانيه للن"
+ },
+ "overload/base_housing.mp3": {
+  "recall": 0.87,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d728773ceac6",
+  "heard": "هذا هو جسم الاوفر لود مصموع من بلاستيك عازل ويحمل الاليه كلها وفي الاسفل اطراف الخروج الي المحرك اثنان t1 4 t2 6 t3 وبينها حواقز عازله ومن الخلف يوجد سند يستند "
+ },
+ "overload/closing.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1a780356d2b0",
+  "heard": "بهذا نكون قد انهينا درس الاوفر لود الحراري جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "aux_block/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0a4befb3e9c8",
+  "heard": "مرحبا بك في درس البلوك المساعد سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "aux_block/intro.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "860c73b33090",
+  "heard": "هذا البلوك المساعد يركوب علي واجهه الكنتكتور ليزيد عدد النقاط المساعده فالكنتكتور العادي فيه نقطه او نقطتان فقط وعندما تحتاج دايره التحكم الي نقاط اكثر مثل الام"
+ },
+ "aux_block/lesson_definition.mp3": {
+  "recall": 0.87,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d19983b29444",
+  "heard": "التعريث البلوك المساعد مجموعه من نقاط التحكم الصغيره المفتوحه والمغلقه في جسم واحد يتعشق ميكنيكيا مع الكنتكتور ونقاطه مصممه لتيارات دايره التحكم فقط مثل الملفات"
+ },
+ "aux_block/lesson_principle.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "12ee65c48c57",
+  "heard": "نظريه التشغيل ليس للبلوك ملف خاصن به ففي خلفه ذراعه عشيق يدخل في حامل نقاط الكنتكتور فعندما يجذب الكنتكتور يتحرك الحامل الي الخلف ويسحب معه منزلق البلوك فتتحرك "
+ },
+ "aux_block/lesson_terminals.mp3": {
+  "recall": 0.73,
+  "precision": 0.59,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8e5326f6b148",
+  "heard": "ترقيم النقاط كل نقطه مرقمه برقمين الرقم الثاني يحدد النوع واحد واثنان يعني نقطه مغلقه نسي وثلاثه واربعه يعني نقطه مفتوحه النوع ورقم الاول هو رقم الترتيب ويكمل ب"
+ },
+ "aux_block/lesson_linked.mp3": {
+  "recall": 0.85,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "51984bf028d6",
+  "heard": "النقاط المرتبطه ميكنيكيا في البلوكات المصنوعه وفق ملحق المواصفه ac6 04 175 شرطه واحد الخاص بالنقاط المرتبطه ميكنيكيا يستحيل ان تكون نقطه مفتوحه ونقطه مغلقه في ا"
+ },
+ "aux_block/lesson_rating.mp3": {
+  "recall": 0.83,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0c50e2922442",
+  "heard": "المقنن وثايه الاستخدام تقنن نقاط التحكم بثايه الاستخدام ac شرطه خمس عشر اي فصل وتوصيل الاحمال الكهر مغنطيسيه مثل ملفات الكنتكتورات والصمامات علي التيار المتردد "
+ },
+ "aux_block/lesson_mounting.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "51b62af35e4a",
+  "heard": "التركيب والفك والكهرباء مفصوله علق الخطاف العلوي في مكانه علي واجهه الكنتكتور وضغط البلوك حتي يغلك المشبك وليفكه اضغط علي زر الفك الاخضر وصحب وبعد التركيب تاكد "
+ },
+ "aux_block/cover.mp3": {
+  "recall": 0.88,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7c9a1e307cc5",
+  "heard": "علي الغطاء الامامي ثمانيه اطراف اربعه في الاعلي واربعه في الاسفل وبجان بكل طرف رقمه واسفل كل عمود مكتوب النوع عن نقطه نوع او انسي وبين الاطراف حواق زعازله العطل"
+ },
+ "aux_block/fixed.mp3": {
+  "recall": 0.88,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a11bc21217ed",
+  "heard": "هذه هي النقاط الثابته شرايح نحاسيه متصله بالاطراف وفي نهايتها نقاط صغيره من الفضه والشكل واحد للنقطه المفتوحه والمغلقه والفرق كله في موضع القنطره المتحركه بالنس"
+ },
+ "aux_block/bridges.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ecdde4fd5550",
+  "heard": "هذه هي القناهر المتحركه قنطرت النقطه المفتوحه تقف امام النقاط الثابته وبمجرد سحب المنزلق تلامسها وتغلق وقنطرت النقطه المغلقه تقف خلف النقاط الثابته وتلامسها وبم"
+ },
+ "aux_block/slide.mp3": {
+  "recall": 0.85,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3d97a27f1090",
+  "heard": "هذا هو المنزلق جزء من البلاستيك العازلي يحمل القناطر الاربعه ويتحرك الي الامام والخلف داخل الجسم وهو الذي يربط حركه الكنتكتور بحركه النقاط العطل الشايع المنزلق "
+ },
+ "aux_block/spring.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "47382abf44d5",
+  "heard": "هذا النابد يعيد المنزلقه الي وضعه الطبيعي عندما يفس الالكونتكتور لتعود النقاط الي حالتها المرسومه في المخطط العطل الشايع النابد ضعيف يجعل النقاط تتاخر في العوده"
+ },
+ "aux_block/plunger.mp3": {
+  "recall": 0.85,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "915f621fba1e",
+  "heard": "هذا هو الزراع الخارج من خلف البلوك ويتخل في نافظه حامل نقاط الكنتكتور وهو الذي ينقل الحركه ويجب ان يكون داخلا في مكانه الصحيح والا يرك البلوك من الخارج دون ان ي"
+ },
+ "aux_block/clip.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1190fdf5d105",
+  "heard": "هذه خططيف التثبيت التي تمسك بواجهه الكنتكتور والزر الاخضر في الاعلي هو زر الفك تضغط عليه لتفك البلوك العطل الشايع المشبك المكسور يجعل البلوك يهتز وينفك مع الاهت"
+ },
+ "aux_block/base.mp3": {
+  "recall": 0.84,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e4d5b3446c0f",
+  "heard": "هذا هو الجسم الخلفي يحمل المنزلق والنابض وفيه الفضحه التي يخرج من هذا راعه عشيك ووضه الخلفي يستقر مباشره علي واجهه الكنتكتور العطل الشايع اي شرخ في الجسم يدخل ا"
+ },
+ "aux_block/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "099ecc09dc21",
+  "heard": "بهذا نكون قد انهينا درس البلوك المساعد جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "pneumatic_timer/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b208309712ad",
+  "heard": "مرحبا بك في درس الموقت الهوايي سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "pneumatic_timer/intro.mp3": {
+  "recall": 0.89,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "003b51b6a99a",
+  "heard": "الموقت الهوايي يركوب علي واجهه الكنتكتور مثل البلوك المساعد لكن نقاطه لا تتغير في لحظه تغير الكنتكتور نفسها بل بعد زمن نضبطه نحن والتاخير هنا ميك نيكي خالص يتم "
+ },
+ "pneumatic_timer/lesson_definition.mp3": {
+  "recall": 0.68,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9f77ddb64c76",
+  "heard": "التعريث الموقت الهوايي بالوقت اخير زمانين يركوب علي الكنتكتور وفيه نقطتان موجلتان واحله مغلقه واخر مفتوحه وهو نوعان تاخير عند التوصيل اوندله وفيه تتغير النقاط ب"
+ },
+ "pneumatic_timer/lesson_principle.mp3": {
+  "recall": 0.83,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "26b3ece1f5cd",
+  "heard": "نظريه التشغيل داخل الموقه غرفه مغلقه جدارها غشاء مطاطي ومعها نابض في نوع اندلا عندما يجذب الكنتكتور يحرر ذراع الموقه فيحاول النابض تحريك الغشاء لكن الغشاء لن يت"
+ },
+ "pneumatic_timer/lesson_setting.mp3": {
+  "recall": 0.75,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7dc850e32bb6",
+  "heard": "ضط الزمن كرس الضط يدير السمام الابري فعندما تديره نحو علامه زايد تضيق الفتحه ويتخل هوااه الطا فيطول الزمن وعندما تديره نحو علامه الناقس تتسع الفتحه ويقصر الزمن "
+ },
+ "pneumatic_timer/lesson_terminals.mp3": {
+  "recall": 0.86,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f61cdd07f171",
+  "heard": "ترقيم النقاط الرقم الثاني للنقاط الموجله 5 6 او 7 8 وهذه علامه علي انها نقاط ذات وظيفه خاصه في نوع التاخير عند التوصيل من 55 الي 56 مغلقه تفتح بعد الزمن ومن 67 "
+ },
+ "pneumatic_timer/lesson_accuracy.mp3": {
+  "recall": 0.88,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6d14ecba4fe0",
+  "heard": "الدقه والملاحظه الموقت الهوايي ابسط وارخص ولا يحتاج الي تغذيه ويتحمل ظروف العمل الصعبه لكن دقته اقل من الموقت الالكتروني ويتاثر بالحراره والغبار ونضافه المرشح و"
+ },
+ "pneumatic_timer/dial.mp3": {
+  "recall": 0.9,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "30fbe1a06e49",
+  "heard": "هذا هو قرص الضط وعليه مد الزمن وهنا من ثانيه الي ثلاثين ثانيه ومكتوب عليه نوع التاخير وعندما تديره تتحكم في فتحه الصمام الابري الذي في داخله فتتحكم في سرعه دخول"
+ },
+ "pneumatic_timer/cover.mp3": {
+  "recall": 0.77,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e55a08ddea4b",
+  "heard": "علي الغطاء اربعه اطراف في الاركان 55 و 56 للنقطه المغلقه الموجله 67 و 68 و 60 للمفتوحه الموجله و عليه علامه الناقس و زايد نحو زايد يعني زمن اطول و نحو الناقس يع"
+ },
+ "pneumatic_timer/needle.mp3": {
+  "recall": 0.9,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f88fcc356df1",
+  "heard": "هذا هو صمام الابري سنمخرطي يدخل في فتحه صغيره فكلما دخل اكثر ضاقه الفتحه ومر الهواء اططي وهو العنصر الذي يحدد الزمن فعليا العطل الشايع اي غبار في الفتحه يطيل ال"
+ },
+ "pneumatic_timer/filter.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6cb75b5061c3",
+  "heard": "هذا المرشح قطعه لبادي صغيره يمر عليها الهواء قبل الصمام الابري حتي لا يدخل غبار يسد الفضحه الدقيقه العطل الشايع المرشح المسدود يطيل الزمن كثيرا الاختبار في البي"
+ },
+ "pneumatic_timer/bellows.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3ca105f2e4f0",
+  "heard": "هذا هو الغشاء المطاطي وهو جدار غرفه الهواء ويتغير حجم الغرفه عندما يتحرك الغشاء ولا يتحرك الغشاء اسرع من دخول الهواء وفيه سمام احادي للتجاه يسمح للهواء بالخروج "
+ },
+ "pneumatic_timer/spring.mp3": {
+  "recall": 0.79,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "292ffdd40e60",
+  "heard": "هذا النابد هو القوه التي تحرك الغشاء بعد جذب الكنتكتور والهواء هو الذي يبطء حركه العطل الشايع النابد ضعيف يجعل النقاط لا تصل الي نهايه الشوط الاختبار هذا جسء دا"
+ },
+ "pneumatic_timer/fixed.mp3": {
+  "recall": 0.78,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "891c48e8a414",
+  "heard": "هذه هي النقاط ثابته المواصله بالاطراف فليسر للنقطه المغلقه من 55 الي 56 والين للمفتوحه من 67 الي 68 العطل الشايع النقاط المسوده تسبب تلام صنضعيفا الاختبار قس ال"
+ },
+ "pneumatic_timer/bridges.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4546759297cf",
+  "heard": "هذه هي القناطر التي يحركها الغشاء في نهايه شوطه وحركتها سريعه بنابذ سريع الانطلاق ليحدث التغيير دفعه واحده لا ببطء مع الهواء العطل الشايع اذا حدث التغيير ببطء ف"
+ },
+ "pneumatic_timer/plunger.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "230c82b5c67a",
+  "heard": "كما في البلوك المساعد هذا هو الذراع الذي يتعشق مع حامل الكنتكتور وهو الذي يبدا التوقيت بمجرد ان يتحرك الكنتكتور العطل الشايع التعشيق الخاطي يعني ان الموقت لن يب"
+ },
+ "pneumatic_timer/base.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0047d79d6a9b",
+  "heard": "الجسم الخلفي يحمل غرفه الهواء وذراعه عشيه ويستقر علي واجهه الكنتكتور العطل الشايع الشرخ في الجسم قد يسبب تسريب الهواء ويفسد التوقي الاختبار افحصه بالنظر"
+ },
+ "pneumatic_timer/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "07eb8222db73",
+  "heard": "بهذا نكون قد انهينا درس الموقت الهوايي جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "mcb/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "78243a289a8d",
+  "heard": "مرحبا بك في درس القاطع mcb سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "mcb/intro.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2c8577068924",
+  "heard": "القاطع الصغير او الامسيبي جهاز يحمل كابلات والاحمال من امرين زياده الحمل والقصر ويعمل ايضا مفتاحا يدوي النفصل به الدايره فبمجرد ان يشعر بتيار خطر يفصل من تلقاء "
+ },
+ "mcb/lesson_definition.mp3": {
+  "recall": 0.75,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9ee55684ccb1",
+  "heard": "التعريث القاطع جهاز توصيل وفصل انتلقايي يحمد دايره بعنصرين في داخله عنصر حراري يفصل عند زياده الحمل التي تطول وعنصر مغنطيسي يفصل عند تيار القصر في لحظه وهذا هو "
+ },
+ "mcb/lesson_thermal.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b04a4a1ce429",
+  "heard": "الحمايه الحراريه زياده الحمل يمر الطيار في شريحه ثناييه المعدن فاذا زاد علي القيمه المقننه لمده من الزمن تسخن شريحه وتنحني وتطفع ماسك اليه الفصل فيفصل القاطع وت"
+ },
+ "mcb/lesson_magnetic.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "08cf2d2fa629",
+  "heard": "الحمايه المغناطسيه القصر ويمر الطيار ايضا في ملف بداخله قلب حديدي متحرك وفي حاله القصر يكون الطيار عاليا جدا فيولد الملف مغناطسيه قويه تسحب القلب في جزء من الثا"
+ },
+ "mcb/lesson_curves.mp3": {
+  "recall": 0.69,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b48193050bb1",
+  "heard": "منحنيات الفصل بي و سي ودي الحرف الذي يسبق الرقم مثل سي ست عشر يحدد عندكم ضعف من التيار المقنن يفصل العنصر المغنطيسي لحظيا فالمنحنبي يفصل بين ثلاثه اضعاف و خمسه "
+ },
+ "mcb/lesson_breaking.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "428c582d45c1",
+  "heard": "ساعه القطع الرقم المكتوب داخل المستطيل علي واجهه القاطع مثل 6 الاف هو اقصه يار قصر يستطيع القاطع قطعه بامان بالامبير ويجب ان يكون اكبر من تيار القصر المتوقع في "
+ },
+ "mcb/lesson_arc.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bc743a4535fb",
+  "heard": "اتفاء الشراره عندما تفتح النقاط تحت تيار تنشا شراره بين النقططين فيجذب مجال مغنطيسيه ومجار معدنيه الشراره الي غرفه الاتفاء وفيها رقايق حديديه متوازيه فتنقسم الش"
+ },
+ "mcb/lesson_tripfree.mp3": {
+  "recall": 0.87,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "755ff633289b",
+  "heard": "الفصل الحر تسمي اليه القاطع اليه الفصل الحر اي انه اذا امسك احدهم الزراعه في وضع التشغيل والقصر مازال موجودا فان القاطع سيفصل من الداخل مع ذلك ولن يطق مغلقا وبع"
+ },
+ "mcb/lesson_selection.mp3": {
+  "recall": 0.85,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0a5e4f4b7798",
+  "heard": "الاختيار والتركيب يجب ان يكون الطيار المقنن للقاطع اقل من الطيار المسموح للكابل الذي يحميه او مساويا لان القاطع في الاساس هو حمايه الكابل ونختار المنحن حسب نوع "
+ },
+ "mcb/lesson_symbol.mp3": {
+  "recall": 0.84,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6ab9a7186fa7",
+  "heard": "الرمز يرسم القاطع في المخطط نقطه مفتوحه علي طرفها علامه x وهي علامه وظيفه القاطع وبجانبها علامه العنصر الحراري والعنصر المغنطسي ويكتب بجانبها الحرف q او f بعض ا"
+ },
+ "mcb/housing_left.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2f4bf96ea58d",
+  "heard": "جسم القاطع مصنوع من نصفين من البلاستيك العازل المقاوم للحراره مثبتين معا بمسمير برشام وفي داخل هذا نصف اماكن محدده بدقه لكل جسء الملف والنقاط والاليه وغرفه الاط"
+ },
+ "mcb/housing_right.mp3": {
+  "recall": 0.84,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e396148129f8",
+  "heard": "علي الواقهه مضبوعه كل بيانات القاطع المنحن والتيار مثل سيس ١٦ وسعه القطع داخل المستطيل وارقام الاطراف وبهذه البيانات نختار القاطع ونراجعه في اللوحه العطل الشايع"
+ },
+ "mcb/handle.mp3": {
+  "recall": 0.77,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fe4bf8b7c38e",
+  "heard": "بهذا الذراع شغل القاطع ونفصله يدويا فالي الاعلي يعني تشغيل اي والي الاسفل يعني ايقافه وفي القواتع متعدده الاقطاب تكون الاذرع مربوطه بقنطره وحده لتفصل كل الاقطاب"
+ },
+ "mcb/mechanism.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bbcd5b99cd84",
+  "heard": "هذه هي الاليه التي تمسك النقاط مغلقه وفيها ماسك ونابض مشحون فبمجرد ان تدفع شريحه الحراريه او الملف المغنطيسي الماسك يفتح النابض النقاط بسرعه كبيره وفيها ايضا مو"
+ },
+ "mcb/line_terminal.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ba4cc78e62e2",
+  "heard": "هذا طرف الدخول في الاعلي وهو قفص معدني يغلق بالمسمار علي السلك ويتخل سلك داخل القفص وليس تحت المسمار مباشره ويجب ان يدخل الي نهايته دون ان يكون عازله داخل الطرف"
+ },
+ "mcb/magnetic_coil.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2d262912f8d7",
+  "heard": "هذا هو الملف المغنطيسي لفات قليله من سلك النحاسي سميق وفي داخلها قلب حديدي متحرك وفي التشغيل العادي لا يفعل شييا اما عند القصر فتصحب المغنطيسيه القلب بقوه فيستض"
+ },
+ "mcb/contacts.mp3": {
+  "recall": 0.9,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ffb2a02fc70b",
+  "heard": "هاتان هما النقطه الثابته والنقطه المتحركه وعليهما سبيكه من الفضه والنقطه المتحركه علي ذراع يدور حول محور ويدغطها النابض علي النقطه الثابته اثناء التشغيل وعند ال"
+ },
+ "mcb/arc_chute.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c129e8fda0f0",
+  "heard": "هذه هي غرفه الاطفاء وفيها رقايق حديديه متوازيه تنجذب الشراره بين رقايق وتنقسم الي شرارات صغيره كثيره فتبرد وتنطفع بسرعه وفي الجسم فتحات صغيره تخرج الغازات الساخ"
+ },
+ "mcb/bimetal.mp3": {
+  "recall": 0.84,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3a119751f300",
+  "heard": "هذه هي الشريحه ثناييه المعدن وهي متصله بالنقطه المتحركه بضافيره نحاسيه مرنه ويمر فيها التيار فاذا زادع المقنن لمده من الزمن تسخ شريحه وتنحني وتدفع الماسك وهذا ه"
+ },
+ "mcb/load_terminal.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7115caf1de4c",
+  "heard": "هذا طرف الخروج في الاسفل ومنه يذهب السلك الي الحمل وطريقه الربط هي نفسها في طرف الدخول العطل الشايع السخونه عند طرف الخروج تسخن شريحه المجاوره فيفصل القاطع دون "
+ },
+ "mcb/din_clip.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d0b9bce8c1c4",
+  "heard": "هذا هو المشبك السفلي تعلق القاطع علي القضيب من الاعل ثم تضغط من الاسفل حتي يغلك المشبك ولفكه اسحب المشبك الي الاسفل بمثه العطل الشايع المشبك المكسور يجعل القاطع"
+ },
+ "mcb/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "37595de9ba3c",
+  "heard": "بهذا نكون قد انهينا درس القاطع mcb جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "rccb/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "adc937f180a9",
+  "heard": "مرحبا بك في درس قاطع تصرب الارضي oursycb سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "rccb/intro.mp3": {
+  "recall": 0.81,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eee3f92a30de",
+  "heard": "قاطع تصرب الارضي او الاورسي سي بي جهاز لحمايه الارواح قبل كل شيء فهو يقارن طيار الداخل في الفاز بالتيار العايد في النيوطرال فاذا وجد فرقا اي ان هناك طيار يتصرب "
+ },
+ "rccb/lesson_definition.mp3": {
+  "recall": 0.78,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c3c76f2c1925",
+  "heard": "التعريف قاطع التصرب الارضي جهاز يفصل الدايره عندما يستشعر تياره صرب اي تيارا يخرج من الدايره ويتجه الي الارض بدلا من ان يعود في النيوطرال ويصنع وفق المواصفه ايس"
+ },
+ "rccb/lesson_principle.mp3": {
+  "recall": 0.79,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e275160614d9",
+  "heard": "مظريه التشغيل يمر الفز وانيوترالك لاهما داخل قلب حديدين علي شكل حلقه وفي الوضع الطبيعي يكون الطيار ذاهب في الفاز مساويا للعايد في النيوترال فيلغ المجالان المغنط"
+ },
+ "rccb/lesson_sensitivity.mp3": {
+  "recall": 0.8,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6489cbeff93a",
+  "heard": "الحساسيه الرقم المكتوب بجانب هو تيار التسرب الذي يفصل عنده فثلاثون ميلي امبير للحمايه الاضافيه للاشخاص من الصاق وهو المطلوب في الحمامات والمقابس والاماكن ربه وم"
+ },
+ "rccb/lesson_types.mp3": {
+  "recall": 0.63,
   "precision": 0.65,
   "attempt": 1,
   "ok": true,
   "voice": "ar-EG-ShakirNeural",
   "model": "azure-neural",
-  "heard": "ده الكويل ملف سلك نحاس معزول ملفوف لفات كتير علي بكره بلستك وطرفينه طالعين علي ترمينال اه واحد واقي اثنان اول ما توصل عليه الجهد المكتوب علي ليبل هنا مثلا ما ات"
+  "h": "45d39a0576ed",
+  "heard": "الانواع اسي و اي و بي النوع اسي يستشعر طيار تصر بالمطرد دفقه والنوع اسي يستشعر ايضا طيار المستمر النابض الذي يصدر عن الاجهزه الالكترونيه مثل الغسالات والشواح وه"
+ },
+ "rccb/lesson_test.mp3": {
+  "recall": 0.88,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c5195f2383f6",
+  "heard": "زر الاختبار الزرتي يحدث تسربا صناعيا مقصودا عبر مقاومه يمر من خارج الحلقه فيجب ان يفصل القاطع ويطلب المصنعون الضغط عليه مره كل شهر والسبب ان الاليه اذا بقيت سنو"
+ },
+ "rccb/lesson_wiring.mp3": {
+  "recall": 0.73,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3dce6a2c9ff5",
+  "heard": "قواعد التوصيل يجب ان يمر الفزوي النيوطرال كلاهما عبر القاطع اما الارضي فلا ولا يصل النيوطرال الذي بعض القاطع بنيوطرال دايره اخري او بالارضي والا سيفصل القاطع با"
+ },
+ "rccb/lesson_symbol.mp3": {
+  "recall": 0.81,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e4a7a0f49844",
+  "heard": "الرمز يرسم في المخطط نقطتين مفتوحتين للفاز والنيوترال ومعهما شكل بيضاوي يمر فيه الخطان وهو علامه محاول التيار الحلقي ويكتب بجانبه واقيمته والحرف كيو او اف"
+ },
+ "rccb/housing_left.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a06592c2acea",
+  "heard": "الجسم مصنوع من نصفين من البلاستيك العازل وهذا النصف من جهه الفاز وفيه فتحه الزراعي وزر الاختبار العطل الشايع اي اثاره تراق او انتفاق تعني ان الجهاز تعرض لقصر كب"
+ },
+ "rccb/housing_right.mp3": {
+  "recall": 0.85,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "590e6ca67f9a",
+  "heard": "علي الواجهه كل البيانات التيار المقنن وهو اقصه يار يمر في النقاط باستمرار والحساسيه والجهد وزمن الفصل ورقم المواصفه والنافذه الصغيره تتبين حاله القاطع العطل الش"
+ },
+ "rccb/handle.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "94401ae410c4",
+  "heard": "هذا الذراع يوصل القضبين ويفسلهما معا وبعد اي فصل بسبب تسرب ينزل الذراع الي الاسفل ولا ترفعه مره اخري الا بعد ان تعرف مكان التسرب وتصلحه العطل الشايع اذا لم يثبت"
+ },
+ "rccb/test_button.mp3": {
+  "recall": 0.82,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ba6de93b1b59",
+  "heard": "هذا هو زر الاختبار البرتقالي عندما تضغطه يمر طيار صغير من الفاز الي نيوترال دون ان يمر داخل الحلقه فيستشعر القاطع فرقا ويفسل فورا اضغطه مره كل شهر العطل الشايع "
+ },
+ "rccb/test_resistor.mp3": {
+  "recall": 0.96,
+  "precision": 0.96,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8dd8122b6732",
+  "heard": "هذه المقاومه تحدد قيمه تيار الاختبار الذي يمر عند ضغط الزر ليكون اكبر قليلا من حساسيه القاطع فيضمن الفصل دون ان يحدث قصرا العطل الشايع المقاومه المقطوعه تجعل زر"
+ },
+ "rccb/toroid.mp3": {
+  "recall": 0.82,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "15014c33246e",
+  "heard": "هذه اهم قطعه في القاطع حلقه من مده مغنطيسيه شديده الحساسيه يمر بداخلها الفاز ونيوترال وعليها ملف ثانوي واي فرق بين تيارين ولو بضعه ميلي امبيرات يولد فيضا في الح"
+ },
+ "rccb/trip_relay.mp3": {
+  "recall": 0.73,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "caa686677d8e",
+  "heard": "هذا مرحول شديد الحساسيه فهم مغنطيس دايم يمسك ذراع صغيرا والجهد القادم من ملاف الحلقه يضع في المغنطيس لحظيا فيتفع نابد الذراع ويصطدم الذراع باليه الفصل ولانه ياخ"
+ },
+ "rccb/mechanism.mp3": {
+  "recall": 0.93,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9ada9ead51a1",
+  "heard": "هذه الاليه تمسك النقاط مغلقه بنابض مشحون وبمجرد ان يدفع مرحل الفصل او زر الاختبار الماسك تفتح النقاط بسرعه والموشر الصغير في النافذه يتحرك معها العطل الشايع الا"
+ },
+ "rccb/contacts.mp3": {
+  "recall": 0.88,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c6a82ecb57fb",
+  "heard": "نقطتان رييسيتان تفتحان معا واحده للفاز واخري للنيوترال وفتح النيوترال مهم لتصبح الدايره معزوله تماما بعض الفصل العطل الشايع النقاط المحترقه تسبب سخونه عند تيارا"
+ },
+ "rccb/line_terminals.mp3": {
+  "recall": 0.76,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9a1ea1e11c3f",
+  "heard": "اطراف الدخول في الاعلي واحد للفاز وان للنيوترال انتبه الي ترتيب فالفاز علي الطرف المكتوب عليه رقم وانيوترال علي الطرف المكتوب عليه العطل الشايع عكس الفاز وانيوت"
+ },
+ "rccb/load_terminals.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "667d80b0741a",
+  "heard": "اطراف الخروج في الاسفل متجهه الي الاحمال المحميه بهذا القاطع ويبقي نيوترال الخروج هذا مخصصا لهذه الدواير فقط العطل الشايع خلط نيوترال الخروج بنيوترال دواير اخري"
+ },
+ "rccb/closing.mp3": {
+  "recall": 0.74,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0b1dadb8a599",
+  "heard": "بهذا نكون قد انهينا درس قاطع تصر بالارضي اورسي سيبي جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "mpcb/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d6bbcba916d7",
+  "heard": "مرحبا بك في درس قاطع عن حمايه المحرك mbcb سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "mpcb/intro.mp3": {
+  "recall": 0.88,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4afc447eadc3",
+  "heard": "قاطع حمايه المحرك او mbcb جهاز واحد يودي عمل ثلاثه اجهزه مفتاح فصل يدوي للمحرك وحمايه من القصر مثل قاطع وحمايه من زياده الحمل وفقد الفاز مثل اورلون ويضبط علي تي"
+ },
+ "mpcb/lesson_definition.mp3": {
+  "recall": 0.73,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2ea2c04d34b6",
+  "heard": "التعريف قاطع حمايه المحرك قاطع ثلاثي الاقطاب مصمم خصيصا للمحركات وفق المواصفتين يسي من 60 947 الاثنان للقواتع ويسي 6 9471 لباديات الحركه وفي داخله لكل فاز عنصرا"
+ },
+ "mpcb/lesson_vs.mp3": {
+  "recall": 0.69,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "111743203773",
+  "heard": "الفرق بينه وبين القاطع العدي والافرلود القاطع العدي وامسيب تياره ثابع مثل 16 او 20 امبر ومنحناه غير مصمم لتيار بدء حركه المحرك كما انه لا يستشعر فقد الفاز والاف"
+ },
+ "mpcb/lesson_thermal.mp3": {
+  "recall": 0.72,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ef7c413d2a80",
+  "heard": "الحمايه الحراريه وضط علي قرص الضط مد مثل من 20 الي 25 امبير ونضبته علي تيار الحمل الكامل المكتوب علي لوحه المحرك فمثلا محرك قدرته 11 كيلوات علي 400 فلت تياره نح"
+ },
+ "mpcb/lesson_magnetic.mp3": {
+  "recall": 0.79,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eafbab827338",
+  "heard": "الحمايه المغناطسيه يفصل العنصر مغناطسيه لحظيا عند تيار عال غالبا نحو ثلاث عشر دعفا من اعلي قيمه في مضضط حسب الطراز وهذه القيمه اعلي من تيار بد المحرك حتي لا يفص"
+ },
+ "mpcb/lesson_breaking.mp3": {
+  "recall": 0.78,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "743553d0dbdc",
+  "heard": "ساعه القطع icu و acs علي الجهاز رقمان لساعه القطع aco هي اقصه يار قصر يستطيع قطعه مره واحده وقد يحتاج بعدها الي الاستبدال و acs هي ساعه القطع التي يبقي بعدها صا"
+ },
+ "mpcb/lesson_handle.mp3": {
+  "recall": 0.79,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8a3bf36ac25b",
+  "heard": "اوضاع المقبض للمقبض ثلاثه اوضاع اي اي تشغيل واو اي فصل ووضع في المنتصف مكتوب عنده ترب فعندما يفسل القاطع بسبب عطل يذهب المقبض الي وضع ترب من تلقاء نفسه فتعرف ان"
+ },
+ "mpcb/lesson_coordination.mp3": {
+  "recall": 0.76,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0f31533ee33c",
+  "heard": "التنسيق مع الكنتكتور عندما يركوب الانبسيبي قبل كونتكتور يعطي المصنوع جداوله تنسيق وفق المواصفه فالتنسيق من النوع الاول يعني ان الكنتكتور قد يحتاج الي الاستبدال "
+ },
+ "mpcb/lesson_wiring.mp3": {
+  "recall": 0.61,
+  "precision": 0.62,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ba781bbd7635",
+  "heard": "التوصيل والرمز الدخول من الاعلي واحد الواحد وثلاث الاثنان وخمس الثلاثه والخروج من الاسفل الثنان تي واحد واربعه تي اثنان وست تي ثلاثه الي الكنتكتور او الي المحرك"
+ },
+ "mpcb/front_cover.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ce9d43349306",
+  "heard": "علي الغطاء الامامي اطراف الدخول في الاعلي والخروج في الاسفل بارقامها وفي المنتصف المقبض وقرص الضبط وفتحه الاختبار وفي الاسفل مضبوع مدي التيار وسعه القطع العطل ا"
+ },
+ "mpcb/rotary_knob.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8f1e8ffeb496",
+  "heard": "هذا هو المقبض الدوار عندما تديره الي اي التصل القاطع والي او يفصل واذا فصل من تلقاء نفسه بسبب عطل يقف المقبض عند ترب في المنطصف العطل الشايع المقبض الذي يعود ال"
+ },
+ "mpcb/setting_dial.mp3": {
+  "recall": 0.88,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "72051699bfc3",
+  "heard": "هذا قرص ضطط الحمايه الحراريه تديره بمفكن علي تيار الحمل الكامل للمحرك وهو يحرك كامه في الداخل تغير المسافه التي يجب ان تنحنيها شريحه حتي يحدث الفصل العطل الشايع"
+ },
+ "mpcb/test_pusher.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "92787eac883c",
+  "heard": "في فتحه الاختبار تطفع بمفكت فتتحرك اليه الفصل ميكنيكيا كان هناك عطلا ويجب ان يذهب المقبض الي وضع ترب وبذلك تتاكد ان الاليه غير عالقه العطل الشايع اذا دفعت ولم ي"
+ },
+ "mpcb/mechanism.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3bea6c7fd343",
+  "heard": "هذه الاليه تتحول دوران المقبض الي حركه فتح واغلاق سريعه للنقاط بنوابض تشحن ثم تنطلق اي ان سرعه فتح النقاط لا تعتمد علي سرعه يدك وهذا امر مهم جدا عند فتح دايره ت"
+ },
+ "mpcb/trip_bar.mp3": {
+  "recall": 0.8,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c07bc177d970",
+  "heard": "مسترتان تربطان اطراف الشرايح ثناييه المعدن في الفازات الثلاثه كما في الاوفر لون فاذا قطع فاز تختلف حركه هما فيفصل القاطع اسرا كما ان اي فصل في اي فاز يفتح الاقط"
+ },
+ "mpcb/bimetals.mp3": {
+  "recall": 0.86,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "21d1d91d5b01",
+  "heard": "ثلاث شرايح ثناييه المعدن علي كل منها ملافتسخين يمر فيه تيار الفاز فعندما يسحب المحرك تيارا زايدا لمده من الزمن تنحن الشرايح وتدفع المستري ويقل زمن الفصل كلما زا"
+ },
+ "mpcb/magnetic.mp3": {
+  "recall": 0.87,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1066aa133af4",
+  "heard": "في كل فاز ملف ذولفات قليله وسميكه وفي داخله قلب متحرك وعند القصر يصحب القلب بقوه في جزء من الثانيه ويستضم بالاليه والنقاط والفصل هنا لحظي العطل الشايع الفصل لحظ"
+ },
+ "mpcb/contacts.mp3": {
+  "recall": 0.84,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6ec48852e5c0",
+  "heard": "في كل فاز قانطره تفتح في مكانين معا اي فتح مزدوي ونقاطها من سبيكه الفضه وعند القصره ساعد القوه المغنطيسيه نفسها علي ابعاد القانطره بسرعه وهذا يحد من قيمه تيار ا"
+ },
+ "mpcb/arc_chambers.mp3": {
+  "recall": 0.92,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b752d115c369",
+  "heard": "لكل فاز غرفه فيها رقايق حديديه تقسم شراره وتبردها حتي تنطفي في وقت قصير جدا وهي التي تعطي القاطع ساعه قطعا عاليه في حج من صغير العطل الشايع اثار السواد حول فتحا"
+ },
+ "mpcb/base.mp3": {
+  "recall": 0.86,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d7d5da6425c1",
+  "heard": "القاعده الخلفيه تحمل الاجزاء الداخليه وفي خلفها مشبك يركب علي قضيب التثبيت مقاس 35 مليمترا العطل الشايع التركيب المايل او المرتخ يوثر علي الاطراف والاليه مع اله"
+ },
+ "mpcb/closing.mp3": {
+  "recall": 0.87,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a55f24d1c1af",
+  "heard": "بهذا نكون قد انهينا درس قاطع حمايه المحرك mbcb جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "fuse/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1bfd3065d722",
+  "heard": "مرحبا بك في درس المصهر الفيوز وحامله سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "fuse/intro.mp3": {
+  "recall": 0.82,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "875b1884a94d",
+  "heard": "المصهر او الفيوز ابسط واقدم جهاز حمايه سلك معدني رفيع محسوب بمجرد ان يمر فيه تيار زايد يسخ وينصهر ويقطع دايره والمصهر الخرطوشي ما قاس عشر في ثمانيه وثلاثون يركب"
+ },
+ "fuse/lesson_principle.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2375bf45df24",
+  "heard": "نظريه التشغيل في السلك داخل المصهر اماكن ضيقه مقصوده تسخن اسرع وعند القصر تنصهر هذه الاماكن في جزء من الالف من الثانيه ورم المحيط بالسلك يمتصح حراره الشراره ويط"
+ },
+ "fuse/lesson_types.mp3": {
+  "recall": 0.69,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c8c3be87ecc6",
+  "heard": "الانواع الجي جي وام المصر الجي جيل الاستخدام العام يحمي من زياده الحمل ومن القصر والمصر ام لحمايه المحركات من القصر فقط ويتحمل تيار البدء العالي ويجب ان يكون مع"
+ },
+ "fuse/lesson_rules.mp3": {
+  "recall": 0.79,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4ded02e5e9cb",
+  "heard": "قواعد مهمه يمنع وضع مصر تياره اكبر من المحسوب ويمنع ربط سلك مكان المصر المحترق لان ذلك يلغ الحمايه ويسبب الحريط وحامل المصر العادي غير مصمم ليفتح تحت الحمل ففصل"
+ },
+ "fuse/holder.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4f104489894b",
+  "heard": "الجسم المثبه علي القضيب وفيه طرف الدخول وطرف الخروج والاقطاب التي يستقر عليها المصهر"
+ },
+ "fuse/carrier.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d4554ed12592",
+  "heard": "الدرج الذي يفتح الي الامام ويحمل المصر وفي بعض الانواع يوجد ليد يضيء عندما يحترق المصر الاختبار اذا كان ليد مضييا فالمصر محترق"
+ },
+ "fuse/fuse.mp3": {
+  "recall": 0.76,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c5bd9d2147bc",
+  "heard": "جسم من السيرميك بغطايين معدنيين في الطرفين وعليه تيار والنوع والجهد العطل الشايع المصهر المحترق مقاومته مالا نهايه الاختبار انزعه وقصه بجهاز القياس علي وضع توصي"
+ },
+ "fuse/element.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8bd22f54606e",
+  "heard": "سلك او شريحه من الفضه او النحاس فيها اماكن ضيقه ومدفونه في رمل الكورتز الذي يطفي الشراره"
+ },
+ "fuse/clips.mp3": {
+  "recall": 0.78,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4b7a9b8b28c6",
+  "heard": "الاقطاب النحاسيه التي تمسك الطرفي المصهر ويجب ان تضغط عليه جيدا العطل الشايع القدر المرتخي يسخ ويحرك الحامل"
+ },
+ "fuse/closing.mp3": {
+  "recall": 0.91,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "543c15595cd0",
+  "heard": "بهذا نكون قد انهينا درس المصهر الفيوز وحامله جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "pushbutton/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e014b2a5c4c8",
+  "heard": "مرحبا بك في درس الضغط مقاس 22 مليمترا سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "pushbutton/intro.mp3": {
+  "recall": 0.82,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d4c4d327f0c9",
+  "heard": "الضغط ابسط وسيله يخاطب بها المشغل دايره التحكم تضغط عليه فتتغير النقطه مادمت ضغطا وبمجرد ان تتركه يعيده النابد ولانه لاحظي يجب ان تكون معه في الدايره نقطه امساك"
+ },
+ "pushbutton/lesson_types.mp3": {
+  "recall": 0.76,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "93e143720486",
+  "heard": "الانواع هناك راس مستوي داخل الاطار يمنع الضغط بالخطا ويستخدم غالب للتشغيل وراس بارز اسهل في الضغط وراس فطري للطوارق وضاغط مزدوغ فيه التشغيل والاقاف في راس واحد "
+ },
+ "pushbutton/lesson_colors.mp3": {
+  "recall": 0.8,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "75c8723f76a5",
+  "heard": "الالوان حسب المواصفه تنص المواصفه ايسي من 60 الف ومايه تان واربعه الي واحد علي ان يكون ضاغط تشغيل ابيض او رماديا او اسود او اخضر والافضل ابيض ولا ايجوز ان يكون "
+ },
+ "pushbutton/lesson_numbering.mp3": {
+  "recall": 0.64,
+  "precision": 0.52,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e911281eabc8",
+  "heard": "ترقيم النقاط البلوك نفسه مكتوب عليه من ثلاثه الي اربعه للمفتوح ومن واحد الي اثنان للمغلق وفي المخطط نضيف رقم ترتيب قبلهما فتصبح من ثلاثه الي اربع عشر لاول نقطه "
+ },
+ "pushbutton/lesson_rating.mp3": {
+  "recall": 0.76,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0a6e54f40e80",
+  "heard": "المقنن نقاط الضواغط مصممه لدواير تحكم وفي اتستخدامها ايسي شرطه خمس عشر اي انها تستطيع تشغيل ملفات الكنتكتوره لكنها لا تصلح لتشغيل محرك او حمل كبير مباشره"
+ },
+ "pushbutton/lesson_mounting.mp3": {
+  "recall": 0.73,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9aa3cec2b048",
+  "heard": "التركيب اثقف الباب فتحه قطرها 22 مليمترا وثلث ادخل الراس من الامام وربط الصموله من الخلف ركب القاعده واحكم مسمار الرب ثم ثبت البلوكات حتي تسمع صوت التفبي ورتب ا"
+ },
+ "pushbutton/cap.mp3": {
+  "recall": 0.87,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1fc5f1755976",
+  "heard": "هذا هو زر الذي يضغط عليه المشغل ولونه يعرف بوظيفته ويمكن ان يكتب عليه رمز او كلمه ويبلغ شوته نحو اربعه مليلي مترا ويعود بين نابد العطل الشايع الزر المكسور او ال"
+ },
+ "pushbutton/bezel.mp3": {
+  "recall": 0.91,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3f61756d50fe",
+  "heard": "الاطار الكرومي او الاسود هو الظاهر من خارج الباب وخلفه جسم مقلوظ يمر عبر فتحه الباب وفي داخله حشيه تنتوط حمايه من الماء والغبار تصل الي اي بست وستون في كثير من "
+ },
+ "pushbutton/head_spring.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "60b267e8b094",
+  "heard": "هذا الزراع ينقل حركه الزر الي البلوكات في الخلف والنابض يعيد الزر بعد ان تتركه وهو الذي يجعله لحظيا العطل الشايع النابض ضعيف يجعل الزر يعلق وقد تضل الدايره تعمل"
+ },
+ "pushbutton/ring_nut.mp3": {
+  "recall": 0.82,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c451d1a509c3",
+  "heard": "هذه الصموله المحززه تربط من خلف الباب علي الجسم المقلوظ فتمسك الضغط في فتحه الباب والفتحه القياسيه 22 مليمترا وثلث العطل الشايع الصموله المرتخيه تجعل الضغط يدور"
+ },
+ "pushbutton/base.mp3": {
+  "recall": 0.81,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "56c3a8173806",
+  "heard": "هذه القاعده تربط الراس بالبلوكات تدخل علي الجسم من الخلف وتقفل بمسمار الربط الذي علاجان بها وفي اسفلها مكان لبلوكين او ثلاثه متجاوره وفي النسخه المعدينيه تكون م"
+ },
+ "pushbutton/block.mp3": {
+  "recall": 0.69,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ff6ab2b9c25a",
+  "heard": "بلوك النقاط يركوب في القاعده وفي داخله نقطه واحده فاذا كان مكتوب عليه بميه واحد ولونه اخضر فهو مفتوح النوطرفاه ثلاثه واربعه واذا كان بميه واثنان ولونه احمر فهو "
+ },
+ "pushbutton/block_contacts.mp3": {
+  "recall": 0.91,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0b37ee76e70a",
+  "heard": "داخل البلوك ذراع يدفعه الضغط وقنطره النحاسيه بنقاط من الفضه ونابض يعيدها في النوع المغلق تلامس القنطره النقاط وتبتعد عند الضغط وفي النوع المفتوح تكون القنطره بع"
+ },
+ "pushbutton/closing.mp3": {
+  "recall": 0.83,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "18b071300440",
+  "heard": "بهذا نكون قد انهينا درس الضغط مقاس 22 مليمترا جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "estop/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "31beddd143b3",
+  "heard": "مرحبا بك في درس مفتاح الطواري سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "estop/intro.mp3": {
+  "recall": 0.94,
+  "precision": 0.96,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ec31ec85a25c",
+  "heard": "مفتاح الطواري هو اخر خط امان في الاله راس علي شكل فتر احمر كبير علي ارضيه صفراء ليجده اي شخص ويضغطه في ثانيه ولو بكثيده وعندما يضغط يقفل في مكانه ولا يعود من تل"
+ },
+ "estop/lesson_definition.mp3": {
+  "recall": 0.85,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "833de6ad223a",
+  "heard": "التعريف والمواصفه مفتاح الطواري جهاز اقاف في حاله الخطر وتحكمه مواصفات خاصه فيجب ان يكون احمر علي ارضيه صفراء وان يقف لميكنيكيا عند الضغط ويجب ان تكون نقاطه نقا"
+ },
+ "estop/lesson_reset.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6eef376eadc0",
+  "heard": "اعاده الضط بعض الضط يظل مفتاح الطواري مضغطا وتكون اعادته بالتدوير في اتجاه الاسهم او بالسحب او بمفتاح في النوع ذي المفتاح وهذا يضمن ان الشخص المسووله وحده هو ال"
+ },
+ "estop/lesson_wiring.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0f65992f850c",
+  "heard": "التوصيل توصل نقطه الطواري المغلقه علي التوالي في بدايه دايره تحكم قبل ضاغط الايقاف فتقطع تحكم كله وفي الالات الكبيره يوصل الي مرحل امان مخصص وغالبا بنقطتين مغلق"
+ },
+ "estop/lesson_box.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "baf8debbfee4",
+  "heard": "علبه الطوارق ترك العلبه الصفراء بجانب الاله نفسها او في مسار المشغل ليصل اليها بسرعه وضربت حمايتها عاليه من الماء والغبار ويتخلها الكابل عبر جلا"
+ },
+ "estop/cap.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d015517dd633",
+  "heard": "راس فطري احمر كبير قطره 40 مليمترا او اكثر ليضغط بكف اليد بسرعه وعليه اسهم توضح تجاه التدوير لاعادته العطل الشايع الراس المكسور او المفكوك يعني ان ضغط قد لا يصل"
+ },
+ "estop/bezel.mp3": {
+  "recall": 0.96,
+  "precision": 0.96,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "33a47049c78c",
+  "heard": "الجسم الاسود الذي يحمل الراس الفطري ويمر عبر فتحه الباب وفيه الحشيه التي تحمي من الماء العطل الشايع الجسم المشقوق يدخل الماء الاختبار فحصم بالنظر"
+ },
+ "estop/head_spring.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7289c39d404a",
+  "heard": "هذه هي الااليه التي تقفل راس الفطريه بعض الضغط وتمنعه من العوده وحده ولا تتحرر الا بالتدوير او بالمفتاح وهي التي تجعل الاله تظلم توقفه حتي يقرر احدهم اعدتها الع"
+ },
+ "estop/ring_nut.mp3": {
+  "recall": 0.82,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ecb5139ca10f",
+  "heard": "هذه الصموله المحززه تربط من خلف الباب علي الجسم المقلوظ فتمسك الضغط في فتحه الباب والفتحه القياسيه 22 مليمترا وثلث العطل الشايع الصموله المرتخيه تجعل الضغط يدور"
+ },
+ "estop/base.mp3": {
+  "recall": 0.79,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "56c3a8173806",
+  "heard": "هذه القاعده تربط الراس بالبلوكات تدخل علي الجسم من الخلف وتقفل بمسمار الربط الذي علاجان بها وفي اسفلها مكان لبلوكين او ثلاثه متجاوره وفي النسخه المعدينيه تكون م"
+ },
+ "estop/block.mp3": {
+  "recall": 0.7,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ff6ab2b9c25a",
+  "heard": "بلوك النقاط يركوب في القاعده وفي داخله نقطه واحده فاذا كان مكتوب عليه بمايه واحد ولونه اخضر فهو مفتوح النواطرفاه ثلاثه واربعه واذا كان بمايه واثنان ولونه احمر ف"
+ },
+ "estop/block_contacts.mp3": {
+  "recall": 0.91,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0b37ee76e70a",
+  "heard": "داخل البلوك ذراع يدفعه الضغط وقنطره النحاسيه بنقاط من الفضه ونابض يعيدها في النوع المغلق تلامس القنطره النقاط وتبتعد عند الضغط وفي النوع المفتوح تكون القنطره بع"
+ },
+ "estop/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "964d18da363f",
+  "heard": "بهذا نكون قد انهينا درس مفتاح الطواري جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "selector/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c6c0a0ed83ab",
+  "heard": "مرحبا بك في درس مفتاح الاختيار السليكتور سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "selector/intro.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4a29e77cdc79",
+  "heard": "مفتاح الاختيار او السليكتور مفتاح يدار بذراع ويبقي في الوضع الذي تتركه فيه ويستخدم الاختيار طريقه التشغيل مثل يدوي والتلقايي او الاختيار احد محركين وهناك نوع يع"
+ },
+ "selector/lesson_positions.mp3": {
+  "recall": 0.88,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fb250605afc5",
+  "heard": "الاوضاع هناك مفتاح اختيار بوضعين صفر وواحد واخر بثلاثه اوضاع واحد وصفر واثنين واشهرها يدوي واقاف وتلقايي وهناك نوع ثابت يقف الوضع وحده ونوع يعود بنابض من وضع اك"
+ },
+ "selector/lesson_cam.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ed8efcd21202",
+  "heard": "طريقه التشغيل يدير ذراع كامه داخل الراس وللكمت بروز يدفع ذراع البلوك في اوضاع معينه فقط فبترتيب البلوكات حول الكامه نستطيع تحقيق اي منطقه نقطه تغلق في الوضع واح"
+ },
+ "selector/lesson_diagram.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2846f120a73c",
+  "heard": "الرمز في المخطط يرسم مفتاح الاختيار نقاط مربوطه بخط المتقطه وفوقها جدول صغير يوضح في اي وضع تكون كل نقطه مغلقه وغالبا يكتب بجانبه s or s"
+ },
+ "selector/cap.mp3": {
+  "recall": 0.98,
+  "precision": 0.98,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b31e3c8daf24",
+  "heard": "الذراع الذي تديره وعليه خط ابيض يشير الي الوضع الحالي وحوله علي الاطار او علي لوحه صغيره مكتوبه ارقام الاوضاء العطل الشايع ذراع مكسور او يدور في مكانه دون ان يح"
+ },
+ "selector/bezel.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "229b769db114",
+  "heard": "الاطار الكرومي والجسم المقلوظ الذي يمر عبر الباب مثل الضغل"
+ },
+ "selector/head_spring.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "996cfe435b61",
+  "heard": "الكامه تحول الدوران الي دفع علي البلوكات ونابض التثبيت يجعل زراعه يقف بثبات في كل وضع فتشعر بالطقه العطل الشايع اليه التثبيت الضعيفه تجعل زراعه يقف بين وضعين فت"
+ },
+ "selector/ring_nut.mp3": {
+  "recall": 0.82,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9808282889fc",
+  "heard": "هذه الصموله المحززه تربط من خلف الباب علي الجسم المقلوظ فتمسك المفتاحه في فتحه الباب والفتحه القياسيه 22 مليمترا وثلث العطل الشايع الصموله المرتخيه تجعل المفتاح"
+ },
+ "selector/base.mp3": {
+  "recall": 0.83,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "002e13d7277a",
+  "heard": "هذه القاعده تربط الراس بالبلوكات تدخل علي الجسم من الخلف وتقفل بمسمار الربط الذي علاجان بها وفي اسفلها مكان لبلوكين او ثلاثه متجاوره وفي النسخه المعدينيه تكون م"
+ },
+ "selector/block.mp3": {
+  "recall": 0.74,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cb21af92a255",
+  "heard": "بلوك النقاط يركوب في القاعده وفي داخله نقطه واحده فاذا كان مكتوب عليه بميه واحد ولونه اخضر فهو مفتوح نوطرفاه ثلاثه واربعه واذا كان بميه واثنان ولونه احمر فهو مغ"
+ },
+ "selector/block_contacts.mp3": {
+  "recall": 0.91,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c904db5a129b",
+  "heard": "داخل البلوك ذراع تدفعه الكامه وقنطره النحاسيه بنقاط من الفضه ونابض يعيدها في النوع المغلق تلامس القنطره النقاط وتبتعد عند الدفع وفي النوع المفتوح تكون القنطره ب"
+ },
+ "selector/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "976dc8606c58",
+  "heard": "بهذا نكون قد انهينا درس مفتاح الاختيار السليك تور جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "pilot_lamp/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7d62469d95a9",
+  "heard": "مرحبا بك في درس الامبه البيان ات 16 سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "pilot_lamp/intro.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "68bc8e602167",
+  "heard": "لمبه البيان تعرف المشغل بحاله الاله من بعيد تعمل او متوقفه او بها عطل والنوع المنتشر ات 16 جسم واحد مغلق في داخله ليد ودايره تغذيه صغيره ويركب في فتحه قطرها 22 "
+ },
+ "pilot_lamp/lesson_colors.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0a2789a2aba0",
+  "heard": "الوان اللنباه تنص المواصفه علي ان الاحمر للطواري والحاله الخطره والاصفر للحاله غير طبيعيه مثل الانذار قبل العطل والاخضر للحاله الطبيعيه والازرق لفعل الزامين علي"
+ },
+ "pilot_lamp/lesson_voltage.mp3": {
+  "recall": 0.88,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8958bad3e45f",
+  "heard": "الجهد يجب ان تكون اللمبه علي جهد دايره التحكم نفسه 24 فول او 110 او ماءتان وثلاثون واللمبه ذات الاربعه والعشرين فول تحترق فورا علي ماءتان وثلاثون وهناك طرازات ل"
+ },
+ "pilot_lamp/lesson_ghost.mp3": {
+  "recall": 0.78,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ca6cc9dab46b",
+  "heard": "التواهق الخفيف لمبات اليد قد تضيي اضاءه خافته وهي يفترض ان تكون مطفيه عندما يكون سلكها طويلا ويمر بجانب اسلاكن عليها جهد والسبب سعه الكابل التي تمرر طيارا صغيرا"
+ },
+ "pilot_lamp/lesson_wiring.mp3": {
+  "recall": 0.7,
+  "precision": 0.6,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e5c1d6900e7c",
+  "heard": "التوصيل توصل لنبه التشغيل علي نقطه مفتوحه من الكنتكتور ولنبه الايقاف علي نقطه مغلقه ولنبه العطل علي النقطه من 7 و 90 الي 8 و 90 للافرل والطرف الاخر للمبات يذهب "
+ },
+ "pilot_lamp/lens.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d6c05b3c7c77",
+  "heard": "العدسه البلاستيكيه الملوانه التي توزع الضوء ولونها هو الذي يحدد معني اللنبه العطل الشايع العدسه الباهته بفعل الشمس تجعل التمييز بين الالوان صعبا"
+ },
+ "pilot_lamp/led.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "04d1c70c0b35",
+  "heard": "في الداخل لوحه صغيره عليها عده ليده والليد عمره طويل جدا مقارنه بلمبه الفتيل القديمه واستهلاكه صغير العطل الشايع الليد المحترق يعني ان لمبه مطفاه رغم وصول الجهد"
+ },
+ "pilot_lamp/bezel.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "44f26fb7421d",
+  "heard": "الاطار الاسود الذي يستقر علي الباب من الامام ويمسك العدسه"
+ },
+ "pilot_lamp/nut.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "29144ab556f0",
+  "heard": "الصموله التي تربط من خلف الباب العطل الشايع الصموله المرتخيه تجعل لنبه تدور فتشد الاسلاك"
+ },
+ "pilot_lamp/body.mp3": {
+  "recall": 0.84,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5149fe42b352",
+  "heard": "الجسم الاسطواني المغلق وفي خلفه طرفان x1 وx2 ومضبوع عليه الجهد انتبه يجب ان يطابق هذا الجهد جهد دايره التحكم العطل الشايع الجهد الخاطي يحرق اللنبه او يجعل اضاءت"
+ },
+ "pilot_lamp/driver.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "09e6668dbcca",
+  "heard": "دايره صغيره داخل الجسم تخفض الجهده الي القيمه التي يحتاجها ليد وتحول تيار المتردد الي مستمر العطل الشايع السخونه زايده او تكرار الجهد العالي يحرقان الدايره"
+ },
+ "pilot_lamp/closing.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5d25eb8da795",
+  "heard": "بهذا نكون قد انهينا درس الامبه البيان ات 16 جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "pb_station/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7fddaa35b0f4",
+  "heard": "مرحبا بك في درس علبه الضواغط سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "pb_station/intro.mp3": {
+  "recall": 0.68,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "56e7179fb6e5",
+  "heard": "علبه الضواغ ترك بجانب الاله لشغل المشغل ويطفي من مكانه بدلا من الذهاب اللوحه وتاتي بفتحه واحده او ثنتين او ثلاثه او اكثر وقتر كل فتحه اثنان وعشرون مليمترا ويتخل"
+ },
+ "pb_station/lesson_ip.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "edc8cf454cac",
+  "heard": "درجه الحمايه العلبه مصممه لتركب في مكان المكشوف وتكتب درجه الحمايه بالحرفين ايب ورقمين الاول للغبار والثاني للماء وايب 65 تعني انها محكمه ضد الغبار وضد رش الماء"
+ },
+ "pb_station/lesson_wiring.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f108a6a25e63",
+  "heard": "التوصيل يدخل الكابل من الجلند ويوصل علي البلوكات والضواغه التي في العلبه توصل تماما مثل التي علي باب الوحه ويكون في الكابل عدد من المواصلات يكفي كل النقاط واذا "
+ },
+ "pb_station/cover.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "782d3b3a7438",
+  "heard": "الغطاء وفيه الفتحات وفوق كل فتحه المكان لللوحه صغيره مكتوب عليها وظيفه ضغل العطل الشايع الغطاء المشقوق يضيي الحمايه من الماء"
+ },
+ "pb_station/gasket.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fa5dbbe81929",
+  "heard": "الحشيه المطاطيه بين الغطاء والعلبه وهي التي تمنع الماء والغبار العطل الشايع الحشيه المقطوعه او الجفه تدخل الماء فيحدث قصرا في الضواغ"
+ },
+ "pb_station/screws.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b4164950c806",
+  "heard": "4 مسميره تغلق الغطاء علي الحشيه بضغط متساو العطل الشايع المسمار الناقص يحدث فتحه في الحشيه"
+ },
+ "pb_station/body.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e5409c074b75",
+  "heard": "جسم العلبه وفي داخله مكان للضواغه والبلوكه وفيه اماكن تثبيت علي الحايط او علي الاله"
+ },
+ "pb_station/gland.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ca2e5d409c86",
+  "heard": "الجولند يمسك الكابل ويحكم الاغلاق حوله ضد الماء ويجب ان يناسب مقاسه قطر الكابل العطل الشايع الجولند المرتخي او الاكبر من الكابل يعني ان الماء سيتخل وان الكابل س"
+ },
+ "pb_station/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3b41647e2d1c",
+  "heard": "بهذا نكون قد انهينا درس علبه الضواغت جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "control_relay/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8ec060296d67",
+  "heard": "مرحبا بك في درس المرحل المساعد الريلي وقواعده سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "control_relay/intro.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0295ed6335bb",
+  "heard": "المرحل المساعد او الريلي كنتكتور صغيره لدواير تحكم فقط فيه ملف وطقم من نقاط التحويل ويركب علي قاعده مثبته علي قضيب التثبيت فتستطيع تغييره في ثوان دون ان تفك اي "
+ },
+ "control_relay/lesson_vs.mp3": {
+  "recall": 0.78,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e61df460d164",
+  "heard": "الفرق بينه وبين الكنتكتور الكنتكتور مصمم لتيار المحرك ونقاطه رييسيه كبيره وتقطع شراره قويه اما اري لي فنقاطه صغيره غالبا من 5 الي 10 امبير علي حمل اومي ومصممه ل"
+ },
+ "control_relay/lesson_pins.mp3": {
+  "recall": 0.55,
+  "precision": 0.62,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bea74a36288f",
+  "heard": "ترقيم الاطراف والقواعد في الريلي المربع ذي الاربعه عشر طرفا يكون الملف علي ثلاث عشر واربعه عشر والاطراف المشتركه للنقاط الاربع هي تسعه عشر واحد عشر واثني عشر وا"
+ },
+ "control_relay/lesson_coil.mp3": {
+  "recall": 0.79,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7c22163e40f5",
+  "heard": "الملف والحمايه جهد الملف مكتوب علي الغطاء مثل 24 فلت مستمر او ماء تاني و 30 فلت متردد و يجب ان يطاب قدايره تحكم و ملفات الطيار المستمر يكون معها غالبا ثنايي علي"
+ },
+ "control_relay/lesson_socket.mp3": {
+  "recall": 0.75,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eb18b1d22507",
+  "heard": "القاعده ترك القاعده علي قضيب التثبي وتصل كل الاسلاك عليها وليس علي ريلي فاذا تلف ريلي تنزعه وتضع غيره في ثوان والمشبك البرطقالي يمسك ريلي في القاعده حتي لا ينفك"
+ },
+ "control_relay/cover.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "449b79997859",
+  "heard": "الغطاء شفاف الاتر نقاط والملف في الداخل وعليه جهد الملف ورسم توصيل وفي بعض الطرازات يوجد زر اختبار يحرك النقاط يدويا"
+ },
+ "control_relay/coil.mp3": {
+  "recall": 0.75,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "670c53c9848b",
+  "heard": "ملف من سلك رفيع ذولثات كثيره بمجرد تغذيته يولد مغنطسيه تجذب الزراع العطل الشايع الملف المقطوع يعني ان اليد قد يضيء بينما لا يسمع صوت طقه ريلي الاختبار قسم قاومه"
+ },
+ "control_relay/yoke.mp3": {
+  "recall": 0.72,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "df41259a9bc7",
+  "heard": "القلب الحديدي داخل الملث والاطار الذي علي شكل حرف يكمل دايره المغنطسيه ليكون الجذب قويا بتيار صغير"
+ },
+ "control_relay/armature.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "47fcb31a2f3c",
+  "heard": "الذراع الحديدي الذي يبذب الي القلب وهو مربوط بقطعه عزله تحرك ريش النقاط الاربع معا والنابض يعيده الي مكانه العطل الشايع الذراع العالق يجعل النقاط في حاله خاطيه "
+ },
+ "control_relay/contacts.mp3": {
+  "recall": 0.89,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "644c73d39fb3",
+  "heard": "4 ريش متحركه كل ريشه بين نقطتين ثابتتين مغلقه ومفتوحه وهذا يسمي نقطه تحويل او 4 بديتي العطل الشايع النقاط المحترقه بسبب حمل اكبر من المقنن خصوصا الاحمال الحثيه "
+ },
+ "control_relay/led.mp3": {
+  "recall": 0.73,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "81c87eb9101f",
+  "heard": "ليد صغير يضيء عندما يتغذ الملث فتعرف حاله الريلي من بعيد"
+ },
+ "control_relay/base.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8c9e9d5701aa",
+  "heard": "اطراف ريلي المسطحه التي تدخل في القاعده والرسم المدبوع يخبرك برقم كل طرف العطل الشايع الطرف المعواج او المتاكسد يسبب تلامس ضعيفا مع القاعده"
+ },
+ "control_relay/socket.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c2a6e8707308",
+  "heard": "قاعده القديد وفيها اربعه عشر طرفا علي صفين بارقامها والمشبك البرتقالي العطل الشايع السلك المواصل علي الطرف الخاطي هو اشهر خطي في توصيل ريليها الاختبار طابق رقم "
+ },
+ "control_relay/closing.mp3": {
+  "recall": 0.74,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cc0d89f9dbe6",
+  "heard": "بهذا نكون قد انهينا درسا مرحل المساعد الريلي وقواعده جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "timer/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "09e423b2dcc5",
+  "heard": "مرحبا بك في درس الموقتات الالكترونيه سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "timer/intro.mp3": {
+  "recall": 0.88,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9dc7c6fa5350",
+  "heard": "الموقت الالكتروني ريلي يوخر تغير نقاطه زمنا تحدده ان ومنه نوع يركب علي قاعده ذات ثمانيه اطراف مثل ريلي ونوع معياري يركب علي قضيب التثبيت مباشره ونوع مخصص لدواير"
+ },
+ "timer/lesson_functions.mp3": {
+  "recall": 0.78,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1116df31b27e",
+  "heard": "وظايف التوقي اشهر وظيفه هي التاخير عند التوصيل اندله فبمجرد اصول تغذيه يبدا الموقت العد وبعد قضاء الزمن تتغير وتبقي كذلك حتي تنقطع التغذيه ووظيفه التاخير عند ال"
+ },
+ "timer/lesson_range.mp3": {
+  "recall": 0.66,
+  "precision": 0.69,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "94bafdec1b14",
+  "heard": "مدي الزمان وضط للموقه مدي تختاره بمفتح صغيره او بقرس مثل عشر ثوان او مايه ثانيه او عشر دقايق ثم يضط القرس الكبير الزمن داخل هذا المد اي ان القرس المكتوب عليه من"
+ },
+ "timer/lesson_terminals.mp3": {
+  "recall": 0.87,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "81d514c6cbc6",
+  "heard": "الترقيم في الموقتات المعياريه تكون التغذيه علي ا1 و ا2 والنقطه الموقله طرفها المشترك 15 والمغلق 16 والمفتوح 18 والنقطه الثانيه ان وجدت 25 و 26 و 28 و 20 وفي موق"
+ },
+ "timer/lesson_star_delta.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "94eed4db8295",
+  "heard": "موقت ستار دلتا لموقت ستار دلتا خرجان خرج للستار يغلق بمجرد وصول التغذيه وبعد زمن الاقلاع المضبوط يفتح وبعد توقف قصير جدا عشرات الاجزاء من الالف من الثانيه يغلق "
+ },
+ "timer/lesson_vs_pneumatic.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "39c8a17e3c99",
+  "heard": "مقارنه بالموقت الهوايي الموقت الالكتروني اضق ولا يتاثر بالغبار والحراره كالموقت الهوايي ويصل مداه الي ساعه لكنه يحتاج الي تغذيه بجهد مضبوط وهو حساس للتداخل والج"
+ },
+ "timer/case.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f6fa9849b2c4",
+  "heard": "علي العلبه جهد التغذيه والامبات الحاله ورسم التوصيل علي الجانب العطل الشايع التغذيه بجهد خاطي تطلف الدايره الالكترونيه الاختبار اقري الجهد قبل التوصيل"
+ },
+ "timer/dial.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5df221d9f213",
+  "heard": "القرس الذي تطبط به الزمن ويشير الموشر الي الرقم والزمن الفعلي هو هذا الرقم مضروبا في المدي المختار العطل الشايع اضطط علي مدخاط ان يعطي زمنا مختلفا تماما عن المط"
+ },
+ "timer/pcb.mp3": {
+  "recall": 0.72,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1d066f0ec155",
+  "heard": "اللوحه الالكترونيه التي تعد الزمن بدقه وتشغيل ريلي الخرد العطل الشايع التيار العال المفاجي او الصايقه قد يتلفانها"
+ },
+ "timer/range_sw.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "552f0bfd2ddf",
+  "heard": "مفتيح صغيره تختار مد الزمن واحيانا الوظيفه وجدول اوضاعها مضبوع علي الجانب العطل الشايع المفتاح المتروك في وضع وسط يعطي نتيجه غير مضمونه"
+ },
+ "timer/relay.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bb1242910b55",
+  "heard": "ريلي صغير داخل الموقي ونقاطه هي الخرق الذي نصله في دايره التحكم العطل الشايع النقاط المحترقه بسبب حمل اكبر من المقنن"
+ },
+ "timer/base.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3fa466a0288b",
+  "heard": "ثمانيه اطراف مستديره حول مفتاح توجيه في المنتصف حتي لا يدخل الموقت في القاعده الا في وضع واحد فقط"
+ },
+ "timer/socket.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6508eef80a83",
+  "heard": "قاعده القضيب التي توصل عليها الاسلاك وارقامها من واحد الي ثمانيه بترتيب الاطراف نفسه الاختبار طابق الارقام مع رسم الموقي"
+ },
+ "timer/closing.mp3": {
+  "recall": 0.86,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e1a0949de96a",
+  "heard": "بهذا نكون قد انهينا درس الموقتات الالكترونيه جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "reversing_contactor/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "de5066b022a9",
+  "heard": "مرحبا بك في درس الكنتكتور العاكس ومنع التداخل سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "reversing_contactor/intro.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "51261c927b24",
+  "heard": "لعكس التجاهد وران المحرك ثلاثي الاطوار نبدل فزين من الفازات الثلاثه والكنتكتور العاكس عباره عن كنتكتورين احدهم يصل الفازات بالترتيب العادي والاخر يبدل فزين والا"
+ },
+ "reversing_contactor/lesson_principle.mp3": {
+  "recall": 0.58,
+  "precision": 0.6,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6185cb6a99ca",
+  "heard": "كيف ينعكس ابتقاه المحرك يتحدد اتقاه دوران المحرك الحثي ثلاثي الاطوار بالتقاه المغال المغنطيسي الدوار وهذا الاتقاه يتحدد بترتيب الفازه فعندما نبدل اي فزين ينعكس "
+ },
+ "reversing_contactor/lesson_mechanical.mp3": {
+  "recall": 0.71,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d96be744b0b7",
+  "heard": "منع التداخ للميكنيكي وحده ترك بين الكنتكتورينين وفي داخل هذا راع يشبه الميزان فعندما يكذب احد الكنتكتورينين يدفع حامله طرف الميزان فيتحرك الطرف الاخر ويقفل حامل"
+ },
+ "reversing_contactor/lesson_electrical.mp3": {
+  "recall": 0.75,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cd32c972a209",
+  "heard": "منع التداخ للكهربايي ونوصل ايضا نقطه مغلقه من كل كنتكتور علي التوالي مع ملف الكنتكتور الاخر فاذا جذب كام واحد تفتح نقطته المغلقه دايره ملف كان اثنان والعكس صحيح"
+ },
+ "reversing_contactor/lesson_modes.mp3": {
+  "recall": 0.87,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4346800780ba",
+  "heard": "طرق التحكم هناك عكس عبر الايقاف اذا يجب ان تضغط استب اولا ثم تختار الاتجاه الاخر وهذا هو الاكثر امانا للمحرك والحمل وهناك عكس مباشر بضواغط مزدوقه تفصل اتجاها وت"
+ },
+ "reversing_contactor/lesson_wiring.mp3": {
+  "recall": 0.54,
+  "precision": 0.55,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b5e871d3c3b0",
+  "heard": "توصيل القوه يصل الدخول واحد الواحد وثلاث الاثنان وخمس الثلاثه في الكنتكتورينين علي التوازي من المصدر نفسه ويذهب الخروج من كام واحد الي المحرك مباشره اثنان الي ي"
+ },
+ "reversing_contactor/contactor_fwd.mp3": {
+  "recall": 0.81,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7119ab9d18e0",
+  "heard": "الكنتكتور الاول يصل الفازات الي المحرك بالترتيب العدي فيدور المحرك في الاتجاه الامامي الاختبار عندما يكذب كام واحد قس ترتيب الفازات عند المحرك بجهاز قياس تتابع "
+ },
+ "reversing_contactor/contactor_rev.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8e8ab38d775d",
+  "heard": "الكنتكتور الثاني يصل المحرك نفسه لكن الثاز الاول والثالث مبادلان في الخرود فيدور المحرك في الاتجاه العكسي العطل الشايع اذا كان الاثنان مواصلين بالترتيب نفسه فلن"
+ },
+ "reversing_contactor/interlock_housing.mp3": {
+  "recall": 0.74,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0eeb1e840d1b",
+  "heard": "الوحده رفيعه التي في المنطصف وتتعشق في جانب الكنتكتورينين وفي هذا النوع عليها نقطه مغلقه اضافيه واحد واثنان العطل الشايع الوحده غير المركبه بشكل صحيح او دون تعش"
+ },
+ "reversing_contactor/interlock_rocker.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "339cc28bde1a",
+  "heard": "ذراع يدور حول محور في المنطصف وطرفاه داخلان في الكنتكتورينين وحركه احد الطرفين الي الامام تمني الطرف الاخر من الحركه العطل الشايع الذراع المكسور يعني عدم وجود ح"
+ },
+ "reversing_contactor/interlock_contacts.mp3": {
+  "recall": 0.76,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c7d545f2a2cc",
+  "heard": "طط مغلقه تفتح عندما يجذب اي من الكنتكتورينين ونوصلها في دايره التحكم حمايه اضافيه الاختبار قسم واحد الاثنان مغلقه والاثنان مفصولان ومفتوحه اذا جذب احدهم"
+ },
+ "reversing_contactor/power_links.mp3": {
+  "recall": 0.8,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3275d0460e81",
+  "heard": "الاسلاك او القناطر التي تربط الكنتكتورينين في الاعلي تصل الدخول علي التوازي وفي الاسفل تبدل البني ورمادي اي الواحد والثلاثه ويبقي الاسود الاثنان في مكانه العطل "
+ },
+ "reversing_contactor/closing.mp3": {
+  "recall": 0.74,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5b2a566ad045",
+  "heard": "بهذا نكون قد انهينا درس الكنتكتور العاكس ومن عتداخل جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "proximity_sensor/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "69ec9785174f",
+  "heard": "مرحبا بك في درس الحساسات الحث والسعوي والضوء سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "proximity_sensor/intro.mp3": {
+  "recall": 0.72,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9f2ee442b2ea",
+  "heard": "الحساس يكتشف وبود جسم امامه دون ان يلمسه فلحتكاك ولا تاكل ويتحمل ملايين المراد فالحساس الحثي يستشعر المعادن فقط والحساس الصعوي يستشعر اي مده حتي الماء والبلستيك"
+ },
+ "proximity_sensor/lesson_inductive.mp3": {
+  "recall": 0.8,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eb4c8b493b80",
+  "heard": "الحساس الحثي نظريه التشغيل داخل الحساس ملاف ملفوف علي قلب من الفريت مفتوح من جهه الواجهه وهو موصل بمذب بنولد مجالا مغنطيسيا علي ترضد امام الواجهه فبمجرد ان تدخل"
+ },
+ "proximity_sensor/lesson_distance.mp3": {
+  "recall": 0.93,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "dac0858b601f",
+  "heard": "مسافه الاستشعار مسافه الاستشعار اسي مكتوبه علي الحساس وتقاص علي قطعه حديد قياسيه اما المعادن الاخري فتستشعر من مسافه اقل فالالو من يوم والنحاس مثلا من ثلث المسا"
+ },
+ "proximity_sensor/lesson_wiring.mp3": {
+  "recall": 0.83,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "07162b7ee872",
+  "heard": "التوصيل بثلاثه اسلاك الحساس ذو الاسلاك الثلاثه البني للموجب والازرق للسالب او الصفر والاسود للخرد في النوع بانبي يخرج الخرق جهدا موجبا الي الحمل والطرف الاخر لل"
+ },
+ "proximity_sensor/lesson_capacitive.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cc4813b5d7ea",
+  "heard": "الحساس الصعوي الحساس الصعوي يستشر تغير في الساعه الكهرباييه امام واجهته فيكتشف اي مده ماء او زيت او بلاستيت او ورق او حبوب ويستخدم كثيرا لقياس المستوي من خارج خ"
+ },
+ "proximity_sensor/lesson_photo.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cd326c31e099",
+  "heard": "الحساس الضوءي هناك ثلاثه انواع النوع الذي فيه المرسل والمستقبل منفصلان ومتقابلان فاي جسم يقطع شعاع يستشعر ومسافته كبيره والنوع العاكس وفيه المرسل والمستقبل في ج"
+ },
+ "proximity_sensor/sensing_face.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f2d16e76277d",
+  "heard": "واجهه الحساس مصنوعه من بلاستيك مقاوم ويخرج منها المجال المغنطيسي ويجب ان تبقي نظيفه من براده الحديد العطل الشايع براده الحديد الملتصقه بالواجهه تجعل الحساس يعمل"
+ },
+ "proximity_sensor/coil_core.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9cf47d772e6e",
+  "heard": "ملف صغير علي قلب من الفريت يشبه الكوب مفتوح من جهه الواجهه ليواجه المجال الي الامام"
+ },
+ "proximity_sensor/electronics.mp3": {
+  "recall": 0.75,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d1de6d970beb",
+  "heard": "هذه الدايره فيها المذبب والمقارن ومرحله الخرق بمبي او امبيا وحمايه من القصر ومن عكس القضبيه في اغلط الطرازه العطل الشايع توصيل الخرق علي الموجب مباشره دون حمل ق"
+ },
+ "proximity_sensor/housing.mp3": {
+  "recall": 0.85,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a740cae6d993",
+  "heard": "جسم من النحاس المطليب النيكل او من الفولاذ المقاوم للصدي مقلوظ وقطره يحدد مقاسه مثل ام ثماني عشر ويركب في ثقب او حامل ويضبط الي الامام والخلف بالصواميل"
+ },
+ "proximity_sensor/nuts.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6a15b92b07e5",
+  "heard": "صمولتان تحكمان الحساس علي الحامل بعض ضبط المسافه ولا تشدهما اكثر من اللازم علي الانواع البلاستكيه العطل الشايع الحساس المرتخي يتحرك بسبب الاهتزاز فتتغير المسافه"
+ },
+ "proximity_sensor/led.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a4c75e994c8c",
+  "heard": "ليد يضيء عندما يعمل الخرد فتعرف دون اجهزه ان الحساس ير القطا العطل الشايع اذا كان ليد مضييا والمتحكم المنطقي لا ير الاشاره فالمشكله في السلك او في نوع الخرد"
+ },
+ "proximity_sensor/connector.mp3": {
+  "recall": 0.85,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7a5d82228e0d",
+  "heard": "وصله قياسيه ام 12 4 اطراف وارقامها والوانها قياسيه واحد بني وثنان ابيض وثلاثه ازرق واربعه اسود العطل الشايع التاكل او الماء في الوصله يسببان الشاره متقطعه"
+ },
+ "proximity_sensor/closing.mp3": {
+  "recall": 0.78,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a8162143379b",
+  "heard": "بهذا نكون قد انهينا درس الحساسات الحث والسعوي والضوء جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "limit_switch/opening.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f266d33d50da",
+  "heard": "مرحبا بك في درس مفتاح نهايه الشو اللينيت سويتش سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "limit_switch/intro.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2a6067834d84",
+  "heard": "مفتاح نهايه الشوت او لميت سويتش مفتاح يعمل بالحركه الميكنيكيه فجزء من الاله يستضم بذراعه او بكرته فتتغير النقاط ونستخدمه لايقاف حركه عند نهايه الشوت او لعكسها ك"
+ },
+ "limit_switch/lesson_actuators.mp3": {
+  "recall": 0.68,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8c46c9941267",
+  "heard": "انواع الزراع الزراع دوارذ البكرت هو الاشهر ويعمل معاكامه او نطوء يمر عليه والزراع ذو الطول القابل للضط يصل الي اماكن بعيده والزراع النابضي يعمل من اي اتجاه ويست"
+ },
+ "limit_switch/lesson_snap.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3c73f1d7b956",
+  "heard": "المفتاح السريع داخل الجسم مفتاح سريع الانطلاقت فالنقاط لا تتحرك ببطء مع ذراع بل تنقلب دفعه واحده عند نقطه معينه وهذا يقل الشراره وتوجد مسافه بين نقطه تشغيل ونقط"
+ },
+ "limit_switch/lesson_positive.mp3": {
+  "recall": 0.82,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5051cdc2f31b",
+  "heard": "الفتح الاجباري في مفتح الامان يجب ان تكون النقطه المغلقه ذات فتح الاجباري وفق المواصفه اي ان ذراع نفسه يفتحها ميكنيكيا حتي لو لتحمه وعلامتها السهم داخل دايره وه"
+ },
+ "limit_switch/lesson_mounting.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0977ea4562e6",
+  "heard": "التركيب وضط يجب ان تقترب الكامه من البكره بزاويه نحو ثلاثين درجه وليس في مواجهاتها مباشره حتي لا ينكس الزراع وترك مسافه تجاوز بعد نقطه تشغيل حتي لا تصطدم الكامه"
+ },
+ "limit_switch/lever.mp3": {
+  "recall": 0.93,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "11c796a59003",
+  "heard": "الذراع المصنوع من الالوم يوم والبكرت التي تلامس الجزء المتحرك ويمكن تدوير الذراع وتثبيته باي زاويه علي العمود ويمكن ضبط طوله في بعض الانواع العطل الشايع البكرت "
+ },
+ "limit_switch/head.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2c4b18a7a9ba",
+  "heard": "الراس وفيه العمود الذي يركب عليه الذرا وفي داخله كما تحول الدوران الي دفع علي المفتاح ونابد يعيد الذرا وكثير من رووس يمكن تدويرها وتركيبها في اي اتجاه من الاتجا"
+ },
+ "limit_switch/cover.mp3": {
+  "recall": 0.85,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d4f9273428dd",
+  "heard": "غطاء باربعه مساميره وحشيه وعليه بيانات المفتاح ونوع النقاط ويجب اغلاقه جيدا للحفاظ علي ضرقه الحمايه i 65 العطل الشايع الغطاء غير المحكم الاغلاق يدخل الماء والزي"
+ },
+ "limit_switch/switch.mp3": {
+  "recall": 0.8,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5a28cd12b9c4",
+  "heard": "المفتاح الاساسي داخل الجسم وفيه نقطه مفتوحه من 13 الي 14 ونقطه مغلقه من 21 الي 22 بمسمير توصيل الاختبار بجهاز القياس حرك الزراع ويجب ان تتبادل نقطتان حالتي همي"
+ },
+ "limit_switch/body.mp3": {
+  "recall": 0.7,
+  "precision": 0.64,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "439c0bcd9486",
+  "heard": "جسم من العلوم يوم المسبوب متين ومقاوم للصدمات وفيه ثقبان للتثبي"
+ },
+ "limit_switch/gland.mp3": {
+  "recall": 0.7,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6875af9ffc77",
+  "heard": "متخل الكابل ويجب ان يكون مقاس الجلندي مضبوطا ومربوطا جيد"
+ },
+ "limit_switch/closing.mp3": {
+  "recall": 0.79,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cbfea936c92f",
+  "heard": "بهذا نكون قد انهينا درس مفتاح نهايه الشو اللي ميت سويتش قرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "float_pressure/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "29c080fe0891",
+  "heard": "مرحبا بك في درس مفتاح العوامه ومفتاح الضغط سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "float_pressure/intro.mp3": {
+  "recall": 0.89,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "979f06067414",
+  "heard": "مفتاح العوامه ومفتاح الضغط من اشهر المفتيح في دواير المضخات والضواغت فالعوامه تستشعر مستوي السايل في الخزان ومفتاح الضغط يستشعر الضغط في الموسير او في خزان الهو"
+ },
+ "float_pressure/lesson_float.mp3": {
+  "recall": 0.86,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ea43035c781b",
+  "heard": "العوامه المعلقه العوامه جسم بالاستيكي مغلق في داخله كره معدنيه ومفتاح صغير وهي معلقه بكابل عليه ثقل فعندما يرتفع مستوي المايه قلب العوامه الي الاهل فتضحر بالكره"
+ },
+ "float_pressure/lesson_pressure.mp3": {
+  "recall": 0.71,
+  "precision": 0.72,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "258510e6acd8",
+  "heard": "مفتاح الضغط في داخله منفاق او غشاء يتحرك بالضغط ضد دناب ومسمار رينج يحدد ضغط تشغيل الاساسي ومسمار دف يحدد الفرق بين ضغط الفصل وضغط العوده فمثلا ضغط هواين يفسل ع"
+ },
+ "float_pressure/lesson_wiring.mp3": {
+  "recall": 0.87,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1577c1e70068",
+  "heard": "التوصيل يصل هذا المفتاحان في دايره تحكم علي التوالي مع ملف كنتكتر المضخه او علي مدخل في المتحكم المنطقي ونقاطه ما مصممه لتيار التحكم ولا تصلح لتشغيل محرك كبير م"
+ },
+ "float_pressure/closing.mp3": {
+  "recall": 0.87,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "33e31e192fa6",
+  "heard": "بهذا نكون قد انهينا درس مفتاح العوامه ومفتاح الضغط جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "solenoid_valve/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4487a3d91577",
+  "heard": "مرحبا بك في درس السمام الكهربايي السول نويد سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "solenoid_valve/intro.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a8c73c17be2d",
+  "heard": "الصمام الكهربايي يفتح صريان المايي او الهواء او الزيت ويغلقه بامر كهربايي فبمجرد ان يتغذ ملفه يسحب قلبا حديديا صغيرا فيفتح الطرير واشهر انواعه المغلق طبيعا انسي"
+ },
+ "solenoid_valve/lesson_principle.mp3": {
+  "recall": 0.86,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "74fb6fcaeac5",
+  "heard": "نظريه التشغيل بصمام القياده في الصمامات الكبيره لا يفتح الملف الفتحه الكبيره بنفسه بل يفتح القلب فتحه صغيره تسمي فتحه القياده في منتصف الرشاء فيتسرب الدقط الذي "
+ },
+ "solenoid_valve/lesson_selection.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e213f415e9c8",
+  "heard": "الاختيار والتركيب يجب ان تختار حسب نوع السايل وضغط المكتوب علي الصمام ومقاس الوصله بالبوصه والجهد والسهم المرسوم علي الجسم يوضح التجاه السريان ويجب تركيبه في ال"
+ },
+ "solenoid_valve/lesson_coil.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5ec62ac2037f",
+  "heard": "الملث الملث مصمم ليعمل باستمرار لكنه يسخن وهذا طبيعي ويمنع تشغيل الملث وهو منزوع عن الانبوبه لانه دون القلب الحديد يزيد التيار ويحترق الملث في دقايق وفي التيار "
+ },
+ "solenoid_valve/coil.mp3": {
+  "recall": 0.84,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "735f80c4e9ef",
+  "heard": "ملف مغلف بالبلستيك الاسود يركب علي الانبوبه ومكتوب عليه الجهد ونوع الصمام والضغط العطل الشايع الملف المحترق له رايحه ومقاومته بين طرفيه ما لنهايه الاختبار قس ال"
+ },
+ "solenoid_valve/nut.mp3": {
+  "recall": 0.67,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6ed62d1f505d",
+  "heard": "الصموله العلويه تتمسك الملف علي الانبوبه"
+ },
+ "solenoid_valve/tube.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "845ab52a108b",
+  "heard": "انبوبه مغلقه في داخلها القلب الحديدي والنابض ويصل السايل الي داخلها ويسحب الملف القلب الي الاله فيفتح فتحه القياده العطل الشايع القلب العالق بسبب الصدق او رواسب"
+ },
+ "solenoid_valve/bonnet.mp3": {
+  "recall": 0.81,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f99ebc949554",
+  "heard": "غطاء النحاسي يغلق علي الغشاء باربعه مسامير العطل الشايع المسامير غير المتساويه فربط تسبب التسريب"
+ },
+ "solenoid_valve/diaphragm.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6fbd049cdb4a",
+  "heard": "غشاء مطاطي يغلق الفتحه الكبيره وفي منتصفه فتحه القياده وفتحه صغيره لموازنه الضغط العطل الشايع الغشاء المقطوع او فتحه الموازنه المسدوده يجعلان السمام يصرب او لا "
+ },
+ "solenoid_valve/body.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "516d1b1f63ec",
+  "heard": "جسم نحاسي بفتحتين مقلوضتين وعليه سهم اتجاه السرين العطل الشايع التركيب عكس السهم يجعل الصمام لا يغلق"
+ },
+ "solenoid_valve/closing.mp3": {
+  "recall": 0.82,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4c2aa09ea7cd",
+  "heard": "بهذا نكون قد انهينا درس الصمام الكهربايي السلنويد قرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "signaling/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e0a7069daa0e",
+  "heard": "مرحبا بك في درس اجهزه التنبيه لمبه التحذير والصفاره وبرج الاشاره سن تعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "signaling/intro.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1bd2deeb5f44",
+  "heard": "اجهزه التنبيه تلفت انظار الموجودين في المكان واسمعهم الي حاله الاله دون ان ينظروا الي اللوحه ومنها لنبه التحذير دواره او الوامضه والصفاره الصوتيه وبرج الاشاره ا"
+ },
+ "signaling/lesson_colors.mp3": {
+  "recall": 0.86,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "60f010834d65",
+  "heard": "الوان بورج الاشاره وفق المواصفه ac من 60 الف ومايه تان واربعه الي واحد الاحمر لحاله الخطر او الطواري والاصفر للحاله غير طبيعيه او الانذار والاخضر للتشغيل الطبيع"
+ },
+ "signaling/lesson_wiring.mp3": {
+  "recall": 0.73,
+  "precision": 0.69,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1b3b57d85175",
+  "heard": "التوصيل لكل جهاز جهد تشغيل مكتوب عليه مثل 24 فلت او ما اتان 20 واذا كانت ياره اكبر من مقنن نقطه تحكم نشغله عن طريق ريلي والصفاره ذات المحرك لها تيار بد انعال فت"
+ },
+ "signaling/lesson_practice.mp3": {
+  "recall": 0.76,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1a682ad33666",
+  "heard": "ممارسه جيده غالبا نضع ضاقه اسكات للسفاره يوقف السوط فقط ويبقي الانذار الضوييه يعمل حتي يصلح العطل ويجب ان يسمع الانذار السوتي فوق ضجيق المكان"
+ },
+ "signaling/closing.mp3": {
+  "recall": 0.85,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "542594564e67",
+  "heard": "بهذا نكون قد انهينا درسه جهزه التنبيه لمبه التحذير والصفاره وبرج الاشاره جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "panel_meter/opening.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6631a80ec153",
+  "heard": "مرحبا بك في درس الاميطر والفلتميطر بالابرا سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "panel_meter/intro.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6eae4528f3ef",
+  "heard": "الاميتر والفوليتميتر المركبان علي باب اللوحه يبينان التيار والجهد بابره علي تدريب ويوصل الاميتر علي التوالي مع الحمل او عن طريق محول تيار ويوصل الفولتيتر علي ال"
+ },
+ "panel_meter/lesson_types.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "34f993adf307",
+  "heard": "الانواع النوع المنتشر في لوحات التيار المتردد هو نوع الحديد المتحرك يمر التيار في ملف فتجب المغنطيسيه قطعه حديد مربوطه بالابرا ويقيس القيمه الفعاله وهناك نوع ال"
+ },
+ "panel_meter/lesson_class.mp3": {
+  "recall": 0.72,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e02b549878a6",
+  "heard": "ردبه الدقه ردبه الدقه مثل كلاس 1 5 ان الخطا قد يصل الي 1 5 من اقصي تدريد اي ان اميترا مداه ميه امبيرا قد يخطا بامبير ونصف في اي قراءه ولذلك نخطار المدي بحيث تقع"
+ },
+ "panel_meter/lesson_wiring.mp3": {
+  "recall": 0.75,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b1f3ab56756b",
+  "heard": "التوصيل الاميتر المباشر يوصل علي التوالي وهو للتيارات الصغيره وفوق ذلك نستخدم محوله يار مثل 100 الي 5 ويكون الاميتر مقاسه 5 امبير لكن تدريجه مكتوب من 0 الي 100 "
+ },
+ "panel_meter/lesson_mounting.mp3": {
+  "recall": 0.73,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3a0f8d562793",
+  "heard": "التركيب المقاسات القياسيه 72 x 72 ميلي متر وفتحتها في الباب 8 x 68 و 96 x 96 وفتحتها 92 x 92 و يثب بمشابك من خلف الباب و يضبط مسمار ضد الصفر والجهاز مفصول لتقف "
+ },
+ "panel_meter/bezel.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "940b451e2dd2",
+  "heard": "الاطار الاسود المربع والعلبه التي خلف الباب وفي داخلها الاليه"
+ },
+ "panel_meter/glass.mp3": {
+  "recall": 0.62,
+  "precision": 0.62,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "363d9a99bafd",
+  "heard": "الزقاج الذي يحمل تدريجه والابره من الغبار واللمس"
+ },
+ "panel_meter/scale.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ed75edd3aa4c",
+  "heard": "لوحه التدريج وعليها الارقام ونوع الجهاز اي او في ونسبه محول التيار وردبه الدقه العطل الشايع التدريج غير المطابق لنسبه محول التيار يوطي قراءه خاطيه تماما الاختبا"
+ },
+ "panel_meter/pointer.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "269bc2644ac0",
+  "heard": "الابره الحمراء مركبه علي عمود رفيع جدا وتتحرك مع الاليه العطل الشايع ابره عالقه او لا تعود الي الصف"
+ },
+ "panel_meter/movement.mp3": {
+  "recall": 0.74,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "52410e39761b",
+  "heard": "الملف وقطعه الحديد التي تبذب ومعهما نابض شعري رفيع يعطي العزم العكسيه ويعيد الابرا العطل الشايع التيار الاعلي بكثير من المدقد يحرق الملف او يلو الابرا"
+ },
+ "panel_meter/zero.mp3": {
+  "recall": 0.58,
+  "precision": 0.58,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b41b1d0bb94a",
+  "heard": "مسمار صغير تحت زجاج يدار بمفكن والجهاز مفسول لتقف الابرط علي الصف"
+ },
+ "panel_meter/terminals.mp3": {
+  "recall": 0.9,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4ce073949152",
+  "heard": "مسماران ملو البان في الخلث تربط عليهما الاسلاك باطراف الكابلات والصواميل العطل الشايع الطرف المرتخي في دايره محول التيار خطر جدا"
+ },
+ "panel_meter/closing.mp3": {
+  "recall": 0.73,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3b339943c96e",
+  "heard": "بهذا نكون قد انهينا درس الاميطر والفلتميطر بالابرا جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "current_transformer/opening.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "36a05fde3c2c",
+  "heard": "مرحبا بك في درس محاول التيار سيتي سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "current_transformer/intro.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "aebde9b7ddc2",
+  "heard": "محول التيار ياسغر طيار الكابل الكبير الي طيار صغير قياسي خمسه امبير او امبير واحد ليتمكن جهاز الاميتر او جهاز الحمايه من قياسه بامان ويمر الكابل عبر النافذه الت"
+ },
+ "current_transformer/lesson_ratio.mp3": {
+  "recall": 0.76,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a34ed93efc85",
+  "heard": "النسبه النسبه مثل 100 الي 5 اي انه عندما يمر ميه امبير في الكابل يخرج من الثانوي 5 امبير ويكون الاميطر المستخدم معه مضارجا حتي 100 امبير ومكتوب عليه ايضا القدره"
+ },
+ "current_transformer/lesson_danger.mp3": {
+  "recall": 0.84,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ac3f17a079d1",
+  "heard": "اهم مقاعده امان يمنع منع باتا فتح دايره الملف الثانوي والتياري يمر في الكابل فاذا فتح الثانوي يولد المحول جهدا عاليا جدا قد يصعق ويحرق المحول ولذلك قبل ان تفك ا"
+ },
+ "current_transformer/lesson_polarity.mp3": {
+  "recall": 0.89,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "32306ab5c14d",
+  "heard": "الاتجاه الوقت المكتوب عليه ب1 يكون باتجاه المصدر ويقابله اس واحد علي الملف الثانوي وهذا الاتجاه مهم مع عدادات الكهرباء واجهزه قياس القدره حتي لا تظهر القراءه با"
+ },
+ "current_transformer/lesson_classes.mp3": {
+  "recall": 0.85,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1632c4e514ba",
+  "heard": "رتب الدقه هناك محولات للقياس مثل ردبه الصفر فاصل 5 او 1 وهي دقيقه عند تيارات العاديه وهناك محولات للحمايه مثل 5 10 وهي تبقي دقيقه حتي عند تيارات القصر الكبيره ل"
+ },
+ "current_transformer/case.mp3": {
+  "recall": 0.64,
+  "precision": 0.64,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "644c1423a087",
+  "heard": "علبه عزله فيها نافظه الكابل وعليها لوحه البيانات وعلامه التجاه بواحد"
+ },
+ "current_transformer/core.mp3": {
+  "recall": 0.79,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "470c572b9c88",
+  "heard": "قلب من حديد السليكون علي شكل حلقه يجمع الفيد المغنطيسيه الذي يولده تيار الكابل"
+ },
+ "current_transformer/winding.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "af24e145023c",
+  "heard": "ملف ذولفات كثيره علي القلب وعدد اللفات هو الذي يحدد النسبه ميه الي خمسه تعني نحو عشرين لفه العطل الشايع الملف الثانوي المفتوح مع وجود تيار في الابتدايي يولد جهد"
+ },
+ "current_transformer/terminals.mp3": {
+  "recall": 0.59,
+  "precision": 0.56,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "da509b2fd2fe",
+  "heard": "طرفان يخرج منهما تيار ثانوي الي الاميطر او العدد الاختبار قبل اي فكت اقصر اس واحد واس اثنان"
+ },
+ "current_transformer/closing.mp3": {
+  "recall": 0.82,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9463c8ae27a7",
+  "heard": "بهذا نكون قد انهينا درس محاول الطيار ct جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "rotary_switches/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "070d76af0eb7",
+  "heard": "مرحبا بك في درس مفاتيح التحويل والمفتاح الرييسي سن تعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "rotary_switches/intro.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8d2453a93d40",
+  "heard": "مفتاح التحويل او مفتاح الكامت مفتاح دوار له عده اوضاع وفي داخله طوابق من النقاط بعضها فوق بعض تشغل بكامات علي عمود واحد ومنه مفتاح واحد في رفرثنين لاختيار مصدر "
+ },
+ "rotary_switches/lesson_cam.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5dc19c5e235e",
+  "heard": "طريقه التشغيل في كل طابق النقطه تاني او اكثر وفي داخله كمه بشكل معين علي العمود وعندما تدير المقبض تغلق الكامات النقاط وتفتحها حسب جدول التشغيل الذي يقدمه المصن"
+ },
+ "rotary_switches/lesson_voltmeter.mp3": {
+  "recall": 0.73,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bbcc1e451ed9",
+  "heard": "مفتاح اختيار الفولتيتر يجعل فولتميترا واحد يقيس صباقيا الصف وثلاثه جهود بين كل فاز وانيوترال وثلاثه جهود بين الفازه ويوصل علي الفازات ثلاثه وانيوترال ويذهب خربه"
+ },
+ "rotary_switches/lesson_isolator.mp3": {
+  "recall": 0.82,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "119d44661b0a",
+  "heard": "المفتاح الرييسي المفتاح رييسي مفتاح فصل تحت الحمل وفق المواصفه iec من 60 947 الي 3 وفي ات استخدامه مثل iec شرطه 23 لاحمال المحركات وعندما يكون المقبض احمر علي ا"
+ },
+ "rotary_switches/lesson_safety.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d0b4287bd0f5",
+  "heard": "الامان قبل العمل داخل اللوحه ادر المفتاح رييسي الي اوف وضع قفلك الشخصي وبطاقه التحذير وتاكد من غياب الجهد بجهاز القياس ويسمي هذا نظام القفل والتعليم لو كاتتكه"
+ },
+ "rotary_switches/front_plate.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8668fbeac856",
+  "heard": "اللوحه المركبه علي الباب وعليها ارقام الاوضاع او اسماوها"
+ },
+ "rotary_switches/knob.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cd2677883c79",
+  "heard": "المقبض الذي تديره وعليه خط يشير الي الوضع"
+ },
+ "rotary_switches/shaft.mp3": {
+  "recall": 0.83,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eca30a1cd7da",
+  "heard": "العمود الذي يدير كل الكامات معا واليه التثبيت التي تثبك الوضع بطقه العطل الشايع اليه التثبيت الضيفه تجعل المفتاح يقف بين وضعين"
+ },
+ "rotary_switches/decks.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9832112bb851",
+  "heard": "طوابق بعضها فوق بعض في كل طابق النقاط وكمه وعدد الطوابق يحدد عدد النقاط العطل الشايع النقاط المحترقه بسبب حمل اكبر من المقنن الاختبار قس كل نقطه في كل وضع وقار "
+ },
+ "rotary_switches/terminals.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "d9e7e43ce645",
+  "heard": "مسامير مرقمه علي جوانب الطواب وهذه الارقام هي الموجوده في جدول التشغيل"
+ },
+ "rotary_switches/closing.mp3": {
+  "recall": 0.78,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8e99e3e30531",
+  "heard": "بهذا نكون قد انهينا درسم فتيح التحويل والمفتاح الرييسي جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "electronic_protection/opening.mp3": {
+  "recall": 0.91,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5f698b292a71",
+  "heard": "مرحبا بك في درس اجهزه الحمايه والقياس الالكترونيه علي قضيب التثبي سن تعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "electronic_protection/intro.mp3": {
+  "recall": 0.82,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e38b22e095b7",
+  "heard": "هذه المجموعه اجهزه الكترونيه تنطراق بالكهرباء وتحمل احمال او تقيس وتعد مرحل فقد الفازات وتتابعها وجهاز مراقبه الجهد وجهاز حمايه الاحمال من الجهد والتيار وعداد ا"
+ },
+ "electronic_protection/lesson_phase.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "322974ce6256",
+  "heard": "مرحل فقد الفازات وتتابعها يوصل علي الواحد وال اثنان والثلاثه ويتاكد ان الفازات ثلاثه موجوده وان ترتبها صحيح واحيانا انها متوازنه فاذا كان كل شيء سليما يكذب مرحل"
+ },
+ "electronic_protection/lesson_pmv.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a0abf35c86be",
+  "heard": "جهاز مراقبه الجهد يراقب الجهد وفيه اقراص نضبط بها الحد الاعلي والحد الادنك نسبه من الجهد المقنن وزمن تاخير لكل منهما حتي لا يفصل بسبب تذضب لحظي وفيه ايضا زمن تا"
+ },
+ "electronic_protection/lesson_va.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "dafcfaa3ea69",
+  "heard": "جهاز حمايه الجهد والتيار جهاز للاحمال احاديه الطور يفس الحمله بنفسه اذا زاد الجهد او نقص عن الحدود او اذا زاد التيار ثم يعيده تلقاييا بعد مده وتعرض الشاشات الجه"
+ },
+ "electronic_protection/lesson_kwh.mp3": {
+  "recall": 0.74,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f36e9943d83c",
+  "heard": "عداد الكهرباء يقيص الطاقه المستهلكه بالكيلوات ساعه ومكتوب عليه مثلا خمسه وبين قوسين ثمانون اي ان التيار الاساسيه خمسه امبير واقصه يار ثمانون امبير والليد يومض ب"
+ },
+ "electronic_protection/lesson_counter.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eb63f55ec83e",
+  "heard": "عداد النبضه يعد نبضات قادمه من حساس او مفتاح نهايه شو مثل عدد القطع او عدد اللفات وعندما يصل العد الي رقم المضبط تتغير نقطه الخرد وفيه مدخل وزر لتصفير العدد"
+ },
+ "electronic_protection/closing.mp3": {
+  "recall": 0.85,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "631afb8658d0",
+  "heard": "بهذا نكون قد انهينا درس اجهزه الحمايه والقياس الالكترونيه علي قضيب التثبي قرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "installation/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "95f2b1444ab5",
+  "heard": "مرحبا بك في درس مستلزمات التمديد القضبان والمجاري والاطراف والجلب سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "installation/intro.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1a41fb2073bb",
+  "heard": "اللوحه الاحترافيه ليست مجرد مكونات صحيحه فالتمديد المنظم هو الذي يفرق بين اللوحه تعمل بامان ويسهل صيانتها ولوحه ملييه بالمشكلات والمستلزمات الاساسيه هي قضيب الت"
+ },
+ "installation/lesson_rail.mp3": {
+  "recall": 0.69,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "502b3e5b1c99",
+  "heard": "قضيب التثبي القضيب القياسي يعرضه 35 مليمترا وعمقه 7 مليمترات ونصف وشكله كالقبعه وهو مفقب ليربط علي لوح التركيب بالمسمير وكل الاجهزه المعياريه تعال في حفته العلي"
+ },
+ "installation/lesson_duct.mp3": {
+  "recall": 0.78,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5037b0edcc66",
+  "heard": "مجاري الاسلات تمر الاسلاك في المجاري بين الاجهزه واصابع المجره تسمح بخروب السلك من اي مكان والقاعده لا تملا المجر باكثر من نحو 70 من اجل التهويه وسهوله الاضافه "
+ },
+ "installation/lesson_terminals.mp3": {
+  "recall": 0.79,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a149a3e6ba8f",
+  "heard": "الاطراف الاطراف هي نقطه الوصل بين الوحه والكابلات الخارجه الي المحرك والضواغه والحساسه ولالوانها معا الرمادي للفاز والتحكم والازرق للينيوترال والاخضر والاسفر لل"
+ },
+ "installation/lesson_numbering.mp3": {
+  "recall": 0.97,
+  "precision": 0.97,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "886d8e7307cf",
+  "heard": "ترقيم الاطراف والاسلاك علي كل طرف رقم وفي طرفي كل سلك جلب ترقيم وهذا يطابق المخطط تماما وهذا يوفر ساعات في الصيانه والبحث عن الاعطال ويجب ان يوجد في اي لوحه احت"
+ },
+ "installation/lesson_ferrules.mp3": {
+  "recall": 0.84,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "795962f3c9c3",
+  "heard": "الجلب واطراف الكابله السلك المجدول لا يربط تحت المسمار عاريا لان شعيراته تتفرق ويرتخر بل نلبسه جلبه ونكبسها بالكماشه المخصصه والوان الجلب تدل علي مقطع سلك وهناك"
+ },
+ "installation/housing.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "72ba9d7ba329",
+  "heard": "جسم من البلاستيك العازل فيه فتحتان للمسمير من الامام وفتحتان للسلك من الاعلي والاسفل ومجري للقانطرات في المنطصف"
+ },
+ "installation/bar.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "60a2440e44ef",
+  "heard": "شريحه عدنيه مواصله طربط طرفي الطرف ببعضهما من الداخل الاختبار قس التوصيل بين جهتي الطرف"
+ },
+ "installation/clamps.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0d96c4aaa0af",
+  "heard": "قفص معدني يغلق علي السلك عند ربط المسمار فيضغطه علي القضيب بمساحه كبيره العطل الشايع السلك الداخل بعازله في القفص يسبب تلامس ضعيفا الاختبار اسحب السلك بعض الرض"
+ },
+ "installation/screws.mp3": {
+  "recall": 0.71,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bb651b08f5f4",
+  "heard": "المسمير التي تربط القفص ولها عز مربط مكتوب في الكتلوب العطل الشايع المسمار المرتخ يسبب سخونه وشراره"
+ },
+ "installation/marker.mp3": {
+  "recall": 0.78,
+  "precision": 0.78,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c0947e27a85a",
+  "heard": "علامه بالاستيكيه ترك فوق الطرف وعليها رقمه حسب المخطط"
+ },
+ "installation/foot.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9f400b996b39",
+  "heard": "القاعده التي تتعشق مع القضيب وفي طرف الارضي تكون القاعده نفسها معدنيه وتوصله بالقضيب"
+ },
+ "installation/closing.mp3": {
+  "recall": 0.84,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e7dcf3582da9",
+  "heard": "بهذا نكون قد انهينا درس مستلزمات التمديد القضبان والمجاري والاطراف والقلب قرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "motor/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e4c0e169f042",
+  "heard": "مرحبا بك في درس المحرك الحثي ثلاثي الاطوار سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "motor/intro.mp3": {
+  "recall": 0.85,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "15aa81b7a8de",
+  "heard": "المحرك الحثي ثلاثي الاطوار ذو القفص السنجابي هو حصان العمل في المصانع بسيت ومتين ويحتاج الي صيانه قليله فالفازات الثلاثه تولد في ملفات العضوثابه مجالا مغنطيسيا "
+ },
+ "motor/lesson_principle.mp3": {
+  "recall": 0.73,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9abe76316a58",
+  "heard": "مضريه التشغيل الملفات الثلاثه في العضو الثابت موزعه علي المحيط وبينها 120 درجه وعندما تغذب ثلاثه فازات يتكون مجال مغنطسي يدور بسرعه ثابته تسمس سرعه التزامنيه وت"
+ },
+ "motor/lesson_nameplate.mp3": {
+  "recall": 0.73,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "63b479c8513d",
+  "heard": "لوحه البيانه اللوحه الاسميه فيها كل ما تحتاجه القدره الخارجه علي العمود بالكيلوه والجهد والتوصيل المناسب له مثل 400 فولد لتاه او 690 ستار والتيار المقنن وهو الل"
+ },
+ "motor/lesson_connection.mp3": {
+  "recall": 0.72,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fe9e404dbeb2",
+  "heard": "التوصيل سطار ودلتا في صندوق الاطراف سته اطراف يواحد وفي واحد ودبلي واحد في الاعل وهي بدايات الملثات ودبليو اثنان ويو اثنان وفي اثنان في الاسفل وهي النهايات ومرت"
+ },
+ "motor/lesson_direction.mp3": {
+  "recall": 0.62,
+  "precision": 0.52,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "b72d2f8e67bb",
+  "heard": "اتجاه الدوران وفق المواصفه ic من 60 004 و 30 الي 8 اذا وصلت الواحد و الاثنان والثلاث علي واحد و في واحد و دبل واحد بالترتيب يدور المحرك في اتجاه عقار بالساعه و "
+ },
+ "motor/lesson_parts_maint.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7b8a05e5118c",
+  "heard": "الصيانه اهم ما نفحص مقاومه العزل بجهاز الميجر بين الملفات والجسم وبين الملفات بعضها وبعض وتوازن تيارات الفازه وصوت كراسي التحميل وحرارتها ونضافه زعانف والمروحه "
+ },
+ "motor/frame.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5ca5080c6077",
+  "heard": "الهيك الخارجي مصبوب من الحديد او الالومنيوم وعليه زعانف تزيد مساحه التبريد وارجل فيها ثقوب للتثبيت وحلقه للرفع العطل الشايع الزعانف الملييه بالغبار او زيت تسخن "
+ },
+ "motor/stator.mp3": {
+  "recall": 0.88,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7cd8c587fdaa",
+  "heard": "رقايق من حديد سليكون معزوله ومربوطه وفيها مجار نوضع بداخلها ملفات النحاسيه معزوله بالورنيش والاطراف الظاهره علي الجانبين تسمر اوس الملفات العطل الشايع الملفات ا"
+ },
+ "motor/rotor.mp3": {
+  "recall": 0.84,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3afd50a2a0d0",
+  "heard": "رقايق حديديه وفي مجريها قضبان من الالوم يوم مقصوره بحلقتين في الطرفين فتشكل هييه القفص والقضبان مايله قليلا ليكون العزم ناعما والسوط اقل العطل الشايع القضيب الم"
+ },
+ "motor/shaft.mp3": {
+  "recall": 0.74,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7df48c39fe3c",
+  "heard": "العمود الصلب الذي ينقل عزمه الي الحمل وعليه خبور يمسك البكره او اصله الرب العطل الشايع العمود المعوج يسبب تزازا ويطلف كراسي التحميل"
+ },
+ "motor/bearings.mp3": {
+  "recall": 0.93,
+  "precision": 0.93,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3fee21e237b4",
+  "heard": "كرسيا تحميل يحملان العمود واحد في كل غطاء العطل الشايع الصوت الخشن او السخونه العاليه عند الغطاء علامه علي ان كرسيا التحميل تالف او يحتاج الي تشحين"
+ },
+ "motor/end_shield_de.mp3": {
+  "recall": 0.73,
+  "precision": 0.73,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c747f9c3a955",
+  "heard": "الغطاء الاماميه من جهه العمود ويحمل كرسيه تحميل من جهه الحمل"
+ },
+ "motor/end_shield_nde.mp3": {
+  "recall": 0.67,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1c674f95308c",
+  "heard": "الغطاء الخلفي ويحمل كرسيه تحميل الاخر"
+ },
+ "motor/fan.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ffaf7fcf4b18",
+  "heard": "مروحه علي طرف العمود تدفع الهواء علي زعانف من الخارج ويسمي هذا المحرك مغلقا ومبردا بمروحه اي تيفسي العطل الشايع المروحه المكسوره تعني تبريد ضعيفا وحراره عاليه"
+ },
+ "motor/fan_cover.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1fcba3f10367",
+  "heard": "غطاء مثقب يحمي من لمس المروحه ويوجه الهواء علي الجسم"
+ },
+ "motor/terminal_box.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4a94b9bfb517",
+  "heard": "الصندوق العلوي وفي داخله لوحه الاطراف السته والقناطر ويتخل منه الكابل عبر ابلاند العطل الشايع الطرف المرتخي داخل الصندوق يسبب فقد الفاز"
+ },
+ "motor/nameplate.mp3": {
+  "recall": 0.88,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "84371183c19b",
+  "heard": "اللوحه المعدنيه التي عليها كل بيانات المحرك وهي اول ما تنظر اليه قبل اي توصيل اوضي"
+ },
+ "motor/closing.mp3": {
+  "recall": 0.91,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "065d01297610",
+  "heard": "بهذا نكون قد انهينا درس المحرك الحثي ثلاثي الاطوار جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "tools/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3087f31fbe1e",
+  "heard": "مرحبا بك في درس ادوات المتدرب سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "tools/intro.mp3": {
+  "recall": 0.86,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "52a1651b9683",
+  "heard": "هذه الادوات هي حقيبه الفني جهاز القياس المتعدد للقياس والتاكد وجهاز الكلابه لقياس التياردون قطعه سلك وقصافه الاسلاك لتقشير السلك وكماشه الكبس لاغلاق الجلب والمف"
+ },
+ "tools/lesson_multimeter.mp3": {
+  "recall": 0.89,
+  "precision": 0.88,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9ea651295e97",
+  "heard": "جهاز القياس المتعدد اختر الوظيفه والمدي قبل ان تلمس الدايره فالجهد يقاس علي التوازي والمقاومه والتوصيل يقاسان والدايره مفصوله فقط والتيار المباشر بجهاز القياس ا"
+ },
+ "tools/lesson_clamp.mp3": {
+  "recall": 0.8,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4d5a519f4e5c",
+  "heard": "جهاز قياس الطيار بالكلابه يقيس الطيار المتردد بالحث دون فصل وتغلق فكه علي سلك واحد فقط فاذا اغلقته علي الفاز وان يتري المعن ستكون القراءه صفرا لان طيارين يلغي ا"
+ },
+ "tools/lesson_safety.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2b53d7bde9b3",
+  "heard": "قبل اي عمل تاكد من غياب الجهد بجهاز سليم واختبر الجهاز علي مصدر معروف قبل القياس وبعده واستخدم ادوات معزوله حتي الف فول ولا تعمل علي دايره عليها جهد الا للضروره"
+ },
+ "tools/closing.mp3": {
+  "recall": 0.81,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ffde42d153ac",
+  "heard": "بهذا نكون قد انهينا درس ادوات المتدرم جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "enclosure/opening.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "cda3a0bcacb0",
+  "heard": "مرحبا بك في درس صندوق اللوحه سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "enclosure/intro.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "192589c18079",
+  "heard": "صندوق اللوحه هو البيت الذي يحمي المكونات من الغبار والماء والصدمات ويحمي الناس من لمس الاجزاء التي عليها جورد وفي داخله لوح تركيب تفتع عليه القضان ومجار الاسلاك"
+ },
+ "enclosure/lesson_ip.mp3": {
+  "recall": 0.81,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "691a4b4ec811",
+  "heard": "درجه الحمايه تكتب درجه الحمايه بالحرفين ib ورقماين الرقم الاول من صفر الي سته للافسام الصلبه والغبار والثاني من صفر الي ثمانيه للماء فاللوحه الصناعيه العاديه غا"
+ },
+ "enclosure/lesson_layout.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4a5a7426459b",
+  "heard": "ترتيب المكونا المعتاد ان يكون الدخول والحمايه الرييسيه في الاعلي ثم باديات الحركه وفي الاسفل الاطراف والكابلات الخارجه ونترك مسافه بين الاجهزه ومجار الاسلات وال"
+ },
+ "enclosure/lesson_earthing.mp3": {
+  "recall": 0.81,
+  "precision": 0.81,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "05fd1969a136",
+  "heard": "التاريد يجب توصيل جسم الصندوق والباب والاحو التركيب بالارضي باسلاك ذات لون اخضر واصفر لان طلاق عازل ويوصل الباب بضفيره مرنا لان المفصلات ليست موصل مضمونا"
+ },
+ "enclosure/lesson_door.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "8d5aaaac42c7",
+  "heard": "الباب يغلق الباب بقفل ذي مفتاح وكثيرا ما يكون مرتبطا بالمفتاح رييسي فلا يفتحوا المفتاح رييسي في وضع التشغيل وتوصل اجهزه الباب بحزمه اسلاك مارناه تمر من جهه المف"
+ },
+ "enclosure/body.mp3": {
+  "recall": 0.71,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "595c03f4a0ba",
+  "heard": "صاب مطلي بالبدره بلون الرماديه فاتح رال 7 535 وفي خلفه اذنان للتعليق علي الحايط العطل الشايع الصدق او فقب غير المسدود يدخل الماء والغبار"
+ },
+ "enclosure/door.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "4287fb5a21c4",
+  "heard": "الباب وفيه فتحات اجهزه تحكم وحوافه مثانيه لتغلق علي الحشيه"
+ },
+ "enclosure/gasket.mp3": {
+  "recall": 0.87,
+  "precision": 0.87,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "630adf26c975",
+  "heard": "الحشيه المطاطيه التي علي الباب وهي التي تحقق دربه الحمايه العطل الشايع الحشيه المقطعه او المتصلبه تعني دخول الغبار والماء الي داخل لوحه"
+ },
+ "enclosure/hinges.mp3": {
+  "recall": 1.0,
+  "precision": 1.0,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0bc44abc7af7",
+  "heard": "مفصلات الباب وغالبا يمكن نزع الباب منها اثناء العمل"
+ },
+ "enclosure/lock.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "94aed3040c02",
+  "heard": "قفل بمفتاح خاص حتي لا تفتح لوحه الا الشخص المسوول"
+ },
+ "enclosure/plate.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fcc9f8e16719",
+  "heard": "لوح من اصاب المبلفن يربط بمسامير داخل الصندوق وعليه نركب كل شيء ويمكن نزع فنستطيع تجميع لوحه كلها علي الطاوله"
+ },
+ "enclosure/glands.mp3": {
+  "recall": 0.76,
+  "precision": 0.76,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "46426f6cbe4c",
+  "heard": "الجلندات في الاسفل تدخل منها الكابلات ومقاس كل جلند يكون حسب قطر الكابل العطل الشايع الجلند غير المربوت او الفارغ دون كابل يضي ضربه الحمايه"
+ },
+ "enclosure/earth.mp3": {
+  "recall": 0.71,
+  "precision": 0.71,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "e45c51f6b701",
+  "heard": "مسمار الارضي رييسي وعليه علامه بي وعليه يجمع تاريد الصندوق والباب وكاب الارضي الداخل"
+ },
+ "enclosure/closing.mp3": {
+  "recall": 0.9,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fee6985cb085",
+  "heard": "بهذا نكون قد انهينا درس صندوق اللوحه جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "control_transformer/opening.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9ca7d8ef7457",
+  "heard": "مرحبا بك في درس محاول التحكم سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "control_transformer/intro.mp3": {
+  "recall": 0.75,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2533c98a9fba",
+  "heard": "محول التحكم يغذ دايره التحكم بجهد اقل واكثر امانا من جهد الشبكه مثل 24 او 28 او 110 فول والاهم انه يعزل دايره التحكم كهرباييا عن الشبكه لان الملف البتدايي والمل"
+ },
+ "control_transformer/lesson_principle.mp3": {
+  "recall": 0.87,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "43366a05829e",
+  "heard": "مظريه التشغيل التيار المتردد في الملف الابتدايي والدفيد مغنطيسيا متغيرا في القلب الحديدي ويمر هذا الفيد في الملف الثانوي فيولد فيه جهدا ونسبه الجهدين تساوي نسبه"
+ },
+ "control_transformer/lesson_taps.mp3": {
+  "recall": 0.85,
+  "precision": 0.82,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "88055de298b2",
+  "heard": "الاطراف والتوصيل للملف البتدايي اكثر من طرف مثل صفر ومايتين وعشرين وثلاثمايه وثمانين فاذا كانت التغذيه فازا ونيوترالا نوصل علي صفر ومايتين وعشرين واذا كانت بين "
+ },
+ "control_transformer/lesson_rating.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "481693dd2602",
+  "heard": "القدره بالفوله امبير يختار المحول بالفوله امبير ويجب ان يغطي امرين الاول مجموع قدره الامساك لكل الملثات واللمبات التي تعمل معا والثاني قدره الجذب الاحضيه عندما "
+ },
+ "control_transformer/lesson_protection.mp3": {
+  "recall": 0.73,
+  "precision": 0.65,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "3a4340082f09",
+  "heard": "الحمايه والتاريد يحمل ملف الابتداييه بمصهر او قاطع يناسب طيار التشغيل اللحظي للمحول نفسه ويحمل ثانوي بمصهر او قاطع صغير ومعظم الانظمه توصل احد طرف الثانوي بالار"
+ },
+ "control_transformer/core.mp3": {
+  "recall": 0.69,
+  "precision": 0.74,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "516d0cd8c4d9",
+  "heard": "قلب من رقايق حديد السليكون علي شكل حرفي وحرفياي معزوله عن بعضها لتقليل تيارات الدواميه والسخونه والساق الوسط تحمل الملفه العطل الشايع القلب المرتخ يصدر طنينا عا"
+ },
+ "control_transformer/primary.mp3": {
+  "recall": 0.94,
+  "precision": 0.94,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "9529e5b07562",
+  "heard": "الملف الذي يوصل بالشبكه لفاته كثيره وسلكه رفيع لان جهده عال وتياره قليل العطل الشايع الملف المقطوع يعني عدم وجود خرج اطلاقا الاختبار قسم قاومه الملف الابتدايي ب"
+ },
+ "control_transformer/secondary.mp3": {
+  "recall": 0.9,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "ec3475493d46",
+  "heard": "الملف الذي يغذي دايره التحكم لفاته اقل وسلكه اسمق لان جهده منخفض وتياره اعلي العطل الشايع القصر في دايره التحكم دون مصر يحرق الملف الثانوي الاختبار قسبهد الثانو"
+ },
+ "control_transformer/bobbin.mp3": {
+  "recall": 0.84,
+  "precision": 0.84,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "fe34368b1cae",
+  "heard": "البكرت البلستيكيه التي يلف عليها الملثان وهي تعزل بينهما وبين القلب وفي محاولات الامان يوجد عزل مضاعف بين الابتدايي والثانوي الاختبار قس العزل بجهاز الميجر بين "
+ },
+ "control_transformer/terminals.mp3": {
+  "recall": 0.77,
+  "precision": 0.77,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "5a6d5282efc9",
+  "heard": "الاطراف العلويه صفل الملف البتدايي باطرافه وصفل الملف الثانوي وعلي كل طرف جهده العطل الشايع التوصيل علي الطرف الخاطي يغير جهد التحكم"
+ },
+ "control_transformer/bracket.mp3": {
+  "recall": 0.9,
+  "precision": 0.9,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "2626cd9a227d",
+  "heard": "الاطار المعدني الذي يمسك رقايق القلب مضغوطه وفيه ارجل بها ثقوب تربط في لوح التركيب والمحول فقيل فيجب تذبيته جيدا"
+ },
+ "control_transformer/label.mp3": {
+  "recall": 0.7,
+  "precision": 0.7,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7aff55eda359",
+  "heard": "اللوحه الاسميه وعليها القدره بالفوله امبر وجهود الابتدايي والثانوي والترد"
+ },
+ "control_transformer/closing.mp3": {
+  "recall": 0.81,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6b0b74bc7c77",
+  "heard": "بهذا نكون قد انهينا درسم حول التحكم جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
+ },
+ "power_supply_24v/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "bebaadab8651",
+  "heard": "مرحبا بك في درس مزود القدره 24 فوله مستمر سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "power_supply_24v/intro.mp3": {
+  "recall": 0.71,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "36e184ec290c",
+  "heard": "مزود القدره احول التيار المتردد القادمه من الشبكه الي تيار مستمر بجهد 24 فول مستقر ونظيف ونستخدمه لتغذيه الحساسات وريليهات التي تعمل علي 24 فول والمتحكم المنطقي"
+ },
+ "power_supply_24v/lesson_principle.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0984fd08d92f",
+  "heard": "مظاريه التشغيل داخل مزود القدره يقوم الجهد المتردد وينعم الي جهد مستمر نعال ثم يقطعه ترانزستور بتردد نعال جدا عشارات الالاف من المرات في الثانيه ويمرره علي محول"
+ },
+ "power_supply_24v/lesson_selection.mp3": {
+  "recall": 0.62,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "eff18101adab",
+  "heard": "الاختيار والتوصيل اختر مزود القدره بتيار اكبر من مجموعه الاحمال بنحو 25 والدخول علي الوين والارضي والخروج من زايد في وشرته في وغالبا يوجد طرفان لكل منهما لتوزيع"
+ },
+ "power_supply_24v/lesson_protection.mp3": {
+  "recall": 0.89,
+  "precision": 0.89,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "7c390fef6f3d",
+  "heard": "الحمايه مزودات القدره الحديثه فيها حمايه من القصر وزياده الحمل فاما ان ينقطع الخرق ثم يحاول العوده مره بعد مره ويسمي ذلك وضع هكب واما ان يحدي من التيار والليد د"
+ },
+ "power_supply_24v/case.mp3": {
+  "recall": 0.77,
+  "precision": 0.79,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "03cf5f4b67dd",
+  "heard": "العلبه المثابته علي القضيب والاطراف في الاعلي للدخول الواين والارضي وفي الاسفل للخروج زايد في وشرته في العطل الشايع توصيل الدخول علي اطراف الخرج يحرق مزود القدر"
+ },
+ "power_supply_24v/pcb.mp3": {
+  "recall": 0.8,
+  "precision": 0.8,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "026ad0d2eef6",
+  "heard": "اللوحه الالكترونيه التي عليها دايره التقيم والتقطع والتحكم في الجهد"
+ },
+ "power_supply_24v/transformer.mp3": {
+  "recall": 0.75,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "1abcb6364ef4",
+  "heard": "محاول صغير جدا بقلب من الفريق ولانه يعمل علي ترضد عالف حجمه اصغر بكثير من محاول الشبكه الذي له القدره نفسها وهو الذي يحقق العزل بين الدخول والخروب"
+ },
+ "power_supply_24v/capacitors.mp3": {
+  "recall": 0.86,
+  "precision": 0.86,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "abb833ce5685",
+  "heard": "المكثفات تنعم الجهد بعد التقويم وهي اكثر القطع تاثر بالحراره والزمن العطل الشايع المكثف المنتفخ يسبب تموغ في جهد الخرد او يجعل مزود القدره يفصل ويعود الاختبار ق"
+ },
+ "power_supply_24v/heatsink.mp3": {
+  "recall": 0.63,
+  "precision": 0.63,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "301911119daa",
+  "heard": "مشته حراري من الالومون بزعانث يسحب الحراره من الترانزستورات والثناييه العطل الشايع التهويه الضعيفه تتقل العمر مزود قدره كثيرا"
+ },
+ "power_supply_24v/front.mp3": {
+  "recall": 0.74,
+  "precision": 0.68,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "beb91734019b",
+  "heard": "علي الواجهه ليد دي سي اوكا ومسمار ضط الجهد في اد جاك تف وبيانات الجهد والتيار العطل الشايع اذا كان ليد مطفيا والدخول واصلا ففي الخرق قصر او ان مزود القدره تالف "
+ },
+ "power_supply_24v/closing.mp3": {
+  "recall": 0.79,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "863a73a42397",
+  "heard": "بهذا نكون قد انهينا درسم زود القدره 24 فولت مستمر جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطع فمختبر نفسك في الاسيله"
+ },
+ "motor_1ph/opening.mp3": {
+  "recall": 0.95,
+  "precision": 0.95,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "f7cdd7cba6ab",
+  "heard": "مرحبا بك في درس المحرك احادي الطور بالمكثث سنتعرف عليه من الخارج والداخل ونفهم طريقه عمله وكيف نختاره ونختبره"
+ },
+ "motor_1ph/intro.mp3": {
+  "recall": 0.85,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "c7d1550ce69b",
+  "heard": "المحرك احادي الطور يعمل علي ثازه وانيوترال وينتشر في المضخات الصغيره والضواغه والمروح والعدد ومشكلته ان الطور الواحد يولد مجالا مغنطيسيا نابضا فقط وليس دوارا فل"
+ },
+ "motor_1ph/lesson_principle.mp3": {
+  "recall": 0.7,
+  "precision": 0.63,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "76a7693f6c4a",
+  "heard": "لماذا يحتاج الي مكثث في العض الثابت ملافن ملافن رييسي يواحد شرطه يوثنان وملافن مساعد زد واحد شرطه زد اثنان مزاح عنه بزاويه في المكان والمكثف المواصل علي التوالي"
+ },
+ "motor_1ph/lesson_types.mp3": {
+  "recall": 0.83,
+  "precision": 0.83,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "0ac8555b1111",
+  "heard": "الانواع هناك محرك بمكثث بدء فقط مكثف كبير يعمل بضع ثوان حتي يصل المحرك الي نحو 70 او 80 في الميه من سرعته ثم يفصله المفتاح الطارد المركزي وهناك محرك بمكثث تشغيل"
+ },
+ "motor_1ph/lesson_caps.mp3": {
+  "recall": 0.75,
+  "precision": 0.75,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "07f76bbc2c04",
+  "heard": "المكثثان مكثف البدء غالبا اليكروليتي اسود سعته كبيره بالميات من المكر فارد ومصمم ليعمل ثوانيا فقط فاذا بقي موصلا يسخن وينفجر ومكثف التشغيل غالبا من النوع الغشاي"
+ },
+ "motor_1ph/lesson_reverse.mp3": {
+  "recall": 0.87,
+  "precision": 0.85,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "43f564a6cff4",
+  "heard": "عكس للتجاه لعكس التجاه المحرك احادي الطور تعكس طرف الملف المساعد بالنسبه الي رييسي اي تبدل زد واحد وزد اثنان او تعكس الملف الرييسي لكنك لا تبدل الفاز والنيوترال"
+ },
+ "motor_1ph/lesson_safety.mp3": {
+  "recall": 0.91,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "6f5f1aeb4fd3",
+  "heard": "الامان يظل المكفف محتفظا بشحنه بعد فصل الكهرباء وقد يصعقك فقبل ان تلمس اطرافه افس الكهرباء وفرغه بمقاومه مناسبه وليس بمفك يحدث شراره"
+ },
+ "motor_1ph/stator.mp3": {
+  "recall": 0.76,
+  "precision": 0.67,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "602c11e978fc",
+  "heard": "في العضو الثابت ملاف ثاني في المجار نفسها الرييسي يسلكه اسمك ومقاومته اقل والمساعد سلكه ارفع ومقاومته اعلي العطل الشايع الملف المساعد المقطوع يجعل المحرك يطن ول"
+ },
+ "motor_1ph/terminal_box.mp3": {
+  "recall": 0.63,
+  "precision": 0.59,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "06850bf93216",
+  "heard": "في صندوق الاطراف طرفا الملف الرييسي يو واحد ويو اثنان وطرف الملف المساعد زد واحد وزد اثنان ومكان دخول الفاز والنيوترال وتوضع القناه رحسب رسم الشركه والتجاه الدو"
+ },
+ "motor_1ph/run_capacitor.mp3": {
+  "recall": 0.58,
+  "precision": 0.62,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "44e808e09fb7",
+  "heard": "مكثف غشايي يظل مواصلا مع الملاف المساعده والتشغيل العطل الشايع المكثف ضعيف يجعل المحرك يسخ ويضعف ويعل صوته الاختبار افس المكثف وفرغ وقسعته بجهاز قياس السع وقارن"
+ },
+ "motor_1ph/start_capacitor.mp3": {
+  "recall": 0.96,
+  "precision": 0.96,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a10456e71bbb",
+  "heard": "مكثف لكتروليت سعته كبيره يعطي عزم بدء عاليا لثوان قليله فقط ثم يفصله المفتاح الطارد المركزي العطل الشايع المكثف المنتفخ او المسرب والمحرك لا يدور ويطن"
+ },
+ "motor_1ph/centrifugal_switch.mp3": {
+  "recall": 0.92,
+  "precision": 0.92,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "a77d238d1b02",
+  "heard": "اثقال علي العمود تنفتح الي الخارج بقوه الطرد المركزي بمجرد ان تزيد السرعه فتدفع ذراعا يفتح نقطه ثابته في الغطاء فيفصل مكثف البد وعندما يتوقف المحرك يوعيدها النا"
+ },
+ "motor_1ph/closing.mp3": {
+  "recall": 0.87,
+  "precision": 0.91,
+  "attempt": 1,
+  "ok": true,
+  "voice": "ar-EG-ShakirNeural",
+  "model": "azure-neural",
+  "h": "53eb56de0b67",
+  "heard": "بهذا نكون قد انهينا درس المحرك احادي الطور بالمكثث جرب فكه وتركيبه بنفسك واستمع الي شرح كل قطعه فمختبر نفسك في الاسيله"
  }
 }

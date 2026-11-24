@@ -1,0 +1,46 @@
+{
+  "component": "tools",
+  "name_ar": "أدوات المتدرب",
+  "name_en": "Trainee tools",
+  "model": "multimeter.glb",
+  "variants": [
+    "multimeter.glb",
+    "clamp_meter.glb",
+    "test_leads.glb",
+    "wire_stripper.glb",
+    "ferrule_crimper.glb",
+    "screwdriver.glb"
+  ],
+  "intro": {
+    "audio": "tools/intro.mp3",
+    "text_ar": "الأدوات دي هي شنطة الفني: الأفوميتر للقياس والتأكد، والكلامب ميتر لقياس التيار من غير ما تقطع السلك، والقصافة لتقشير السلك، والكماشة لتقفيل الجلب، والمفك المعزول. واستخدامها الصح جزء من التدريب زي التوصيل بالظبط."
+  },
+  "lesson": [
+    {
+      "id": "multimeter",
+      "title_ar": "الأفوميتر",
+      "title_en": "Multimeter",
+      "text_ar": "اختار الوظيفة والمدى قبل ما تلمس الدايرة. والجهد بيتقاس على التوازي. والمقاومة والتوصيل بيتقاسوا والدايرة مفصولة بس. والتيار المباشر بالأفوميتر بيتقاس على التوالي ومن ترمينال الأمبير. وأشهر غلطة خطيرة: تقيس جهد والمجسات في ترمينال الأمبير، فتعمل قصر. والأجهزة ليها فئة أمان، زي CAT III 600V، ولازم تناسب المكان اللي بتقيس فيه.",
+      "audio": "tools/lesson_multimeter.mp3"
+    },
+    {
+      "id": "clamp",
+      "title_ar": "الكلامب ميتر",
+      "title_en": "Clamp meter",
+      "text_ar": "بيقيس التيار المتردد بالحث، من غير فصل. بتقفل الفك على سلك واحد بس. لو قفلته على الفاز والنيوترال مع بعض، القراية هتطلع صفر، لإن التيارين بيلغوا بعض.",
+      "audio": "tools/lesson_clamp.mp3"
+    },
+    {
+      "id": "safety",
+      "title_ar": "قبل أي شغل",
+      "title_en": "Before any work",
+      "text_ar": "اتأكد من غياب الجهد بجهاز سليم. اختبر الجهاز على مصدر معروف قبل وبعد القياس. واستخدم أدوات معزولة على ألف فولت. ومتشتغلش على دايرة عليها كهربا إلا للضرورة، وبعد إذن وتجهيزات حماية.",
+      "audio": "tools/lesson_safety.mp3"
+    }
+  ],
+  "parts": [],
+  "references": [
+    "IEC 61010-1 / -2-033: Safety of measuring equipment (CAT ratings)",
+    "IEC 60900: Insulated hand tools"
+  ]
+}

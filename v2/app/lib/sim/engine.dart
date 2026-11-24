@@ -1,0 +1,810 @@
+// Control Academy — simulation engine (Dart port of the v1 web engine).
+//
+// Model: every terminal is "<compId>.<termId>". Wires and closed contacts join
+// terminals into nets (union-find). Sources put phasors on nets; a net with two
+// different phasors from the same source group is a short. Coils pull in when the
+// voltage across them is inside their window; the loop repeats until the contact
+// state is stable (or chatters). `tick` advances time: timers, coil burn-out,
+// motor speed/current, overload heating, the cart on the track.
+import 'dart:math' as math;
+
+// ---------------------------------------------------------------- phasors
+class Ph {
+  final double re, im;
+  const Ph(this.re, this.im);
+  factory Ph.polar(double mag, double deg) {
+    final r = deg * math.pi / 180;
+    return Ph(mag * math.cos(r), mag * math.sin(r));
+  }
+  double get abs => math.sqrt(re * re + im * im);
+  Ph operator -(Ph o) => Ph(re - o.re, im - o.im);
+  double get angle => ((math.atan2(im, re) * 180 / math.pi) + 360) % 360;
+}
+
+const Map<String, List<double>> kPhase = {
+  'L1': [220, 0],
+  'L2': [220, -120],
+  'L3': [220, 120],
+  'N': [0, 0],
+  'PE': [0, 0],
+};
+
+// ---------------------------------------------------------------- types
+class Term {
+  final String id, side; // side: t (top) · b (bottom) · x (internal, not wireable)
+  final double x, y;
+  const Term(this.id, this.x, this.y, this.side);
+}
+
+typedef Links = List<List<String>> Function(Comp c);
+
+class CompType {
+  final String key, nameAr;
+  final double w, h;
+  final List<Term> Function(Comp c) terms;
+  final Links? links;
+  final List<String>? coil; // [A1, A2]
+  final double Function(Comp c)? rated;
+  final bool breaker, wide, station;
+  final double rating;
+  const CompType({
+    required this.key,
+    required this.nameAr,
+    required this.w,
+    required this.h,
+    required this.terms,
+    this.links,
+    this.coil,
+    this.rated,
+    this.breaker = false,
+    this.wide = false,
+    this.station = false,
+    this.rating = 0,
+  });
+}
+
+List<Term> _t(List<Term> t) => t;
+
+final Map<String, CompType> kTypes = {
+  'sup': CompType(
+      key: 'sup', nameAr: 'مصدر التغذية ثلاثي الأطوار 380 فولت', w: 340, h: 78,
+      terms: (_) => _t(const [Term('L1', 40, 62, 'b'), Term('L2', 100, 62, 'b'), Term('L3', 160, 62, 'b'), Term('N', 230, 62, 'b'), Term('PE', 290, 62, 'b')])),
+  'mcb1': CompType(
+      key: 'mcb1', nameAr: 'قاطع أحادي القطب', w: 44, h: 124, breaker: true, rating: 6,
+      terms: (_) => _t(const [Term('1', 22, 12, 't'), Term('2', 22, 112, 'b')]),
+      links: (c) => c.s.on ? [['1', '2']] : []),
+  'mcb3': CompType(
+      key: 'mcb3', nameAr: 'قاطع ثلاثي الأقطاب', w: 120, h: 124, breaker: true, rating: 16,
+      terms: (_) => _t(const [Term('1', 22, 12, 't'), Term('3', 60, 12, 't'), Term('5', 98, 12, 't'), Term('2', 22, 112, 'b'), Term('4', 60, 112, 'b'), Term('6', 98, 112, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['3', '4'], ['5', '6']] : []),
+  'trafo': CompType(
+      key: 'trafo', nameAr: 'محوّل التحكم', w: 128, h: 136,
+      terms: (_) => _t(const [Term('P0', 22, 12, 't'), Term('P220', 64, 12, 't'), Term('P380', 106, 12, 't'), Term('S0', 22, 124, 'b'), Term('S24', 64, 124, 'b'), Term('S48', 106, 124, 'b')])),
+  'kc': CompType(
+      key: 'kc', nameAr: 'كونتاكتور', w: 136, h: 156, coil: const ['A1', 'A2'],
+      rated: (c) => (c.p['coilV'] as num?)?.toDouble() ?? 220,
+      terms: (c) => [
+            const Term('A1', 14, 12, 't'), const Term('1', 38, 12, 't'), const Term('3', 60, 12, 't'), const Term('5', 82, 12, 't'),
+            const Term('13', 104, 12, 't'), const Term('21', 124, 12, 't'),
+            const Term('A2', 14, 144, 'b'), const Term('2', 38, 144, 'b'), const Term('4', 60, 144, 'b'), const Term('6', 82, 144, 'b'),
+            const Term('14', 104, 144, 'b'), const Term('22', 124, 144, 'b'),
+            if (c.p['aux'] == true) ...const [Term('53', 52, 54, 't'), Term('61', 86, 54, 't'), Term('54', 52, 104, 'b'), Term('62', 86, 104, 'b')],
+          ],
+      links: (c) {
+        final aux = c.p['aux'] == true;
+        if (c.s.on) return [['1', '2'], ['3', '4'], ['5', '6'], ['13', '14'], if (aux) ['53', '54']];
+        return [['21', '22'], if (aux) ['61', '62']];
+      }),
+  'ol': CompType(
+      key: 'ol', nameAr: 'أوفرلود حراري', w: 176, h: 104,
+      terms: (_) => _t(const [
+            Term('95', 146, 14, 't'), Term('97', 166, 14, 't'), Term('2', 38, 92, 'b'), Term('4', 60, 92, 'b'), Term('6', 82, 92, 'b'),
+            Term('96', 146, 92, 'b'), Term('98', 166, 92, 'b'), Term('1', 38, -4, 'x'), Term('3', 60, -4, 'x'), Term('5', 82, -4, 'x'),
+          ]),
+      links: (c) => [['1', '2'], ['3', '4'], ['5', '6'], c.s.trip ? ['97', '98'] : ['95', '96']]),
+  'relay': CompType(
+      key: 'relay', nameAr: 'مرحّل مساعد', w: 108, h: 150, coil: const ['A1', 'A2'],
+      rated: (c) => (c.p['coilV'] as num?)?.toDouble() ?? 220,
+      terms: (_) => _t(const [Term('A1', 16, 12, 't'), Term('11', 52, 12, 't'), Term('21', 88, 12, 't'), Term('A2', 12, 138, 'b'), Term('12', 34, 138, 'b'), Term('14', 54, 138, 'b'), Term('22', 76, 138, 'b'), Term('24', 96, 138, 'b')]),
+      links: (c) => c.s.on ? [['11', '14'], ['21', '24']] : [['11', '12'], ['21', '22']]),
+  'timer': CompType(
+      key: 'timer', nameAr: 'مؤقت', w: 78, h: 150, coil: const ['A1', 'A2'], rated: (_) => 230, wide: true,
+      terms: (_) => _t(const [Term('A1', 18, 12, 't'), Term('15', 58, 12, 't'), Term('A2', 14, 138, 'b'), Term('16', 39, 138, 'b'), Term('18', 64, 138, 'b')]),
+      links: (c) => c.s.sw ? [['15', '18']] : [['15', '16']]),
+  'pb_no': CompType(
+      key: 'pb_no', nameAr: 'ضاغط تشغيل NO', w: 76, h: 124, station: true,
+      terms: (_) => _t(const [Term('13', 38, 12, 't'), Term('14', 38, 112, 'b')]),
+      links: (c) => c.s.pr ? [['13', '14']] : []),
+  'pb_nc': CompType(
+      key: 'pb_nc', nameAr: 'ضاغط إيقاف NC', w: 76, h: 124, station: true,
+      terms: (_) => _t(const [Term('11', 38, 12, 't'), Term('12', 38, 112, 'b')]),
+      links: (c) => c.s.pr ? [] : [['11', '12']]),
+  'estop': CompType(
+      key: 'estop', nameAr: 'مفتاح الطوارئ', w: 84, h: 124, station: true,
+      terms: (_) => _t(const [Term('11', 42, 12, 't'), Term('12', 42, 112, 'b')]),
+      links: (c) => c.s.lat ? [] : [['11', '12']]),
+  'sel': CompType(
+      key: 'sel', nameAr: 'مفتاح اختيار', w: 84, h: 124, station: true,
+      terms: (_) => _t(const [Term('13', 22, 12, 't'), Term('21', 62, 12, 't'), Term('14', 22, 112, 'b'), Term('22', 62, 112, 'b')]),
+      links: (c) => c.s.pos != 0 ? [['13', '14']] : [['21', '22']]),
+  'lamp': CompType(
+      key: 'lamp', nameAr: 'لمبة بيان', w: 66, h: 124, station: true,
+      terms: (_) => _t(const [Term('X1', 33, 12, 't'), Term('X2', 33, 112, 'b')])),
+  'ls': CompType(
+      key: 'ls', nameAr: 'مفتاح نهاية الشوط', w: 84, h: 118,
+      terms: (_) => _t(const [Term('11', 20, 12, 't'), Term('23', 64, 12, 't'), Term('12', 20, 106, 'b'), Term('24', 64, 106, 'b')]),
+      links: (c) => c.s.act ? [['23', '24']] : [['11', '12']]),
+  'motor': CompType(
+      key: 'motor', nameAr: 'محرك حثي ثلاثي الأطوار', w: 220, h: 236,
+      terms: (_) => _t(const [Term('W2', 60, 26, 't'), Term('U2', 105, 26, 't'), Term('V2', 150, 26, 't'), Term('U1', 60, 64, 't'), Term('V1', 105, 64, 't'), Term('W1', 150, 64, 't'), Term('PE', 190, 45, 't')]),
+      links: (c) => switch (c.p['links']) {
+            'delta' => [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']],
+            'star' => [['U2', 'V2'], ['V2', 'W2']],
+            _ => <List<String>>[],
+          }),
+};
+
+// ---------------------------------------------------------------- components
+class CompState {
+  // breakers
+  bool on = false, trip = false;
+  // coils
+  double v = 0, burn = 0;
+  bool hum = false, dead = false, blocked = false;
+  // timer
+  bool sw = false;
+  double el = 0;
+  // overload
+  double heat = 0, current = 0;
+  // stations
+  bool pr = false, lat = false;
+  int pos = 0;
+  // limit switch
+  bool act = false, man = false;
+  // motor
+  String mode = 'off';
+  double spd = 0, ang = 0;
+  int dir = 0;
+  List<double> vw = const [0, 0, 0];
+  bool load = false;
+  // transformer
+  double k = 0;
+}
+
+class Comp {
+  final String id, type;
+  final Map<String, Object?> p;
+  final String? attach;
+  double x, y;
+  final CompState s = CompState();
+  Comp(this.id, this.type, {Map<String, Object?>? p, this.attach, this.x = 0, this.y = 0}) : p = {...?p} {
+    switch (type) {
+      case 'mcb1':
+      case 'mcb3':
+        s.on = true;
+      case 'timer':
+        this.p['mode'] ??= 'on';
+        this.p['T'] ??= 3.0;
+      case 'ol':
+        this.p['set'] ??= 8.5;
+      case 'motor':
+        this.p['links'] ??= 'delta';
+        this.p['In'] ??= 8.5;
+      case 'lamp':
+        this.p['col'] ??= 'g';
+        this.p['V'] ??= 220.0;
+      case 'pb_no':
+        this.p['col'] ??= 'g';
+      case 'pb_nc':
+        this.p['col'] ??= 'r';
+    }
+  }
+  CompType get t => kTypes[type]!;
+  List<Term> get terms => t.terms(this);
+  double num_(String k) => (p[k] as num).toDouble();
+  String? get label => p['lb'] as String?;
+}
+
+class Wire {
+  final String a, b, col;
+  final bool power;
+  const Wire(this.a, this.b, {this.col = 'rd', this.power = false});
+  @override
+  String toString() => '$a—$b';
+}
+
+class Track {
+  final String motor, left, right;
+  double x = 0;
+  Track(this.motor, this.left, this.right);
+}
+
+class SimEvent {
+  final String t;
+  final String? id;
+  final Map<String, Object?> data;
+  const SimEvent(this.t, [this.id, this.data = const {}]);
+  @override
+  String toString() => '$t${id == null ? '' : ':$id'}';
+}
+
+class ShortInfo {
+  final String a, b;
+  final String? breaker;
+  final double at;
+  const ShortInfo(this.a, this.b, this.breaker, this.at);
+}
+
+// ---------------------------------------------------------------- nets
+class _UF {
+  final Map<String, String> p = {};
+  String f(String a) {
+    final q = p[a];
+    if (q == null) {
+      p[a] = a;
+      return a;
+    }
+    if (q == a) return a;
+    final r = f(q);
+    p[a] = r;
+    return r;
+  }
+
+  void u(String a, String b) {
+    final x = f(a), y = f(b);
+    if (x != y) p[x] = y;
+  }
+}
+
+class _Src {
+  final String g, key;
+  final Ph ph;
+  const _Src(this.g, this.ph, this.key);
+}
+
+class Nets {
+  final _UF _uf;
+  final Map<String, List<_Src>> _src;
+  Nets._(this._uf, this._src);
+  String root(String term) => _uf.f(term);
+  bool same(String a, String b) => _uf.f(a) == _uf.f(b);
+  _Src? pot(String term) {
+    final l = _src[_uf.f(term)];
+    return (l == null || l.isEmpty) ? null : l.first;
+  }
+
+  /// true when the net carries any voltage source (used to draw live wires)
+  bool live(String term) => pot(term) != null;
+  double vAcross(String a, String b) {
+    final pa = pot(a), pb = pot(b);
+    if (pa == null || pb == null || pa.g != pb.g) return 0;
+    return (pa.ph - pb.ph).abs;
+  }
+
+  /// phase key of the net (L1/L2/L3/N/PE…) or null
+  String? phaseOf(String term) => pot(term)?.key;
+}
+
+// ---------------------------------------------------------------- lab
+class Lab {
+  final List<Comp> comps = [];
+  final List<Wire> wires = [];
+  final List<List<String>> mech = []; // mechanical interlock pairs
+  Track? track;
+  bool power = false;
+  double t = 0;
+  final List<SimEvent> events = [];
+  ShortInfo? short;
+  Nets? nets;
+  bool chatter = false;
+
+  Comp? byId(String id) {
+    for (final c in comps) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
+
+  Comp operator [](String id) => byId(id)!;
+
+  void emit(SimEvent e) => events.add(e);
+
+  /// events since the last call (for UI sounds / toasts)
+  List<SimEvent> drain() {
+    final out = List<SimEvent>.of(events);
+    events.clear();
+    return out;
+  }
+
+  Nets buildNets({String? exclude}) {
+    final uf = _UF();
+    for (final w in wires) {
+      uf.u(w.a, w.b);
+    }
+    for (final c in comps) {
+      final ty = c.t;
+      if (ty.links != null && exclude != c.id) {
+        for (final l in ty.links!(c)) {
+          uf.u('${c.id}.${l[0]}', '${c.id}.${l[1]}');
+        }
+      }
+      if (c.attach != null && c.type == 'ol') {
+        final par = byId(c.attach!);
+        if (par != null) {
+          for (final pr in const [['2', '1'], ['4', '3'], ['6', '5']]) {
+            uf.u('${par.id}.${pr[0]}', '${c.id}.${pr[1]}');
+          }
+        }
+      }
+    }
+    final src = <String, List<_Src>>{};
+    void add(String term, String g, Ph ph, String key) => (src[uf.f(term)] ??= []).add(_Src(g, ph, key));
+    if (power) {
+      for (final s in comps.where((c) => c.type == 'sup')) {
+        kPhase.forEach((k, v) => add('${s.id}.$k', 'M', Ph.polar(v[0], v[1]), k));
+      }
+    }
+    for (final c in comps) {
+      if (c.type == 'trafo' && c.s.k > 0.05) {
+        final g = 'T:${c.id}';
+        add('${c.id}.S0', g, const Ph(0, 0), 'S0');
+        add('${c.id}.S24', g, Ph(24 * c.s.k, 0), 'S24');
+        add('${c.id}.S48', g, Ph(48 * c.s.k, 0), 'S48');
+      }
+    }
+    return Nets._(uf, src);
+  }
+
+  static (String, String)? _findShort(Nets n) {
+    for (final l in n._src.values) {
+      for (var i = 0; i < l.length; i++) {
+        for (var j = i + 1; j < l.length; j++) {
+          if (l[i].g == l[j].g && (l[i].ph - l[j].ph).abs > 5) return (l[i].key, l[j].key);
+        }
+      }
+    }
+    return null;
+  }
+
+  List<double> coilWindow(Comp c) {
+    if (c.t.wide) return const [20, 264, 300];
+    final r = c.t.rated!(c);
+    return [r * 0.8, r * 1.15, r * 1.3];
+  }
+
+  void _tripBreaker(Comp c, String why) {
+    c.s.on = false;
+    c.s.trip = true;
+    emit(SimEvent('trip', c.id, {'why': why}));
+  }
+
+  /// Settle all contacts for the current inputs.
+  void solve() {
+    var guard = 0;
+    for (var it = 0; it < 24; it++) {
+      final n = buildNets();
+      final sh = _findShort(n);
+      if (sh != null) {
+        final cands = comps.where((c) => c.t.breaker && c.s.on).toList()..sort((a, b) => a.t.rating.compareTo(b.t.rating));
+        Comp? hit;
+        for (final c in cands) {
+          if (_findShort(buildNets(exclude: c.id)) == null) {
+            hit = c;
+            break;
+          }
+        }
+        short = ShortInfo(sh.$1, sh.$2, hit?.id, t);
+        if (hit != null) {
+          _tripBreaker(hit, 'short');
+        } else {
+          power = false;
+          emit(const SimEvent('mainTrip'));
+        }
+        emit(SimEvent('short', hit?.id, {'a': sh.$1, 'b': sh.$2}));
+        if (++guard > 6) break;
+        continue;
+      }
+      var changed = false;
+      for (final c in comps.where((c) => c.type == 'trafo')) {
+        final v220 = n.vAcross('${c.id}.P0', '${c.id}.P220'), v380 = n.vAcross('${c.id}.P0', '${c.id}.P380');
+        var k = 0.0;
+        if (v380 > 1) {
+          k = v380 / 380;
+        } else if (v220 > 1) {
+          k = v220 / 220;
+        }
+        if ((k - c.s.k).abs() > 0.01) {
+          c.s.k = k;
+          changed = true;
+        }
+      }
+      if (changed) continue;
+      final want = <String, bool>{};
+      for (final c in comps) {
+        final coil = c.t.coil;
+        if (coil == null) continue;
+        final v = n.vAcross('${c.id}.${coil[0]}', '${c.id}.${coil[1]}');
+        c.s.v = v;
+        final w = coilWindow(c);
+        final ok = !c.s.dead && v >= w[0] && v <= w[1] * 1.3;
+        want[c.id] = ok;
+        c.s.hum = !c.s.dead && !ok && v > w[0] * 0.35;
+        c.s.blocked = false;
+      }
+      for (final m in mech) {
+        final a = m[0], b = m[1];
+        if ((want[a] ?? false) && (want[b] ?? false)) {
+          final A = this[a], B = this[b];
+          if (A.s.on && !B.s.on) {
+            want[b] = false;
+            B.s.blocked = true;
+          } else if (B.s.on && !A.s.on) {
+            want[a] = false;
+            A.s.blocked = true;
+          } else if (!A.s.on && !B.s.on) {
+            want[a] = want[b] = false;
+            A.s.blocked = B.s.blocked = true;
+          }
+        }
+      }
+      for (final c in comps) {
+        final nv = want[c.id];
+        if (nv == null) continue;
+        if (c.type == 'timer') {
+          if (nv != c.s.on) {
+            c.s.on = nv;
+            changed = true;
+            if (c.p['mode'] == 'off') {
+              if (nv) {
+                if (!c.s.sw) {
+                  c.s.sw = true;
+                  emit(SimEvent('tsw', c.id));
+                }
+                c.s.el = 0;
+              }
+            } else if (!nv) {
+              if (c.s.sw) emit(SimEvent('tsw', c.id));
+              c.s.sw = false;
+              c.s.el = 0;
+            }
+          }
+        } else if (nv != c.s.on) {
+          c.s.on = nv;
+          changed = true;
+          emit(SimEvent(nv ? 'kon' : 'koff', c.id, {'type': c.type}));
+        }
+      }
+      if (!changed) {
+        nets = n;
+        chatter = false;
+        _loads(n);
+        return;
+      }
+    }
+    chatter = true;
+    nets = buildNets();
+    _loads(nets!);
+    emit(const SimEvent('chatter'));
+  }
+
+  void _loads(Nets n) {
+    for (final c in comps) {
+      if (c.type == 'lamp') {
+        final v = n.vAcross('${c.id}.X1', '${c.id}.X2');
+        c.s.v = c.s.dead ? 0 : v;
+        if (!c.s.dead && v > c.num_('V') * 1.4) {
+          c.s.dead = true;
+          c.s.v = 0;
+          emit(SimEvent('pop', c.id));
+        }
+      }
+      if (c.type == 'motor') _motor(n, c);
+    }
+  }
+
+  void _motor(Nets n, Comp m) {
+    const w = [['U1', 'U2'], ['V1', 'V2'], ['W1', 'W2']];
+    const tt = ['U1', 'U2', 'V1', 'V2', 'W1', 'W2'];
+    final pot = <String, Ph?>{};
+    for (final t in tt) {
+      final p = n.pot('${m.id}.$t');
+      pot[t] = (p != null && p.g == 'M') ? p.ph : null;
+    }
+    // star point: terminals joined together with no source take the mean of the far ends
+    final groups = <String, List<String>>{};
+    for (final t in tt) {
+      if (pot[t] == null) (groups[n.root('${m.id}.$t')] ??= []).add(t);
+    }
+    String other(String t) {
+      for (final x in w) {
+        if (x[0] == t) return x[1];
+        if (x[1] == t) return x[0];
+      }
+      return t;
+    }
+
+    for (final ts in groups.values) {
+      if (ts.length < 2) continue;
+      final oth = ts.map(other).where((o) => pot[o] != null).toList();
+      if (oth.length < 2) continue;
+      var re = 0.0, im = 0.0;
+      for (final o in oth) {
+        re += pot[o]!.re;
+        im += pot[o]!.im;
+      }
+      final p = Ph(re / ts.length, im / ts.length);
+      for (final t in ts) {
+        pot[t] = p;
+      }
+    }
+    final vw = [for (final x in w) (pot[x[0]] != null && pot[x[1]] != null) ? (pot[x[0]]! - pot[x[1]]!).abs : 0.0];
+    m.s.vw = vw;
+    var mode = 'off';
+    if (m.s.dead) {
+      mode = 'dead';
+    } else if (vw.any((v) => v > 460)) {
+      mode = 'over';
+    } else if (vw.every((v) => v > 330)) {
+      mode = 'delta';
+    } else if (vw.every((v) => v > 180 && v <= 260)) {
+      mode = 'star';
+    } else if (vw.any((v) => v > 40)) {
+      mode = 'single';
+    }
+    if (mode == 'delta' || mode == 'star') {
+      final d = ((pot['V1']!.angle - pot['U1']!.angle) + 360) % 360;
+      m.s.dir = d > 180 ? 1 : -1;
+    }
+    if (mode != m.s.mode) {
+      emit(SimEvent('motor', m.id, {'mode': mode, 'prev': m.s.mode}));
+      m.s.mode = mode;
+    }
+  }
+
+  /// Advance time; returns true when a contact changed and the circuit must be re-solved.
+  bool tick(double dt) {
+    t += dt;
+    var dirty = false;
+    for (final c in comps) {
+      if (c.type == 'timer') {
+        final tm = c.num_('T');
+        if (c.p['mode'] == 'on') {
+          if (c.s.on && !c.s.sw) {
+            c.s.el += dt;
+            if (c.s.el >= tm) {
+              c.s.sw = true;
+              dirty = true;
+              emit(SimEvent('tsw', c.id));
+            }
+          }
+        } else if (!c.s.on && c.s.sw) {
+          c.s.el += dt;
+          if (c.s.el >= tm) {
+            c.s.sw = false;
+            c.s.el = 0;
+            dirty = true;
+            emit(SimEvent('tsw', c.id));
+          }
+        }
+        if (c.s.v > 300 && !c.s.dead) {
+          c.s.dead = true;
+          c.s.on = false;
+          c.s.sw = false;
+          dirty = true;
+          emit(SimEvent('burn', c.id));
+        }
+      } else if (c.t.coil != null) {
+        final b = coilWindow(c)[2];
+        if (c.s.v > b && !c.s.dead) {
+          c.s.burn += dt;
+          if (c.s.burn > 1.2) {
+            c.s.dead = true;
+            c.s.on = false;
+            dirty = true;
+            emit(SimEvent('burn', c.id));
+          }
+        } else {
+          c.s.burn = 0;
+        }
+      }
+      if (c.type == 'motor') dirty = _motorTick(c, dt) || dirty;
+    }
+    for (final c in comps) {
+      if (c.type == 'ol' && c.s.trip) c.s.heat = math.max(0.0, c.s.heat - 25 * dt);
+    }
+    final tr = track;
+    if (tr != null) {
+      final m = byId(tr.motor);
+      if (m != null) tr.x = (tr.x + m.s.spd * m.s.dir * dt * 0.16).clamp(0.0, 1.0).toDouble();
+      for (final (side, lid) in [('l', tr.left), ('r', tr.right)]) {
+        final ls = byId(lid);
+        if (ls == null) continue;
+        final hit = side == 'l' ? tr.x <= 0.05 : tr.x >= 0.95;
+        final act = hit || ls.s.man;
+        if (act != ls.s.act) {
+          ls.s.act = act;
+          dirty = true;
+          emit(SimEvent('ls', lid, {'act': act}));
+        }
+      }
+    }
+    return dirty;
+  }
+
+  bool _motorTick(Comp c, double dt) {
+    final s = c.s, inom = c.num_('In');
+    var dirty = false;
+    var tgt = 0.0, rate = 0.5;
+    if (s.mode == 'delta') {
+      tgt = 1;
+      rate = 0.9;
+    } else if (s.mode == 'star') {
+      tgt = 0.86;
+      rate = 0.42;
+    }
+    if (s.load && tgt > 0) tgt *= 0.94;
+    s.spd += (tgt - s.spd) * math.min(1.0, dt * (tgt > s.spd ? rate * 1.6 : 0.7));
+    if (tgt == 0 && s.spd < 0.004) s.spd = 0;
+    final slip = tgt > 0 ? math.max(0.0, tgt - s.spd) / tgt : 0.0;
+    var i = 0.0;
+    if (s.mode == 'delta') {
+      i = inom * (1 + 5 * math.pow(slip, 0.8));
+    } else if (s.mode == 'star') {
+      i = inom / 3 * (1 + 5 * math.pow(slip, 0.8)) * 1.15;
+    } else if (s.mode == 'single') {
+      i = inom * 5;
+    } else if (s.mode == 'over') {
+      i = inom * 3;
+    }
+    if (s.load && (s.mode == 'delta' || s.mode == 'star')) i *= 2.2;
+    s.current = i;
+    s.ang = (s.ang + s.spd * (s.dir == 0 ? 1 : s.dir) * dt * 900) % 360;
+    final n = nets;
+    Comp? ol;
+    if (n != null) {
+      for (final o in comps) {
+        if (o.type != 'ol') continue;
+        if (['2', '4', '6'].any((t) => ['U1', 'V1', 'W1'].any((u) => n.same('${o.id}.$t', '${c.id}.$u')))) {
+          ol = o;
+          break;
+        }
+      }
+    }
+    if (ol != null) {
+      ol.s.current = i;
+      final r = i / ol.num_('set');
+      if (r > 1.1 && !ol.s.trip) {
+        ol.s.heat += 4 * (r * r - 1.1) * dt;
+      } else if (!ol.s.trip) {
+        ol.s.heat = math.max(0.0, ol.s.heat - 12 * dt);
+      }
+      if (ol.s.heat > 150 && !ol.s.trip) {
+        ol.s.trip = true;
+        ol.s.heat = 150;
+        dirty = true;
+        emit(SimEvent('oltrip', ol.id));
+      }
+    } else if (s.mode == 'single' || s.mode == 'over') {
+      s.burn += dt;
+      if (s.burn > 6 && !s.dead) {
+        s.dead = true;
+        dirty = true;
+        emit(SimEvent('mburn', c.id));
+      }
+    }
+    return dirty;
+  }
+
+  void step(double dt) {
+    if (tick(dt)) solve();
+  }
+
+  /// run `seconds` of simulated time in small steps
+  void run(double seconds, {double dt = 0.05}) {
+    var left = seconds;
+    while (left > 1e-9) {
+      final d = math.min(dt, left);
+      step(d);
+      left -= d;
+    }
+  }
+
+  void setPower(bool on) {
+    power = on;
+    emit(SimEvent(on ? 'powerOn' : 'powerOff'));
+    solve();
+  }
+
+  /// User action on a component. what: press · estop · sel · mcb · olreset · oltest · ls · load
+  void actuate(String id, String what, [bool val = true]) {
+    final c = byId(id);
+    if (c == null) return;
+    switch (what) {
+      case 'press':
+        c.s.pr = val;
+      case 'estop':
+        c.s.lat = !c.s.lat;
+      case 'sel':
+        c.s.pos = c.s.pos != 0 ? 0 : 1;
+      case 'mcb':
+        if (c.s.on) {
+          c.s.on = false;
+        } else {
+          c.s.on = true;
+          c.s.trip = false;
+        }
+      case 'olreset':
+        if (c.s.trip) {
+          if (c.s.heat > 40) {
+            emit(SimEvent('olhot', id));
+            return;
+          }
+          c.s.trip = false;
+          c.s.heat = 0;
+          emit(SimEvent('olreset', id));
+        }
+      case 'oltest':
+        if (!c.s.trip) {
+          c.s.trip = true;
+          c.s.heat = 60;
+          emit(SimEvent('oltrip', id));
+        }
+      case 'ls':
+        c.s.man = val;
+        final tr = track;
+        final onTrack = tr != null && (tr.left == id || tr.right == id);
+        c.s.act = onTrack ? (val || (tr.left == id ? tr.x <= 0.05 : tr.x >= 0.95)) : val;
+      case 'load':
+        c.s.load = !c.s.load;
+    }
+    solve();
+  }
+
+  // ------------------------------------------------------------ wiring check
+  List<String> allTerms() => [
+        for (final c in comps)
+          for (final t in c.terms)
+            if (t.side != 'x') '${c.id}.${t.id}'
+      ];
+
+  /// Compares the user's wires with a reference solution by connectivity
+  /// (two wirings are equal when they make the same nets).
+  WiringDiff wiringDiff(List<Wire> solution) {
+    final terms = allTerms();
+    _UF part(List<Wire> ws) {
+      final uf = _UF();
+      for (final t in terms) {
+        uf.f(t);
+      }
+      for (final w in ws) {
+        uf.u(w.a, w.b);
+      }
+      return uf;
+    }
+
+    final us = part(wires), so = part(solution);
+    return WiringDiff(
+      missing: [for (final w in solution) if (us.f(w.a) != us.f(w.b)) w],
+      extra: [for (final w in wires) if (so.f(w.a) != so.f(w.b)) w],
+    );
+  }
+}
+
+class WiringDiff {
+  final List<Wire> missing, extra;
+  const WiringDiff({required this.missing, required this.extra});
+  bool get ok => missing.isEmpty && extra.isEmpty;
+}
+
+// ---------------------------------------------------------------- helpers for tasks
+bool motorRunning(Lab l, String m) {
+  final x = l.byId(m);
+  return x != null && (x.s.mode == 'delta' || x.s.mode == 'star') && x.s.spd > 0.3;
+}
+
+bool motorStopped(Lab l, String m) {
+  final x = l.byId(m);
+  return x != null && x.s.spd < 0.05 && x.s.mode == 'off';
+}
+
+bool isOn(Lab l, String k) => l.byId(k)?.s.on ?? false;

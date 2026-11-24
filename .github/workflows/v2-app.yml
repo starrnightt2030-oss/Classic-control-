@@ -45,6 +45,11 @@ jobs:
           flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
           cat analyze.txt
           python3 tool/ci_report.py analyze.txt
+      - name: Unit tests (simulation engine + catalog)
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter test 2>&1 | tee test.txt || { python3 tool/ci_report.py test.txt --tail; exit 1; }
       - name: Build APK
         shell: bash
         run: |

@@ -34,8 +34,8 @@ API = "https://generativelanguage.googleapis.com/v1beta"
 sys.path.insert(0, str(HERE))
 from asr_split import words_of  # noqa: E402
 
-STYLE = ("اقرا النص اللي جاي بالعامية المصرية بصوت مدرّس هادي وواضح، بالحرف زي ما هو مكتوب، "
-         "كلمة كلمة، من غير ما تزوّد أو تشيل أو تغيّر أي حاجة، ومن غير أي مقدمة أو تعليق:\n\n")
+# English director's note in the documented "Say …:" form, so it is not spoken itself
+STYLE = "Read aloud word for word, in a calm, clear Egyptian Arabic teacher voice: "
 
 
 def missing_clips():
@@ -113,6 +113,7 @@ class Verifier:
         hyp, ref = words_of(" ".join(s.text for s in segs)), words_of(text)
         sm = difflib.SequenceMatcher(None, ref, hyp, autojunk=False)
         hit = sum(b.size for b in sm.get_matching_blocks())
+        self.last = " ".join(s.text for s in segs)[:160] if False else " ".join(hyp)[:160]
         return hit / max(1, len(ref)), hit / max(1, len(hyp)), len(hyp) / max(1, len(ref))
 
 
@@ -164,7 +165,8 @@ def main():
             if ver:
                 rec, prec, ratio = ver.score(dst, text)
                 good = rec >= 0.6 and prec >= 0.55 and ratio <= 1.5
-                status[name] = {"recall": round(rec, 2), "precision": round(prec, 2), "attempt": attempt, "ok": good, "voice": a.voice, "model": model}
+                status[name] = {"recall": round(rec, 2), "precision": round(prec, 2), "attempt": attempt, "ok": good, "voice": a.voice,
+                                "model": model, "heard": ver.last}
                 if not good:
                     dst.unlink(missing_ok=True)
                     print(f"  ✗ {name} rec={rec:.2f} prec={prec:.2f} (attempt {attempt})", flush=True)

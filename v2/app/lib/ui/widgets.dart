@@ -49,10 +49,10 @@ class SquareButton extends StatelessWidget {
   }
 }
 
-class Thumb extends StatelessWidget {
+class CompThumb extends StatelessWidget {
   final String componentId;
   final double size;
-  const Thumb(this.componentId, {super.key, this.size = 120});
+  const CompThumb(this.componentId, {super.key, this.size = 120});
   @override
   Widget build(BuildContext context) => Image.asset(
         Repository.instance.thumbFor(componentId),
@@ -117,7 +117,7 @@ class ContinueCard extends StatelessWidget {
             ),
           ]),
         ),
-        Thumb(component.id, size: 150),
+        CompThumb(component.id, size: 150),
       ]),
     );
   }

@@ -2,14 +2,14 @@
 /// (schema: v2/docs/04-content-guide.md).
 library;
 
-class Clip {
+class Narration {
   final String? audio;
   final String text;
-  const Clip({this.audio, required this.text});
+  const Narration({this.audio, required this.text});
 
-  static Clip? fromJson(Object? j) {
+  static Narration? fromJson(Object? j) {
     if (j is! Map) return null;
-    return Clip(audio: j['audio'] as String?, text: (j['text_ar'] ?? '') as String);
+    return Narration(audio: j['audio'] as String?, text: (j['text_ar'] ?? '') as String);
   }
 }
 
@@ -65,9 +65,9 @@ class Component {
   final String nameEn;
   final String model;
   final List<String> variants;
-  final Clip? intro;
-  final Clip? opening;
-  final Clip? closing;
+  final Narration? intro;
+  final Narration? opening;
+  final Narration? closing;
   final List<Lesson> lessons;
   final List<Part> parts;
   final List<String> references;
@@ -95,9 +95,9 @@ class Component {
       nameEn: (j['name_en'] ?? '') as String,
       model: model,
       variants: v.isEmpty ? [model] : v,
-      intro: Clip.fromJson(j['intro']),
-      opening: Clip.fromJson(j['opening']),
-      closing: Clip.fromJson(j['closing']),
+      intro: Narration.fromJson(j['intro']),
+      opening: Narration.fromJson(j['opening']),
+      closing: Narration.fromJson(j['closing']),
       lessons: ((j['lesson'] as List?) ?? const []).whereType<Map>().map(Lesson.fromJson).toList(),
       parts: ((j['parts'] as List?) ?? const []).whereType<Map>().map(Part.fromJson).toList(),
       references: ((j['references'] as List?) ?? const []).map((e) => e.toString()).toList(),

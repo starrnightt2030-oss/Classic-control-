@@ -119,7 +119,7 @@ class _ComponentCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(child: Center(child: Hero(tag: 'thumb_${component.id}', child: Thumb(component.id, size: 140)))),
+            Expanded(child: Center(child: Hero(tag: 'thumb_${component.id}', child: CompThumb(component.id, size: 140)))),
             Text(component.nameAr,
                 maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
             Row(children: [

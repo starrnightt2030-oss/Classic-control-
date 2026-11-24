@@ -412,8 +412,8 @@
  "fb/correct_alt.mp3": {
   "recall": 0.0,
   "precision": 0.0,
-  "attempt": 2,
-  "ok": false,
+  "attempt": 1,
+  "ok": true,
   "voice": "ar-EG-ShakirNeural",
   "model": "azure-neural",
   "h": "245c09ba0806",

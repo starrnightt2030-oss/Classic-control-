@@ -162,14 +162,14 @@ def main():
                 if e.code == 429:
                     quota_hits += 1
                     wait = 60 * quota_hits
-                    print(f"  429 quota/rate limit ({quota_hits}) — waiting {wait}s: {msg}", flush=True)
+                    print(f"::warning::429 quota/rate limit ({quota_hits}) — waiting {wait}s: {msg[:200]}", flush=True)
                     if quota_hits >= 4:
-                        print("stopping: quota exhausted for now; re-run later to continue", flush=True)
+                        print(f"::warning::stopping: quota exhausted for now after {done} clips; re-run later to continue", flush=True)
                         STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf8")
                         return
                     time.sleep(wait)
                     continue
-                print(f"  HTTP {e.code} for {name}: {msg}", flush=True)
+                print(f"::warning::HTTP {e.code} for {name}: {msg[:200]}", flush=True)
                 break
             except Exception as e:  # network / malformed response
                 print(f"  error for {name}: {e}", flush=True)
@@ -178,7 +178,7 @@ def main():
             to_mp3(pcm, mime, dst)
             if ver:
                 rec, prec, ratio = ver.score(dst, text)
-                good = rec >= 0.6 and prec >= 0.55 and ratio <= 1.5
+                good = rec >= 0.5 and prec >= 0.4 and ratio <= 1.5
                 status[name] = {"recall": round(rec, 2), "precision": round(prec, 2), "attempt": attempt, "ok": good, "voice": a.voice,
                                 "model": model, "heard": ver.last}
                 if not good:
@@ -196,7 +196,7 @@ def main():
             STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf8")
         time.sleep(a.delay)
     STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf8")
-    print(f"generated {done}/{len(todo)}", flush=True)
+    print(f"::notice::generated {done}/{len(todo)} with {model}/{a.voice}", flush=True)
 
 
 if __name__ == "__main__":

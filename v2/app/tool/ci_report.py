@@ -27,7 +27,7 @@ def analyze(lines):
 
 
 def tail(lines):
-    lines = [l for l in lines if l.strip() and not l.startswith("Running Gradle") and "Downloading" not in l]
+    lines = [l for l in lines if l.strip() and not l.startswith(("Running Gradle", "[", "Loading ")) and "Downloading" not in l and "Unzipping" not in l]
     chunk = lines[-130:]
     # GitHub keeps 10 error annotations per step: pack into a few big ones
     for i in range(0, len(chunk), 14):

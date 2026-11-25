@@ -4,7 +4,8 @@
     python tool/patch_platforms.py
 
 Android: INTERNET permission + cleartext to 127.0.0.1 (the in-app asset server
-that feeds the 3D WebView), Arabic app label, launcher icons.
+that feeds the 3D WebView), permission to install the downloaded update, Arabic
+app label, launcher icons.
 Windows: window title/size and app icon.
 """
 import pathlib
@@ -22,6 +23,16 @@ def patch_android() -> None:
     s = man.read_text(encoding="utf-8")
     if "android.permission.INTERNET" not in s:
         s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
+    # the in-app updater downloads the new APK and opens Android's installer for it
+    if "REQUEST_INSTALL_PACKAGES" not in s:
+        s = s.replace("<application", '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <application', 1)
+    # open_filex asks for media and storage access the app never needs (it only opens its own APK)
+    if "xmlns:tools" not in s:
+        s = s.replace("<manifest ", '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+    for perm in ("READ_EXTERNAL_STORAGE", "READ_MEDIA_IMAGES", "READ_MEDIA_VIDEO", "READ_MEDIA_AUDIO"):
+        tag = f'<uses-permission android:name="android.permission.{perm}" tools:node="remove"/>'
+        if tag not in s:
+            s = s.replace("<application", tag + "\n    <application", 1)
     if "usesCleartextTraffic" not in s:
         s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
     s = re.sub(r'android:label="[^"]*"', 'android:label="Control Academy"', s, count=1)

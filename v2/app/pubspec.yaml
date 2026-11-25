@@ -20,6 +20,8 @@ dependencies:
   path_provider: ^2.1.4
   share_plus: '>=11.0.0 <14.0.0'
   file_selector: ^1.0.3
+  open_filex: ^5.0.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:
@@ -32,6 +34,7 @@ flutter:
     - assets/content/
     - assets/models/
     - assets/audio/sfx/
+    - assets/pack/
     # >>> audio
     # <<< audio
     - assets/images/

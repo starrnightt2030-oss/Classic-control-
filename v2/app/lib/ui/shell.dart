@@ -6,6 +6,7 @@ import 'home_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
 import 'theme.dart';
+import 'update_ui.dart';
 
 /// Adaptive frame: bottom bar on phones, side rail on wide screens (Windows,
 /// tablets, phone landscape).
@@ -42,7 +43,7 @@ class _ShellState extends State<Shell> {
       const ReadyDiagramsPage(),
       const AboutPage(),
     ];
-    return LayoutBuilder(builder: (context, c) {
+    return UpdateWatcher(child: LayoutBuilder(builder: (context, c) {
       final wide = c.maxWidth >= 720;
       final body = IndexedStack(index: _index, children: pages);
       if (wide) {
@@ -57,7 +58,7 @@ class _ShellState extends State<Shell> {
         body: SafeArea(bottom: false, child: body),
         bottomNavigationBar: _BottomBar(index: _index, onTap: go),
       );
-    });
+    }));
   }
 }
 

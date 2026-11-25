@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/packs.dart';
 import 'catalog.dart';
 import 'models.dart';
 
@@ -31,11 +32,21 @@ class Repository {
   Future<void> load() async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     _assets.addAll(manifest.listAssets());
-    for (final key in _assets) {
+    await PackStore.instance.init();
+    await reloadContent();
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  /// (re)read the lessons: the bundled ones, and any newer copy from a content pack
+  Future<void> reloadContent() async {
+    final packs = PackStore.instance;
+    _assets.addAll(packs.local);
+    for (final key in _assets.toList()) {
       if (!key.startsWith('assets/content/') || !key.endsWith('.json')) continue;
       if (key.endsWith('audio_cues.json')) continue;
       try {
-        final j = jsonDecode(await rootBundle.loadString(key));
+        final f = packs.file(key);
+        final j = jsonDecode(f != null ? await f.readAsString() : await rootBundle.loadString(key));
         if (j is Map && j['component'] != null) {
           final c = Component.fromJson(j);
           _byId[c.id] = c;
@@ -44,7 +55,6 @@ class Repository {
         // a broken content file must not take the whole library down
       }
     }
-    _prefs = await SharedPreferences.getInstance();
   }
 
   /// assets path for a content audio reference like "contactor/coil.mp3"

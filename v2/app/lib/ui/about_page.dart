@@ -5,6 +5,7 @@ import '../data/repository.dart';
 import '../services/audio_service.dart';
 import 'icons.dart';
 import 'theme.dart';
+import 'update_ui.dart';
 import 'widgets.dart';
 
 class AboutPage extends StatefulWidget {
@@ -77,6 +78,8 @@ class _AboutPageState extends State<AboutPage> {
               title: const Text('المؤثرات الصوتية', style: TextStyle(fontWeight: FontWeight.w700)),
               subtitle: const Text('صوت لمس الأجزاء والفك والتركيب', style: TextStyle(color: CC.muted, fontSize: 12.5)),
             ),
+            const Divider(height: 1, color: CC.line),
+            const UpdateTile(),
             const Divider(height: 1, color: CC.line),
             ListTile(
               leading: const CcIcon(CcIcons.audio, color: CC.cyan),

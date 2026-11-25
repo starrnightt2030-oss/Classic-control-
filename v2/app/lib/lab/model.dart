@@ -17,14 +17,9 @@ class Placed {
   bool get structural => kStructural.contains(def);
 
   Size get size {
-    switch (def) {
-      case 'din_rail':
-        return Size(len, 35);
-      case 'motor':
-        return const Size(MotorPlate.w, MotorPlate.h);
-    }
-    final i = d.info;
-    return i == null ? const Size(40, 60) : Size(i.wMm, i.hMm);
+    if (def == 'din_rail') return Size(len, 35);
+    if (d.engine == 'motor' || d.engine == 'motor1') return const Size(MotorPlate.w, MotorPlate.h);
+    return d.frame;
   }
 
   double get len => (p['len'] as num?)?.toDouble() ?? 300;
@@ -76,6 +71,12 @@ class LabDoc {
   final List<Placed> parts = [];
   final List<LabWire> wires = [];
   double plateW = 900, plateH = 700;
+  /// work bench to the right of the plate for motors, machines and door devices (0 = none)
+  double benchW = 0;
+  static const benchGap = 30.0;
+  double get totalW => plateW + (benchW > 0 ? benchGap + benchW : 0);
+  Rect get plateRect => Rect.fromLTWH(0, 0, plateW, plateH);
+  Rect? get benchRect => benchW > 0 ? Rect.fromLTWH(plateW + benchGap, 0, benchW, plateH) : null;
 
   Placed? byId(String id) {
     for (final p in parts) {
@@ -101,13 +102,18 @@ class LabDoc {
   }
 
   /// whether the terminal leaves upward (top half of its part)
-  bool termUp(String key) {
+  bool termUp(String key) => termDir(key).dy < 0;
+
+  /// direction a wire leaves the terminal: up / down, or sideways for door-device lugs
+  Offset termDir(String key) {
     final i = key.indexOf('.');
     final p = byId(key.substring(0, i));
     final t = termPos(key);
-    if (p == null || t == null) return true;
-    if (p.def == 'motor') return true;
-    return t.dy < p.y + p.size.height / 2;
+    if (p == null || t == null) return const Offset(0, -1);
+    if (p.d.engine == 'motor' || p.d.engine == 'motor1') return const Offset(0, -1);
+    if (p.d.machine != null) return const Offset(0, 1);
+    if (p.d.side.isNotEmpty) return t.dx < p.x + p.size.width / 2 ? const Offset(-1, 0) : const Offset(1, 0);
+    return t.dy < p.y + p.size.height / 2 ? const Offset(0, -1) : const Offset(0, 1);
   }
 
   void removePart(Placed p) {
@@ -162,6 +168,7 @@ class LabDoc {
   String toJsonString() => jsonEncode({
         'v': 1,
         'plate': [plateW, plateH],
+        'bench': benchW,
         'parts': [for (final p in parts) p.toJson()],
         'wires': [for (final w in wires) w.toJson()],
       });
@@ -173,6 +180,7 @@ class LabDoc {
     if (pl != null) {
       d.plateW = (pl[0] as num).toDouble();
       d.plateH = (pl[1] as num).toDouble();
+      d.benchW = (j['bench'] as num?)?.toDouble() ?? 0;
     }
     for (final p in (j['parts'] as List)) {
       final q = Placed.fromJson(p as Map<String, dynamic>);

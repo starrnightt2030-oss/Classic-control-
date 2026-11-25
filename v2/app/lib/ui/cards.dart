@@ -70,6 +70,7 @@ class SectionCard extends StatelessWidget {
   final String icon;
   final Color accent;
   final bool soon;
+  final bool compact;
   const SectionCard({
     super.key,
     required this.image,
@@ -78,6 +79,7 @@ class SectionCard extends StatelessWidget {
     required this.icon,
     this.accent = CC.amber,
     this.soon = false,
+    this.compact = false,
   });
 
   @override
@@ -127,14 +129,14 @@ class SectionCard extends StatelessWidget {
           ),
         ),
       PositionedDirectional(
-        start: 18,
-        end: 18,
-        bottom: 18,
+        start: compact ? 12 : 18,
+        end: compact ? 12 : 18,
+        bottom: compact ? 12 : 18,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, height: 1.25, color: Colors.white)),
+          Text(title, maxLines: 2, style: TextStyle(fontSize: compact ? 17 : 23, fontWeight: FontWeight.w700, height: 1.25, color: Colors.white)),
           const SizedBox(height: 2),
-          Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: CC.text2, height: 1.5)),
-          const SizedBox(height: 10),
+          Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: compact ? 11.5 : 13, color: CC.text2, height: 1.45)),
+          SizedBox(height: compact ? 6 : 10),
           Row(children: [
             Container(height: 3, width: 34, decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),

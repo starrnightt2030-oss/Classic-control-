@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_info.dart';
-import '../data/repository.dart';
 import 'cards.dart';
-import 'component_page.dart';
 import 'diagrams_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
@@ -54,19 +52,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final repo = Repository.instance;
-    final last = repo.byId(repo.lastComponent ?? 'contactor') ?? repo.byId('contactor');
-    final featuredIds = ['contactor', 'overload', 'mcb', 'mpcb', 'timer', 'control_relay', 'motor', 'pushbutton', 'estop', 'proximity_sensor'];
-    final featured = [for (final id in featuredIds) if (repo.byId(id) != null) repo.byId(id)!];
     final sections = _sections;
     return LayoutBuilder(builder: (context, c) {
       final w = c.maxWidth;
-      final pad = w >= 900 ? 28.0 : 16.0;
-      return ListView(
-        padding: EdgeInsets.fromLTRB(0, 14, 0, 28),
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: pad),
+      final pad = w >= 900 ? 28.0 : 14.0;
+      final cols = w >= 1300 ? 4 : (w >= 820 ? 3 : 2);
+      final tileH = w >= 820 ? 230.0 : 196.0;
+      return CustomScrollView(slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(pad, 14, pad, 6),
+          sliver: SliverToBoxAdapter(
             child: Row(children: [
               ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset('assets/images/logo_small.webp', width: 48, height: 48)),
               const SizedBox(width: 12),
@@ -79,45 +74,35 @@ class _HomePageState extends State<HomePage> {
               SquareButton(icon: CcIcons.search, label: 'بحث في المكتبة', onTap: () => widget.onGo(1)),
             ]),
           ),
-          const SizedBox(height: 18),
-          CardCarousel(
-            count: sections.length,
-            height: carouselHeight(w),
-            viewportFraction: carouselFraction(w),
-            builder: (context, i) {
-              final s = sections[i];
-              return OpenCard(
-                open: s.page,
-                onClosed: () => setState(() {}),
-                closed: (_) => SectionCard(image: s.image, title: s.title, subtitle: s.subtitle, icon: s.icon, accent: s.accent, soon: s.soon),
-              );
-            },
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(pad, 14, pad, 10),
+          sliver: const SliverToBoxAdapter(
+            child: Text('القائمة الرئيسية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           ),
-          const SizedBox(height: 22),
-          if (last != null)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: pad),
-              child: SizedBox(
-                height: 200,
-                child: OpenCard(
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: pad),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisSpacing: 12, crossAxisSpacing: 12, mainAxisExtent: tileH),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final s = sections[i];
+                return OpenCard(
+                  open: s.page,
                   onClosed: () => setState(() {}),
-                  open: (_) => ComponentPage(componentId: last.id),
-                  closed: (_) => ContinueCard(component: last, seen: repo.seenParts(last.id).length),
-                ),
-              ),
+                  closed: (_) => SectionCard(image: s.image, title: s.title, subtitle: s.subtitle, icon: s.icon, accent: s.accent, soon: s.soon, compact: w < 820),
+                );
+              },
+              childCount: sections.length,
             ),
-          const SizedBox(height: 22),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: pad),
-            child: ComponentRow(title: 'مكونات أساسية', items: featured, cardWidth: w >= 900 ? 190 : 156, onChanged: () => setState(() {})),
           ),
-          const SizedBox(height: 22),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: pad),
-            child: const SafetyStrip(text: 'افصل، اقفل، علّق الكارت، واتأكد بالأفوميتر قبل ما تلمس.'),
-          ),
-        ],
-      );
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(pad, 20, pad, 28),
+          sliver: const SliverToBoxAdapter(child: SafetyStrip(text: 'افصل، اقفل، علّق الكارت، واتأكد بالأفوميتر قبل ما تلمس.')),
+        ),
+      ]);
     });
   }
 }

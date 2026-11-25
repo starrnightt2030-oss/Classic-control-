@@ -178,4 +178,59 @@ void main() {
     expect(d.parts.every((p) => p.def == 'din_rail'), isTrue);
     expect(d.wires, isEmpty);
   });
+
+  test('machines follow their motor and switch at the ends', () {
+    final l = benchDemo().toLab()..setPower(true);
+    expect(l['M1'].s.mode, 'delta');
+    l.run(8);
+    final w = l['W1'];
+    expect(w.s.mx == 1.0 || w.s.mx == 0.0, isTrue, reason: 'cart reached an end');
+    expect(w.s.ms.take(2).where((x) => x).length, 1);
+    expect(l['H1'].s.v, greaterThan(200));
+  });
+
+  test('six-terminal motor wired by hand: star and delta bridges', () {
+    LabDoc mk(List<(String, String)> bridges) {
+      final d = emptyPanel();
+      d.parts.add(Placed('X0', 'supply', 40, 60));
+      d.parts.add(Placed('M1', 'motor', 470, 20));
+      d.wires
+        ..add(LabWire('X0.L1', 'M1.U1', 'br'))
+        ..add(LabWire('X0.L2', 'M1.V1', 'bk'))
+        ..add(LabWire('X0.L3', 'M1.W1', 'gy'));
+      for (final (a, b) in bridges) {
+        d.wires.add(LabWire('M1.$a', 'M1.$b', 'rd'));
+      }
+      return d;
+    }
+
+    final none = mk([]).toLab()..setPower(true);
+    expect(none['M1'].s.mode, 'off');
+    final star = mk([('U2', 'V2'), ('V2', 'W2')]).toLab()..setPower(true);
+    expect(star['M1'].s.mode, 'star');
+    final delta = mk([('U1', 'W2'), ('V1', 'U2'), ('W1', 'V2')]).toLab()..setPower(true);
+    expect(delta['M1'].s.mode, 'delta');
+  });
+
+  test('single-phase motor needs its capacitor winding; swapping Z1/Z2 reverses', () {
+    Lab mk(bool aux, bool swap) {
+      final d = emptyPanel();
+      d.parts.add(Placed('X0', 'supply', 40, 60));
+      d.parts.add(Placed('M1', 'motor1', 470, 20));
+      d.wires
+        ..add(LabWire('X0.L1', 'M1.U1', 'br'))
+        ..add(LabWire('X0.N', 'M1.U2', 'bu'));
+      if (aux) {
+        d.wires
+          ..add(LabWire(swap ? 'M1.U2' : 'M1.U1', 'M1.Z1', 'rd'))
+          ..add(LabWire(swap ? 'M1.U1' : 'M1.U2', 'M1.Z2', 'rd'));
+      }
+      return d.toLab()..setPower(true);
+    }
+
+    expect(mk(false, false)['M1'].s.mode, 'single');
+    final f = mk(true, false), r = mk(true, true);
+    expect(f['M1'].s.mode, 'run');
+    expect(f['M1'].s.dir, -r['M1'].s.dir);
+  });
 }

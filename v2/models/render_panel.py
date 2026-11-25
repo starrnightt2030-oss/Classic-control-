@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "..", "app", "assets", "models")
@@ -36,6 +36,9 @@ PARTS = {
     "limit_roller": "-Y", "power_supply_24v": "-Y", "control_transformer": "-Y",
     "voltmeter": "-Y", "ammeter": "-Y", "kwh_meter": "-Y", "terminal_block": "-Y",
     "din_rail": "-Y", "wire_duct": "-Y", "motor": "-Y", "signal_tower": "-Y", "siren": "-Y",
+    # door devices seen face-on (the lab draws their terminals left and right)
+    "pb_green_metal_face": "+Z", "pb_red_plastic_face": "+Z", "estop_face": "+Z", "selector_face": "+Z",
+    "lamp_green_face": "+Z", "lamp_red_face": "+Z", "lamp_amber_face": "+Z",
 }
 
 
@@ -65,13 +68,15 @@ def light(loc, energy, size, target):
 
 def render_one(name, front):
     reset()
-    bpy.ops.import_scene.gltf(filepath=os.path.join(SRC, name + ".glb"))
+    glb = name[:-5] if name.endswith("_face") else name
+    bpy.ops.import_scene.gltf(filepath=os.path.join(SRC, glb + ".glb"))
     S = bpy.context.scene
     meshes = [o for o in S.objects if o.type == "MESH"]
     if front == "+Z":  # rotate a top-facing model so its face points −Y
+        R = Matrix.Rotation(math.radians(90), 4, "X")  # +Z → −Y (towards the camera)
         for o in S.objects:
             if o.parent is None:
-                o.rotation_euler.rotate_axis("X", math.radians(-90))
+                o.matrix_world = R @ o.matrix_world
         bpy.context.view_layer.update()
     lo, hi = world_bounds(meshes)
     size = hi - lo

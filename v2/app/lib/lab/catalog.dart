@@ -2,7 +2,12 @@
 // engine terminals, and how it mounts.
 import 'dart:convert';
 
+import 'dart:math' as math;
+import 'dart:ui' show Size;
+
 import 'package:flutter/services.dart';
+
+import '../sim/engine.dart' show machSwitches;
 
 class SpriteInfo {
   final String name;
@@ -47,6 +52,9 @@ class LabPartDef {
   final String? attachTo; // engine type it clips onto (aux block / overload on a contactor)
   /// extra terminals not in the sprite: engine terminal → mm (motor plate)
   final Map<String, (double, double)> extraTerms;
+
+  /// door device seen face-on: [left terminal, right terminal] on lugs beside it
+  final List<String> side;
   const LabPartDef({
     required this.key,
     required this.nameAr,
@@ -59,7 +67,20 @@ class LabPartDef {
     this.mount = Mount.din,
     this.attachTo,
     this.extraTerms = const {},
+    this.side = const [],
   });
+
+  String? get machine => engine == 'mach' ? params['kind'] as String? : null;
+
+  /// part frame in mm
+  Size get frame {
+    final m = machine;
+    if (m != null) return MachineGeo.size(m);
+    final i = info;
+    if (i == null) return const Size(40, 60);
+    if (side.isNotEmpty) return Size(i.wMm + 2 * kLug, math.max(i.hMm, 24));
+    return Size(i.wMm, i.hMm);
+  }
 
   SpriteInfo? get info => Sprites.of(sprite);
 
@@ -67,6 +88,12 @@ class LabPartDef {
   Map<String, (double, double)> termPos() {
     final i = info;
     final out = <String, (double, double)>{};
+    final m = machine;
+    if (m != null) return MachineGeo.terms(m);
+    if (side.isNotEmpty) {
+      final f = frame;
+      return {side[0]: (kLug * 0.48, f.height / 2), side[1]: (f.width - kLug * 0.48, f.height / 2)};
+    }
     if (i != null) {
       terms.forEach((s, e) {
         final p = i.terms[s];
@@ -98,8 +125,9 @@ const kLabCategories = [
   LabCategory('الحماية', 0xFFFF5A64, ['mcb1', 'mcb2', 'mcb3', 'mcb4', 'mpcb', 'rccb', 'fuse']),
   LabCategory('الكونتاكتورات', 0xFF4FD8FF, ['kc', 'aux', 'ol']),
   LabCategory('المرحلات والمؤقتات', 0xFF3D8BFF, ['relay', 'timer', 'tsd', 'phr']),
-  LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber']),
-  LabCategory('المحركات والحساسات', 0xFFC9A27E, ['motor', 'limit']),
+  LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'pb_black', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber']),
+  LabCategory('المحركات', 0xFFC9A27E, ['motor', 'motor_d', 'motor_s', 'motor1']),
+  LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'limit']),
   LabCategory('التمديدات', 0xFFF5B83D, ['tb', 'din_rail']),
 ];
 
@@ -155,29 +183,53 @@ final Map<String, LabPartDef> kLabParts = {
         key: 'phr', nameAr: 'مرحّل مراقبة الأطوار', category: 'المرحلات والمؤقتات', sprite: 'phase_relay', engine: 'phr', prefix: 'KF',
         terms: {'L1': 'L1', 'L2': 'L2', 'L3': 'L3', '11': '11', '12': '12', '14': '14'}),
     const LabPartDef(
-        key: 'pb_green', nameAr: 'ضاغط تشغيل NO', category: 'الضواغط والإشارة', sprite: 'pb_green_metal', engine: 'pb_no', prefix: 'S',
-        terms: {'3': '13', '4': '14'}, params: {'col': 'g'}, mount: Mount.free),
+        key: 'pb_green', nameAr: 'ضاغط تشغيل NO', category: 'الضواغط والإشارة', sprite: 'pb_green_metal_face', engine: 'pb_no', prefix: 'S',
+        side: ['13', '14'], params: {'col': 'g'}, mount: Mount.free),
     const LabPartDef(
-        key: 'pb_red', nameAr: 'ضاغط إيقاف NC', category: 'الضواغط والإشارة', sprite: 'pb_red_plastic', engine: 'pb_nc', prefix: 'S',
-        terms: {'1': '11', '2': '12'}, params: {'col': 'r'}, mount: Mount.free),
+        key: 'pb_black', nameAr: 'ضاغط NO (أمر إضافي)', category: 'الضواغط والإشارة', sprite: 'pb_green_metal_face', engine: 'pb_no', prefix: 'S',
+        side: ['13', '14'], params: {'col': 'k'}, mount: Mount.free),
     const LabPartDef(
-        key: 'estop', nameAr: 'مفتاح طوارئ', category: 'الضواغط والإشارة', sprite: 'estop', engine: 'estop', prefix: 'S',
-        terms: {'1': '11', '2': '12'}, mount: Mount.free),
+        key: 'pb_red', nameAr: 'ضاغط إيقاف NC', category: 'الضواغط والإشارة', sprite: 'pb_red_plastic_face', engine: 'pb_nc', prefix: 'S',
+        side: ['11', '12'], params: {'col': 'r'}, mount: Mount.free),
     const LabPartDef(
-        key: 'selector', nameAr: 'مفتاح اختيار 0-1', category: 'الضواغط والإشارة', sprite: 'selector', engine: 'sel', prefix: 'S',
-        terms: {'3': '13', '4': '14'}, mount: Mount.free),
+        key: 'estop', nameAr: 'مفتاح طوارئ', category: 'الضواغط والإشارة', sprite: 'estop_face', engine: 'estop', prefix: 'S',
+        side: ['11', '12'], mount: Mount.free),
     const LabPartDef(
-        key: 'lamp_green', nameAr: 'لمبة بيان خضراء', category: 'الضواغط والإشارة', sprite: 'lamp_green', engine: 'lamp', prefix: 'H',
-        terms: {'X1': 'X1', 'X2': 'X2'}, params: {'col': 'g', 'V': 220.0}, mount: Mount.free),
+        key: 'selector', nameAr: 'مفتاح اختيار 0-1', category: 'الضواغط والإشارة', sprite: 'selector_face', engine: 'sel', prefix: 'S',
+        side: ['13', '14'], mount: Mount.free),
     const LabPartDef(
-        key: 'lamp_red', nameAr: 'لمبة بيان حمراء', category: 'الضواغط والإشارة', sprite: 'lamp_red', engine: 'lamp', prefix: 'H',
-        terms: {'X1': 'X1', 'X2': 'X2'}, params: {'col': 'r', 'V': 220.0}, mount: Mount.free),
+        key: 'lamp_green', nameAr: 'لمبة بيان خضراء', category: 'الضواغط والإشارة', sprite: 'lamp_green_face', engine: 'lamp', prefix: 'H',
+        side: ['X1', 'X2'], params: {'col': 'g', 'V': 220.0}, mount: Mount.free),
     const LabPartDef(
-        key: 'lamp_amber', nameAr: 'لمبة بيان صفراء', category: 'الضواغط والإشارة', sprite: 'lamp_amber', engine: 'lamp', prefix: 'H',
-        terms: {'X1': 'X1', 'X2': 'X2'}, params: {'col': 'y', 'V': 220.0}, mount: Mount.free),
+        key: 'lamp_red', nameAr: 'لمبة بيان حمراء', category: 'الضواغط والإشارة', sprite: 'lamp_red_face', engine: 'lamp', prefix: 'H',
+        side: ['X1', 'X2'], params: {'col': 'r', 'V': 220.0}, mount: Mount.free),
+    const LabPartDef(
+        key: 'lamp_amber', nameAr: 'لمبة بيان صفراء', category: 'الضواغط والإشارة', sprite: 'lamp_amber_face', engine: 'lamp', prefix: 'H',
+        side: ['X1', 'X2'], params: {'col': 'y', 'V': 220.0}, mount: Mount.free),
     LabPartDef(
-        key: 'motor', nameAr: 'محرك حثي ثلاثي الأطوار', category: 'المحركات والحساسات', sprite: 'motor', engine: 'motor', prefix: 'M',
+        key: 'motor', nameAr: 'محرك 3 أطوار بستة أطراف (اربط نجمة أو دلتا بنفسك)', category: 'المحركات', sprite: 'motor', engine: 'motor', prefix: 'M',
+        params: const {'links': 'none', 'In': 8.5}, mount: Mount.free, extraTerms: MotorPlate.terms()),
+    LabPartDef(
+        key: 'motor_d', nameAr: 'محرك 3 أطوار بقناطر دلتا جاهزة', category: 'المحركات', sprite: 'motor', engine: 'motor', prefix: 'M',
         params: const {'links': 'delta', 'In': 8.5}, mount: Mount.free, extraTerms: MotorPlate.terms()),
+    LabPartDef(
+        key: 'motor_s', nameAr: 'محرك 3 أطوار بقناطر نجمة جاهزة', category: 'المحركات', sprite: 'motor', engine: 'motor', prefix: 'M',
+        params: const {'links': 'star', 'In': 5.0}, mount: Mount.free, extraTerms: MotorPlate.terms()),
+    LabPartDef(
+        key: 'motor1', nameAr: 'محرك أحادي الطور بمكثف', category: 'المحركات', sprite: 'motor', engine: 'motor1', prefix: 'M',
+        params: const {'In': 4.0}, mount: Mount.free, extraTerms: MotorPlate.terms1()),
+    const LabPartDef(
+        key: 'mach_cart', nameAr: 'عربة على قضيب بمفتاحي نهاية شوط', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'cart'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_hoist', nameAr: 'ونش كهربائي (رفع وإنزال)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'hoist'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_lift', nameAr: 'مصعد بثلاثة أدوار', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'lift'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_tank', nameAr: 'خزان بطلمبة وعوّامتين', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'tank'}, mount: Mount.free),
     const LabPartDef(
         key: 'limit', nameAr: 'مفتاح نهاية الشوط', category: 'المحركات والحساسات', sprite: 'limit_roller', engine: 'ls', prefix: 'B',
         terms: {'21': '11', '22': '12', '13': '23', '14': '24'}, mount: Mount.free),
@@ -201,6 +253,46 @@ class MotorPlate {
         'V2': (plateX + 58, plateY + 31),
         'PE': (plateX + plateW + 12, plateY + 21),
       };
+
+  /// single-phase motor: main winding U1-U2 (left), capacitor winding Z1-Z2 (right)
+  static Map<String, (double, double)> terms1() => {
+        'U1': (plateX + 12, plateY + 13),
+        'Z1': (plateX + 58, plateY + 13),
+        'U2': (plateX + 12, plateY + 31),
+        'Z2': (plateX + 58, plateY + 31),
+        'PE': (plateX + plateW + 12, plateY + 21),
+      };
+}
+
+/// width of the terminal lug beside a face-on door device (mm)
+const double kLug = 13;
+
+/// Machines are drawn by the lab; their switch terminals sit on a strip along the bottom:
+/// switch n → Sn1 Sn2 (NC) · Sn3 Sn4 (NO).
+class MachineGeo {
+  static Size size(String kind) => switch (kind) {
+        'cart' => const Size(330, 170),
+        'hoist' => const Size(220, 330),
+        'lift' => const Size(240, 390),
+        'tank' => const Size(240, 320),
+        _ => const Size(300, 200),
+      };
+
+  static Map<String, (double, double)> terms(String kind) {
+    final n = machSwitches(kind);
+    final sz = size(kind);
+    const pitch = 9.0, gap = 13.0;
+    final total = n * 4 * pitch + (n - 1) * gap;
+    var x0 = (sz.width - total) / 2 + pitch / 2;
+    final out = <String, (double, double)>{};
+    for (var i = 1; i <= n; i++) {
+      for (var j = 1; j <= 4; j++) {
+        out['S$i$j'] = (x0 + (j - 1) * pitch, sz.height - 9);
+      }
+      x0 += 4 * pitch + gap;
+    }
+    return out;
+  }
 }
 
 const kStructural = {'din_rail'};

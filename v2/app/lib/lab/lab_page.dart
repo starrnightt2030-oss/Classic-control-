@@ -107,6 +107,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         1 => dolTemplate(),
         3 => shortDemo(),
         4 => burnDemo(),
+        5 => benchDemo(),
         _ => s == null || widget.demo > 0 ? emptyPanel() : LabDoc.fromJsonString(s),
       };
     } catch (_) {
@@ -126,7 +127,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         });
       }
       if (widget.demo == 2) setState(() => libOpen = true);
-      if (widget.demo == 3 || widget.demo == 4) Future<void>.delayed(const Duration(milliseconds: 600), _power);
+      if (widget.demo == 3 || widget.demo == 4 || widget.demo == 5) Future<void>.delayed(const Duration(milliseconds: 600), _power);
     });
   }
 
@@ -185,7 +186,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _fit() {
     final sz = context.size;
     if (sz == null) return;
-    final w = doc.plateW * kPx, h = doc.plateH * kPx;
+    final w = doc.totalW * kPx, h = doc.plateH * kPx;
     const top = 70.0, bottom = showUiBottom;
     final s = math.min((sz.width - 40) / w, (sz.height - top - bottom) / h);
     final dx = (sz.width - w * s) / 2, dy = top + (sz.height - top - bottom - h * s) / 2;
@@ -515,7 +516,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       const pole = {'1': 'br', '2': 'br', '3': 'bk', '4': 'bk', '5': 'gy', '6': 'gy', '7': 'bu', '8': 'bu'};
       if (const {'supply'}.contains(p.def)) return {'L1': 'br', 'L2': 'bk', 'L3': 'gy'}[t] ?? '';
       if (const {'mcb3', 'mcb4', 'mpcb', 'kc', 'ol'}.contains(p.def)) return pole[t] ?? '';
-      if (p.def == 'motor') return {'U1': 'br', 'V1': 'bk', 'W1': 'gy', 'U2': 'br', 'V2': 'bk', 'W2': 'gy'}[t] ?? '';
+      if (p.d.engine == 'motor') return {'U1': 'br', 'V1': 'bk', 'W1': 'gy', 'U2': 'br', 'V2': 'bk', 'W2': 'gy'}[t] ?? '';
       return '';
     }
 
@@ -543,9 +544,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         if (r.overlaps(q.rect.deflate(0.8))) return true;
       }
     }
-    final plate = Rect.fromLTWH(0, 0, doc.plateW, doc.plateH);
+    final areas = [doc.plateRect, if (p.d.mount == Mount.free && doc.benchRect != null) doc.benchRect!];
     for (final r in mine) {
-      if (!plate.contains(r.topLeft) || !plate.contains(r.bottomRight)) return true;
+      if (!areas.any((a) => a.inflate(0.01).contains(r.topLeft) && a.inflate(0.01).contains(r.bottomRight))) return true;
     }
     return false;
   }
@@ -626,13 +627,25 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       ...d.params,
       if (kStructural.contains(def)) 'len': 400.0,
     });
-    p.x = (c.dx - p.size.width / 2).clamp(0.0, doc.plateW - p.size.width).toDouble();
-    p.y = (c.dy - p.size.height / 2).clamp(0.0, doc.plateH - p.size.height).toDouble();
+    // motors, machines and door devices start on the bench, the rest on the plate
+    final bench = doc.benchRect;
+    final area = (p.d.mount == Mount.free && bench != null && (p.d.machine != null || p.d.engine.startsWith('motor') || p.d.side.isNotEmpty))
+        ? bench
+        : doc.plateRect;
+    final cc = area.contains(c) ? c : area.center;
+    double cx(double v) => v.clamp(area.left, math.max(area.left, area.right - p.size.width)).toDouble();
+    double cy(double v) => v.clamp(area.top, math.max(area.top, area.bottom - p.size.height)).toDouble();
+    p.x = cx(cc.dx - p.size.width / 2);
+    p.y = cy(cc.dy - p.size.height / 2);
     // find a free spot near the centre
-    for (var i = 0; i < 120 && _collides(p); i++) {
+    for (var i = 0; i < 240 && _collides(p); i++) {
       final a = i * 0.7, r = 6.0 + i * 3;
-      p.x = (c.dx - p.size.width / 2 + math.cos(a) * r).clamp(0.0, doc.plateW - p.size.width).toDouble();
-      p.y = (c.dy - p.size.height / 2 + math.sin(a) * r).clamp(0.0, doc.plateH - p.size.height).toDouble();
+      p.x = cx(cc.dx - p.size.width / 2 + math.cos(a) * r);
+      p.y = cy(cc.dy - p.size.height / 2 + math.sin(a) * r);
+    }
+    if (p.d.machine != null) {
+      final m = doc.parts.where((q) => q.d.engine == 'motor' || q.d.engine == 'motor1').firstOrNull;
+      if (m != null) p.p['motor'] = m.id;
     }
     _snapshot();
     doc.parts.add(p);
@@ -792,11 +805,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               : 'احترق ${e.id} لأنه وُصّل على جهد أعلى من جهده. استبدله من الخصائص.');
         case 'motor':
           final m = e.data['mode'], p = e.data['prev'];
-          if ((m == 'star' || m == 'delta') && p == 'off') a.sfx('motor_start');
-          if (m == 'off' && (p == 'star' || p == 'delta')) a.sfx('motor_stop');
+          if ((m == 'star' || m == 'delta' || m == 'run') && p == 'off') a.sfx('motor_start');
+          if (m == 'off' && (p == 'star' || p == 'delta' || p == 'run')) a.sfx('motor_stop');
           if (m == 'single') {
             a.sfx('motor_strain');
-            _toast('فقد فاز: المحرك ${e.id} يطنّ ولا يدور.');
+            _toast(sim?.byId(e.id ?? '')?.type == 'motor1'
+                ? 'المحرك ${e.id} يطنّ ولا يدور: ملف التقويم (المكثف) Z1-Z2 غير موصّل.'
+                : 'فقد فاز: المحرك ${e.id} يطنّ ولا يدور.');
           }
         case 'chatter':
           _toast('الدائرة غير مستقرة: كونتاكتور يفتح ويغلق باستمرار.');
@@ -834,8 +849,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         case 'ol':
           _olSheet(p.id);
         case 'motor':
+        case 'motor1':
           l.actuate(p.id, 'load');
           _toast(l[p.id].s.load ? 'تم تحميل المحرك بحمل زائد.' : 'رُفع الحمل الزائد عن المحرك.');
+        case 'mach':
+          if (p.p['kind'] == 'tank') {
+            l.actuate(p.id, 'valve');
+            _toast(l[p.id].s.valve ? 'فُتح محبس التصريف: الخزان يفرغ.' : 'أُغلق محبس التصريف.');
+          }
       }
     } else if (!down) {
       final id = _pressBy.remove(pointer);
@@ -975,6 +996,29 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             if (e == 'ol' || e == 'mpcb') ...[
               Text('ضبط التيار: ${((p.p['set'] ?? 8.5) as num).toStringAsFixed(1)} أمبير', style: const TextStyle(color: CC.text2)),
               Slider(min: 4, max: 14, divisions: 40, value: ((p.p['set'] ?? 8.5) as num).toDouble(), onChanged: (v) => upd('set', v)),
+            ],
+            if (e == 'mach') ...[
+              const Text('المحرك الذي يقود الآلة', style: TextStyle(color: CC.text2)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final m in doc.parts.where((q) => q.d.engine == 'motor' || q.d.engine == 'motor1'))
+                  ChoiceChip(label: Text(m.id, textDirection: TextDirection.ltr), selected: p.p['motor'] == m.id, onSelected: (_) => upd('motor', m.id)),
+              ]),
+              if (!doc.parts.any((q) => q.d.engine == 'motor' || q.d.engine == 'motor1'))
+                const Text('أضف محركًا من المكتبة أولًا.', style: TextStyle(color: CC.muted)),
+              const SizedBox(height: 10),
+              Text(
+                  switch (p.p['kind']) {
+                    'tank' => 'الطلمبة تملأ الخزان والمحبس يفرّغه. العوامة S1 تعمل عند 20% والعوامة S2 عند 85%. اضغط على الخزان أثناء التشغيل لفتح المحبس أو غلقه.',
+                    'lift' => 'المصعد يتحرك بين ثلاثة أدوار، وفي كل دور مفتاح يعمل عند وصول الكابينة. اتجاه دوران المحرك يحدد الصعود أو النزول.',
+                    'hoist' => 'الونش يرفع وينزل الحمل. S1 مفتاح الحد الأسفل وS2 مفتاح الحد الأعلى.',
+                    _ => 'العربة تتحرك يمينًا ويسارًا حسب اتجاه دوران المحرك. S1 عند النهاية اليسرى وS2 عند النهاية اليمنى.',
+                  },
+                  style: const TextStyle(color: CC.muted, height: 1.6)),
+            ],
+            if (e == 'motor1') ...[
+              Text('التيار الاسمي: ${((p.p['In'] ?? 4.0) as num).toStringAsFixed(1)} أمبير', style: const TextStyle(color: CC.text2)),
+              Slider(min: 1, max: 12, divisions: 22, value: ((p.p['In'] ?? 4.0) as num).toDouble(), onChanged: (v) => upd('In', v)),
             ],
             if (e == 'motor') ...[
               const Text('توصيلة صندوق الأطراف', style: TextStyle(color: CC.text2)),
@@ -1160,7 +1204,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             boundaryMargin: const EdgeInsets.all(2400),
             onInteractionUpdate: (_) => setState(() {}),
             child: SizedBox(
-              width: doc.plateW * kPx,
+              width: doc.totalW * kPx,
               height: doc.plateH * kPx,
               child: Stack(clipBehavior: Clip.none, children: [
                 Positioned.fill(child: CustomPaint(painter: PlatePainter(doc, selPart))),
@@ -1213,9 +1257,28 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     final sz = p.size;
     final c = sim?.byId(p.id);
     final children = <Widget>[];
-    if (p.def == 'motor') {
+    final mk = p.d.machine;
+    if (mk != null) {
+      children.add(Positioned.fill(
+          child: CustomPaint(
+              painter: MachinePainter(mk,
+                  x: c?.s.mx ?? (mk == 'cart' ? 0.5 : (mk == 'tank' ? 0.1 : 0.0)),
+                  sw: c?.s.ms ?? const [false, false, false],
+                  run: () {
+                    final m = c == null ? null : sim?.byId((p.p['motor'] as String?) ?? '');
+                    return m != null && m.s.spd > 0.05 && (m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run');
+                  }(),
+                  valve: c?.s.valve ?? true,
+                  motor: (p.p['motor'] as String?) ?? '',
+                  phase: _phase))));
+    } else if (p.d.side.isNotEmpty) {
+      final lw = kLug * kPx;
       children
-        ..add(Positioned.fill(child: CustomPaint(painter: MotorPlatePainter((p.p['links'] ?? 'delta') as String))))
+        ..add(Positioned.fill(child: CustomPaint(painter: SideLugPainter([p.d.printed(p.d.side[0]), p.d.printed(p.d.side[1])]))))
+        ..add(Positioned(left: lw, right: lw, top: 0, bottom: 0, child: Image.asset(p.d.info?.asset ?? '', fit: BoxFit.contain, filterQuality: FilterQuality.medium)));
+    } else if (p.d.engine == 'motor' || p.d.engine == 'motor1') {
+      children
+        ..add(Positioned.fill(child: CustomPaint(painter: MotorPlatePainter((p.p['links'] ?? 'none') as String, single: p.d.engine == 'motor1'))))
         ..add(Positioned(
           left: 0,
           right: 0,
@@ -1294,7 +1357,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   List<Widget> _liveOverlay(Placed p, Comp c) {
     final sz = p.size;
-    if (p.p['burnt'] == true && p.def != 'motor') return const [];
+    if (p.p['burnt'] == true && !p.d.engine.startsWith('motor')) return const [];
     Widget badge(String t, Color col) => Positioned(
           top: -11 * kPx,
           left: -20 * kPx,
@@ -1312,18 +1375,21 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         final lit = c.s.v > (c.num_('V') * 0.6) && !c.s.dead && c.s.fault != 'lamp_dead';
         if (!lit) return const [];
         final col = switch (p.p['col'] ?? p.d.params['col']) { 'r' => const Color(0xFFFF3B30), 'y' => const Color(0xFFFFC21A), _ => const Color(0xFF2FE07A) };
-        // the lens is the coloured cap at the top of the side-view sprite
+        // face-on lens in the middle between the two lugs
+        final lens = (sz.width - 2 * kLug) * 0.62 * kPx;
         return [
           Positioned(
-            left: sz.width * kPx * 0.06,
-            right: sz.width * kPx * 0.06,
-            top: -sz.height * kPx * 0.01,
-            height: sz.height * kPx * 0.07,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3 * kPx),
-                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.white.withValues(alpha: 0.95), col, col.withValues(alpha: 0.9)]),
-                boxShadow: [BoxShadow(color: col.withValues(alpha: 0.85), blurRadius: 60, spreadRadius: 10), BoxShadow(color: col.withValues(alpha: 0.6), blurRadius: 16)],
+            left: (sz.width * kPx - lens) / 2,
+            top: (sz.height * kPx - lens) / 2,
+            width: lens,
+            height: lens,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [Colors.white.withValues(alpha: 0.95), col, col.withValues(alpha: 0.85)], stops: const [0, 0.45, 1]),
+                  boxShadow: [BoxShadow(color: col.withValues(alpha: 0.85), blurRadius: 60, spreadRadius: 12), BoxShadow(color: col.withValues(alpha: 0.6), blurRadius: 16)],
+                ),
               ),
             ),
           ),
@@ -1353,21 +1419,32 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       case 'estop':
         final down = c.type == 'estop' ? c.s.lat : c.s.pr;
         if (!down) return const [];
+        final cap = (sz.width - 2 * kLug) * 0.7 * kPx;
         return [
           Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              height: sz.height * kPx * 0.3,
-              child: Transform.translate(
-                offset: Offset(0, 1.5 * kPx),
-                child: DecoratedBox(decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(4 * kPx))),
+              left: (sz.width * kPx - cap) / 2,
+              top: (sz.height * kPx - cap) / 2,
+              width: cap,
+              height: cap,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black.withValues(alpha: 0.35), border: Border.all(color: CC.amber, width: 0.8 * kPx))),
               )),
-          badge(c.type == 'estop' ? 'مضغوط' : 'مضغوط', CC.amber),
+          badge('مضغوط', CC.amber),
         ];
       case 'motor':
-        final run = c.s.mode == 'star' || c.s.mode == 'delta';
-        final mode = {'off': 'STOPPED', 'star': 'RUN · STAR', 'delta': 'RUN · DELTA', 'single': 'PHASE LOSS', 'over': 'OVERVOLT', 'dead': 'BURNT'}[c.s.mode] ?? c.s.mode;
+      case 'motor1':
+        final run = c.s.mode == 'star' || c.s.mode == 'delta' || c.s.mode == 'run';
+        final mode = {
+              'off': 'STOPPED',
+              'star': 'RUN · STAR',
+              'delta': 'RUN · DELTA',
+              'run': 'RUN',
+              'single': c.type == 'motor1' ? 'HUM · NO START' : 'PHASE LOSS',
+              'over': 'OVERVOLT',
+              'dead': 'BURNT'
+            }[c.s.mode] ??
+            c.s.mode;
         final bad = c.s.mode == 'single' || c.s.mode == 'over' || c.s.mode == 'dead';
         return [
           Positioned(
@@ -1644,6 +1721,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     Widget thumb;
     if (kStructural.contains(d.key)) {
       thumb = const Icon(Icons.horizontal_rule_rounded, color: CC.text2);
+    } else if (d.machine != null) {
+      final f = d.frame;
+      thumb = FittedBox(child: SizedBox(width: f.width * kPx, height: f.height * kPx, child: CustomPaint(painter: MachinePainter(d.machine!))));
     } else {
       thumb = Image.asset(d.info?.asset ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.memory_rounded, color: CC.muted));
     }

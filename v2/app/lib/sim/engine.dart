@@ -142,6 +142,26 @@ final Map<String, CompType> kTypes = {
             'star' => [['U2', 'V2'], ['V2', 'W2']],
             _ => <List<String>>[],
           }),
+  // single-phase capacitor motor: main winding U1-U2, auxiliary (capacitor) winding Z1-Z2.
+  // Swapping Z1/Z2 against U1/U2 reverses it.
+  'motor1': CompType(
+      key: 'motor1', nameAr: 'محرك أحادي الطور بمكثف', w: 180, h: 160,
+      terms: (_) => _t(const [Term('U1', 0, 0, 't'), Term('U2', 0, 0, 't'), Term('Z1', 0, 0, 't'), Term('Z2', 0, 0, 't'), Term('PE', 0, 0, 't')])),
+  // a machine driven by a motor (p['motor']): cart on a track, hoist, lift, tank + pump.
+  // Each of its position / level switches has an NC pair Sn1-Sn2 and an NO pair Sn3-Sn4.
+  'mach': CompType(
+      key: 'mach', nameAr: 'آلة', w: 300, h: 200,
+      terms: (c) => _t([
+            for (var i = 1; i <= machSwitches(c.p['kind'] as String?); i++) ...[
+              Term('S${i}1', 0, 0, 'b'),
+              Term('S${i}2', 0, 0, 'b'),
+              Term('S${i}3', 0, 0, 'b'),
+              Term('S${i}4', 0, 0, 'b'),
+            ]
+          ]),
+      links: (c) => [
+            for (var i = 1; i <= machSwitches(c.p['kind'] as String?); i++) c.s.ms[i - 1] ? ['S${i}3', 'S${i}4'] : ['S${i}1', 'S${i}2'],
+          ]),
   // ---- Panel Lab devices
   'mcb2': CompType(
       key: 'mcb2', nameAr: 'قاطع ثنائي الأقطاب', w: 80, h: 124, breaker: true, rating: 10,
@@ -222,6 +242,10 @@ class CompState {
   bool load = false;
   // transformer / power supply
   double k = 0;
+  // machine: position / level 0…1 and its switches
+  double mx = 0;
+  List<bool> ms = [false, false, false];
+  bool valve = true; // tank outlet open
   // injected fault (free lab): coil_open · weld · nc_open · no_close · lamp_dead · phase_loss
   String? fault;
 }
@@ -262,6 +286,10 @@ class Comp {
       case 'pb_nc':
         this.p['col'] ??= 'r';
     }
+    if (type == 'mach') {
+      s.mx = switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
+    }
+    if (type == 'motor1') this.p['In'] ??= 4.0;
     if (this.p['burnt'] == true) s.dead = true;
   }
   CompType get t => kTypes[type]!;
@@ -277,6 +305,15 @@ class Wire {
   @override
   String toString() => '$a—$b';
 }
+
+int machSwitches(String? kind) => kind == 'lift' ? 3 : 2;
+
+/// where each machine switch sits (cart / hoist: ends · lift: floors · tank: float levels)
+List<double> machPoints(String? kind) => switch (kind) {
+      'lift' => const [0.0, 0.5, 1.0],
+      'tank' => const [0.2, 0.85],
+      _ => const [0.0, 1.0],
+    };
 
 class Track {
   final String motor, left, right;
@@ -661,6 +698,35 @@ class Lab {
         }
       }
       if (c.type == 'motor') _motor(n, c);
+      if (c.type == 'motor1') _motor1(n, c);
+    }
+  }
+
+  void _motor1(Nets n, Comp m) {
+    Ph? pot(String t) {
+      final p = n.pot('${m.id}.$t');
+      return (p != null && p.g == 'M') ? p.ph : null;
+    }
+
+    final u1 = pot('U1'), u2 = pot('U2'), z1 = pot('Z1'), z2 = pot('Z2');
+    final vm = (u1 != null && u2 != null) ? u1 - u2 : null;
+    final va = (z1 != null && z2 != null) ? z1 - z2 : null;
+    m.s.vw = [vm?.abs ?? 0, va?.abs ?? 0, 0];
+    var mode = 'off';
+    final main = vm?.abs ?? 0, aux = va?.abs ?? 0;
+    if (m.s.dead) {
+      mode = 'dead';
+    } else if (main > 300 || aux > 300) {
+      mode = 'over';
+    } else if (main > 180 && aux > 180) {
+      mode = 'run';
+      m.s.dir = (vm!.re * va!.re + vm.im * va.im) >= 0 ? 1 : -1;
+    } else if (main > 40) {
+      mode = 'single'; // main winding alone: hums, no starting torque
+    }
+    if (mode != m.s.mode) {
+      emit(SimEvent('motor', m.id, {'mode': mode, 'prev': m.s.mode}));
+      m.s.mode = mode;
     }
   }
 
@@ -782,7 +848,8 @@ class Lab {
           c.s.el = 0;
         }
       }
-      if (c.type == 'motor') dirty = _motorTick(c, dt) || dirty;
+      if (c.type == 'motor' || c.type == 'motor1') dirty = _motorTick(c, dt) || dirty;
+      if (c.type == 'mach') dirty = _machTick(c, dt) || dirty;
     }
     for (final c in comps) {
       if ((c.type == 'ol' || c.type == 'mpcb') && c.s.trip) c.s.heat = math.max(0.0, c.s.heat - 25 * dt);
@@ -806,11 +873,46 @@ class Lab {
     return dirty;
   }
 
+  bool _machTick(Comp c, double dt) {
+    final kind = c.p['kind'] as String?;
+    Comp? m = c.p['motor'] == null ? null : byId(c.p['motor'] as String);
+    m ??= comps.where((o) => o.type == 'motor' || o.type == 'motor1').firstOrNull;
+    final running = m != null && (m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run');
+    final v = running ? m.s.spd * (m.s.dir == 0 ? 1 : m.s.dir) : 0.0; // braked when off
+    switch (kind) {
+      case 'tank':
+        c.s.mx += (running ? m.s.spd * 0.075 : 0) * dt - (c.s.valve ? 0.03 : 0) * dt;
+      case 'lift':
+        c.s.mx += v * 0.09 * dt;
+      case 'hoist':
+        c.s.mx += v * 0.12 * dt;
+      default:
+        c.s.mx += v * 0.16 * dt;
+    }
+    c.s.mx = c.s.mx.clamp(0.0, 1.0).toDouble();
+    final pts = machPoints(kind);
+    var dirty = false;
+    for (var i = 0; i < pts.length; i++) {
+      final x = c.s.mx, p = pts[i];
+      final bool act = switch (kind) {
+        'tank' => x >= p,
+        'lift' => (x - p).abs() <= 0.015,
+        _ => i == 0 ? x <= 0.02 : x >= 0.98,
+      };
+      if (act != c.s.ms[i]) {
+        c.s.ms[i] = act;
+        dirty = true;
+        emit(SimEvent('ls', c.id, {'act': act, 'sw': i + 1}));
+      }
+    }
+    return dirty;
+  }
+
   bool _motorTick(Comp c, double dt) {
     final s = c.s, inom = c.num_('In');
     var dirty = false;
     var tgt = 0.0, rate = 0.5;
-    if (s.mode == 'delta') {
+    if (s.mode == 'delta' || s.mode == 'run') {
       tgt = 1;
       rate = 0.9;
     } else if (s.mode == 'star') {
@@ -822,7 +924,7 @@ class Lab {
     if (tgt == 0 && s.spd < 0.004) s.spd = 0;
     final slip = tgt > 0 ? math.max(0.0, tgt - s.spd) / tgt : 0.0;
     var i = 0.0;
-    if (s.mode == 'delta') {
+    if (s.mode == 'delta' || s.mode == 'run') {
       i = inom * (1 + 5 * math.pow(slip, 0.8));
     } else if (s.mode == 'star') {
       i = inom / 3 * (1 + 5 * math.pow(slip, 0.8)) * 1.15;
@@ -831,7 +933,7 @@ class Lab {
     } else if (s.mode == 'over') {
       i = inom * 3;
     }
-    if (s.load && (s.mode == 'delta' || s.mode == 'star')) i *= 2.2;
+    if (s.load && (s.mode == 'delta' || s.mode == 'star' || s.mode == 'run')) i *= 2.2;
     s.current = i;
     s.ang = (s.ang + s.spd * (s.dir == 0 ? 1 : s.dir) * dt * 900) % 360;
     final n = nets;
@@ -932,6 +1034,8 @@ class Lab {
         c.s.act = onTrack ? (val || (tr.left == id ? tr.x <= 0.05 : tr.x >= 0.95)) : val;
       case 'load':
         c.s.load = !c.s.load;
+      case 'valve':
+        c.s.valve = !c.s.valve;
     }
     solve();
   }
@@ -985,6 +1089,10 @@ class Lab {
       if (c.type == 'trafo' && c.s.k > 0.05) {
         final hi = n.vAcross('${c.id}.P0', '${c.id}.P380') > 1 ? 'P380' : 'P220';
         loads.add(('${c.id}.$hi', '${c.id}.P0'));
+      }
+      if (c.type == 'motor1') {
+        if (c.s.vw[0] > 40) loads.add(('${c.id}.U1', '${c.id}.U2'));
+        if (c.s.vw[1] > 40) loads.add(('${c.id}.Z1', '${c.id}.Z2'));
       }
       if (c.type == 'motor') {
         const w = [['U1', 'U2'], ['V1', 'V2'], ['W1', 'W2']];
@@ -1069,7 +1177,7 @@ class WiringDiff {
 // ---------------------------------------------------------------- helpers for tasks
 bool motorRunning(Lab l, String m) {
   final x = l.byId(m);
-  return x != null && (x.s.mode == 'delta' || x.s.mode == 'star') && x.s.spd > 0.3;
+  return x != null && (x.s.mode == 'delta' || x.s.mode == 'star' || x.s.mode == 'run') && x.s.spd > 0.3;
 }
 
 bool motorStopped(Lab l, String m) {

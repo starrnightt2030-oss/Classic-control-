@@ -52,7 +52,7 @@ LabDoc dolTemplate() {
     add(def, id, dx, dy);
     dx += w(def) + 11;
   }
-  add('motor', 'M1', 344, 526);
+  add('motor_d', 'M1', 344, 526);
 
   void wire(String a, String b, String c) => d.wires.add(LabWire(a, b, c));
   // power
@@ -95,12 +95,15 @@ void _structure(LabDoc d) {
   d.parts.add(Placed('R2', 'din_rail', 40, 342.5, p: {'len': 490}));
 }
 
-/// the default worksheet: an empty mounting plate with two DIN rails
+/// the default worksheet: a compact mounting plate with two DIN rails (parts look
+/// big on screen) and a work bench beside it for motors, machines and door devices
 LabDoc emptyPanel() {
   final d = LabDoc()
-    ..plateW = 570
-    ..plateH = 712;
-  _structure(d);
+    ..plateW = 430
+    ..plateH = 520
+    ..benchW = 420;
+  d.parts.add(Placed('R1', 'din_rail', 25, 95, p: {'len': 380}));
+  d.parts.add(Placed('R2', 'din_rail', 25, 285, p: {'len': 380}));
   return d;
 }
 
@@ -130,5 +133,30 @@ LabDoc burnDemo() {
     ..add(LabWire('X0.L2', 'F1.3', 'bk'))
     ..add(LabWire('F1.2', 'H1.X1', 'rd'))
     ..add(LabWire('F1.4', 'H1.X2', 'rd'));
+  return d;
+}
+
+/// bench preview: a motor fed straight from a breaker drives the cart; lift, tank
+/// and door devices stand beside it
+LabDoc benchDemo() {
+  final d = emptyPanel();
+  final bx = d.plateW + LabDoc.benchGap;
+  d.parts.add(Placed('X0', 'supply', 40, 95 + 17.5 - (kLabParts['supply']!.info?.hMm ?? 60) / 2));
+  d.parts.add(Placed('Q1', 'mcb3', 160, 95 + 17.5 - (kLabParts['mcb3']!.info?.hMm ?? 90) / 2));
+  d.parts.add(Placed('M1', 'motor_d', bx + 10, 20));
+  d.parts.add(Placed('W1', 'mach_cart', bx + 10, 215, p: {'kind': 'cart', 'motor': 'M1'}));
+  d.parts.add(Placed('S1', 'pb_green', 40, 400));
+  d.parts.add(Placed('S2', 'pb_red', 110, 400));
+  d.parts.add(Placed('H1', 'lamp_green', 180, 400, p: {'col': 'g', 'V': 220.0}));
+  d.parts.add(Placed('M2', 'motor1', 240, 330));
+  d.wires
+    ..add(LabWire('X0.L1', 'Q1.1', 'br'))
+    ..add(LabWire('X0.L2', 'Q1.3', 'bk'))
+    ..add(LabWire('X0.L3', 'Q1.5', 'gy'))
+    ..add(LabWire('Q1.2', 'M1.U1', 'br'))
+    ..add(LabWire('Q1.4', 'M1.V1', 'bk'))
+    ..add(LabWire('Q1.6', 'M1.W1', 'gy'))
+    ..add(LabWire('Q1.2', 'H1.X1', 'rd'))
+    ..add(LabWire('X0.N', 'H1.X2', 'bu'));
   return d;
 }

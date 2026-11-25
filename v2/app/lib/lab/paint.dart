@@ -28,8 +28,7 @@ class WireRouter {
 
   WireRoute route(LabWire w, int index) {
     final a = doc.termPos(w.a)!, b = doc.termPos(w.b)!;
-    final upA = doc.termUp(w.a), upB = doc.termUp(w.b);
-    return WireRoute([a, b], Offset(0, upA ? -1 : 1), Offset(0, upB ? -1 : 1), index);
+    return WireRoute([a, b], doc.termDir(w.a), doc.termDir(w.b), index);
   }
 }
 
@@ -88,6 +87,25 @@ class PlatePainter extends CustomPainter {
 
   @override
   void paint(Canvas c, Size size) {
+    final bench = doc.benchRect;
+    if (bench != null) {
+      final b = Rect.fromLTWH(bench.left * kPx, bench.top * kPx, bench.width * kPx, bench.height * kPx);
+      final br = RRect.fromRectAndRadius(b, const Radius.circular(18));
+      c.drawShadow(Path()..addRRect(br), Colors.black, 14, false);
+      c.drawRRect(br, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2A3344), Color(0xFF1C2433)]).createShader(b));
+      final grid = Paint()..color = const Color(0x14FFFFFF);
+      for (var x = b.left + 20 * kPx; x < b.right; x += 20 * kPx) {
+        c.drawLine(Offset(x, b.top + 8), Offset(x, b.bottom - 8), grid);
+      }
+      for (var y = b.top + 20 * kPx; y < b.bottom; y += 20 * kPx) {
+        c.drawLine(Offset(b.left + 8, y), Offset(b.right - 8, y), grid);
+      }
+      final tp = TextPainter(
+          text: TextSpan(text: 'منضدة العمل: المحركات والآلات ومكونات الباب', style: TextStyle(fontSize: 6 * kPx, color: const Color(0x99DDE6F5), fontWeight: FontWeight.w600)),
+          textDirection: TextDirection.rtl)
+        ..layout();
+      tp.paint(c, Offset(b.right - tp.width - 8 * kPx, b.top + 5 * kPx));
+    }
     final plate = Rect.fromLTWH(0, 0, doc.plateW * kPx, doc.plateH * kPx);
     final rr = RRect.fromRectAndRadius(plate, const Radius.circular(18));
     c.drawShadow(Path()..addRRect(rr), Colors.black, 18, false);
@@ -392,14 +410,15 @@ class TermPainter extends CustomPainter {
 /// The motor part: terminal box plate (studs + bridges) above the motor body.
 class MotorPlatePainter extends CustomPainter {
   final String links;
-  MotorPlatePainter(this.links);
+  final bool single; // single-phase motor: U1 U2 / Z1 Z2 and a run capacitor
+  MotorPlatePainter(this.links, {this.single = false});
   @override
   void paint(Canvas c, Size size) {
     const s = kPx;
     final plate = Rect.fromLTWH(MotorPlate.plateX * s, MotorPlate.plateY * s, MotorPlate.plateW * s, MotorPlate.plateH * s);
     c.drawRRect(RRect.fromRectAndRadius(plate.inflate(4 * s), Radius.circular(4 * s)), Paint()..color = const Color(0xFF5E666E));
     c.drawRRect(RRect.fromRectAndRadius(plate, Radius.circular(2.5 * s)), Paint()..color = const Color(0xFF1E2328));
-    final t = MotorPlate.terms();
+    final t = single ? MotorPlate.terms1() : MotorPlate.terms();
     void stud(Offset o, String label) {
       c.drawCircle(o, 4.6 * s, Paint()..color = const Color(0xFFB8BEC4));
       c.drawCircle(o, 3.0 * s, Paint()..color = const Color(0xFF7E868E));
@@ -410,9 +429,17 @@ class MotorPlatePainter extends CustomPainter {
       tp.paint(c, o + Offset(-tp.width / 2, label.endsWith('1') ? -9.6 * s : 5.6 * s));
     }
 
-    for (final k in ['U1', 'V1', 'W1', 'W2', 'U2', 'V2']) {
+    for (final k in single ? const ['U1', 'U2', 'Z1', 'Z2'] : const ['U1', 'V1', 'W1', 'W2', 'U2', 'V2']) {
       final p = t[k]!;
       stud(Offset(p.$1 * s, p.$2 * s), k);
+    }
+    if (single) {
+      // run capacitor in the auxiliary winding (drawn between the two columns)
+      final cx = (MotorPlate.plateX + 35) * s, cy = (MotorPlate.plateY + 22) * s;
+      final r = Rect.fromCenter(center: Offset(cx, cy), width: 13 * s, height: 26 * s);
+      c.drawRRect(RRect.fromRectAndRadius(r, Radius.circular(4 * s)), Paint()..color = const Color(0xFF2E5FA8));
+      final tp = TextPainter(text: TextSpan(text: 'C', style: TextStyle(fontSize: 6 * s, color: Colors.white, fontWeight: FontWeight.w800)), textDirection: TextDirection.ltr)..layout();
+      tp.paint(c, Offset(cx - tp.width / 2, cy - tp.height / 2));
     }
     final bridge = Paint()
       ..color = const Color(0xFFD9A441)
@@ -432,7 +459,290 @@ class MotorPlatePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant MotorPlatePainter old) => old.links != links;
+  bool shouldRepaint(covariant MotorPlatePainter old) => old.links != links || old.single != single;
+}
+
+/// screw-terminal lugs left and right of a face-on door device
+class SideLugPainter extends CustomPainter {
+  final List<String> labels;
+  SideLugPainter(this.labels);
+  @override
+  void paint(Canvas c, Size size) {
+    const s = kPx;
+    final h = 18 * s, w = kLug * s * 0.92;
+    for (var i = 0; i < 2; i++) {
+      final x = i == 0 ? 0.0 : size.width - w;
+      final r = Rect.fromLTWH(x, size.height / 2 - h / 2, w, h);
+      c.drawRRect(RRect.fromRectAndRadius(r, Radius.circular(2.2 * s)), Paint()..color = const Color(0xFF15191F));
+      c.drawRRect(RRect.fromRectAndRadius(r.deflate(1.2 * s), Radius.circular(1.6 * s)), Paint()..color = const Color(0xFF2B3139));
+      final o = r.center;
+      c.drawCircle(o, 3.6 * s, Paint()..color = const Color(0xFFC9A24A));
+      c.drawLine(o - Offset(2.2 * s, 0), o + Offset(2.2 * s, 0), Paint()
+        ..color = const Color(0xFF7A5E22)
+        ..strokeWidth = 0.9 * s);
+      final tp = TextPainter(
+          text: TextSpan(text: labels[i], style: TextStyle(fontSize: 3.6 * s, color: const Color(0xFFE8EDF2), fontWeight: FontWeight.w800)), textDirection: TextDirection.ltr)
+        ..layout();
+      tp.paint(c, Offset(o.dx - tp.width / 2, r.top - tp.height - 0.6 * s));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant SideLugPainter old) => false;
+}
+
+/// Machines driven by a motor: cart on a track, hoist, three-floor lift, tank with pump.
+/// [x] is position / level 0…1, [sw] the switch states, [run] the motor turns.
+class MachinePainter extends CustomPainter {
+  final String kind;
+  final double x;
+  final List<bool> sw;
+  final bool run, valve;
+  final String motor;
+  final double phase;
+  MachinePainter(this.kind, {this.x = 0, this.sw = const [false, false, false], this.run = false, this.valve = true, this.motor = '', this.phase = 0});
+
+  static const _steel = Color(0xFF8C96A3), _dark = Color(0xFF151A22), _frame = Color(0xFF2B3442);
+
+  void _text(Canvas c, String t, Offset at, double size, {Color col = const Color(0xFFDDE6F5), bool bold = true, TextDirection dir = TextDirection.ltr, bool center = true}) {
+    final tp = TextPainter(text: TextSpan(text: t, style: TextStyle(fontSize: size, color: col, fontWeight: bold ? FontWeight.w800 : FontWeight.w500)), textDirection: dir)..layout();
+    tp.paint(c, at - Offset(center ? tp.width / 2 : 0, tp.height / 2));
+  }
+
+  /// a small roller limit switch; [on] when actuated
+  void _limit(Canvas c, Offset o, bool on, String label, {bool flip = false}) {
+    const s = kPx;
+    final body = Rect.fromCenter(center: o, width: 14 * s, height: 18 * s);
+    c.drawRRect(RRect.fromRectAndRadius(body, Radius.circular(2 * s)), Paint()..color = const Color(0xFFE0B23A));
+    c.drawRRect(RRect.fromRectAndRadius(body, Radius.circular(2 * s)), Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8 * s
+      ..color = const Color(0xFF6B5216));
+    final arm = o + Offset(0, (flip ? 1 : -1) * 12 * s) + Offset(on ? 4 * s : 0, 0);
+    c.drawLine(o + Offset(0, (flip ? 1 : -1) * 8 * s), arm, Paint()
+      ..strokeWidth = 1.4 * s
+      ..color = _dark);
+    c.drawCircle(arm, 3 * s, Paint()..color = on ? const Color(0xFF2FE07A) : const Color(0xFF3A4250));
+    if (on) {
+      c.drawCircle(o, 10 * s, Paint()
+        ..color = const Color(0x552FE07A)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+    }
+    _text(c, label, o + Offset(0, (flip ? -1 : 1) * 14 * s), 4.6 * s, col: on ? const Color(0xFF2FE07A) : const Color(0xFFDDE6F5));
+  }
+
+  @override
+  void paint(Canvas c, Size size) {
+    const s = kPx;
+    final all = Offset.zero & size;
+    c.drawRRect(RRect.fromRectAndRadius(all, Radius.circular(5 * s)), Paint()..color = const Color(0xFF0E141D));
+    c.drawRRect(RRect.fromRectAndRadius(all.deflate(1.5 * s), Radius.circular(4 * s)), Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2 * s
+      ..color = const Color(0xFF3A4658));
+    // terminal strip along the bottom
+    final strip = Rect.fromLTWH(6 * s, size.height - 20 * s, size.width - 12 * s, 16 * s);
+    c.drawRRect(RRect.fromRectAndRadius(strip, Radius.circular(2 * s)), Paint()..color = _frame);
+    final n = kind == 'lift' ? 3 : 2;
+    final names = switch (kind) {
+      'tank' => ['عوامة سفلى', 'عوامة عليا'],
+      'lift' => ['الأرضي', 'الأول', 'الثاني'],
+      'hoist' => ['أسفل', 'أعلى'],
+      _ => ['يسار', 'يمين'],
+    };
+    final terms = MachineGeo.terms(kind);
+    for (var i = 1; i <= n; i++) {
+      final a = terms['S${i}1']!, b = terms['S${i}4']!;
+      final cx = (a.$1 + b.$1) / 2 * s;
+      _text(c, 'S$i ${names[i - 1]}', Offset(cx, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: sw[i - 1] ? const Color(0xFF2FE07A) : const Color(0xFFDDE6F5));
+      _text(c, 'NC', Offset(((terms['S${i}1']!.$1 + terms['S${i}2']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
+      _text(c, 'NO', Offset(((terms['S${i}3']!.$1 + terms['S${i}4']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
+    }
+    final area = Rect.fromLTRB(10 * s, 12 * s, size.width - 10 * s, strip.top - 12 * s);
+    _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : 'يقودها المحرك $motor', Offset(area.left, 6.5 * s), 4.2 * s,
+        col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
+    switch (kind) {
+      case 'cart':
+        _cart(c, area);
+      case 'hoist':
+        _hoist(c, area);
+      case 'lift':
+        _lift(c, area);
+      case 'tank':
+        _tank(c, area);
+    }
+  }
+
+  void _cart(Canvas c, Rect a) {
+    const s = kPx;
+    final railY = a.center.dy + 14 * s;
+    final l = a.left + 22 * s, r = a.right - 22 * s;
+    c.drawRect(Rect.fromLTRB(l - 6 * s, railY, r + 6 * s, railY + 5 * s), Paint()..color = _steel);
+    for (var xx = l; xx < r; xx += 16 * s) {
+      c.drawRect(Rect.fromLTWH(xx, railY + 5 * s, 6 * s, 4 * s), Paint()..color = const Color(0xFF59616C));
+    }
+    const cw = 70.0 * s, ch = 38.0 * s;
+    final cx = l + 9 * s + x * (r - l - 18 * s - cw);
+    final body = Rect.fromLTWH(cx, railY - ch - 8 * s, cw, ch);
+    c.drawRRect(RRect.fromRectAndRadius(body, Radius.circular(4 * s)), Paint()..shader = const LinearGradient(colors: [Color(0xFF3D8BFF), Color(0xFF1F4FA8)]).createShader(body));
+    c.drawRect(Rect.fromLTWH(body.left + 8 * s, body.top + 6 * s, cw - 16 * s, 10 * s), Paint()..color = const Color(0x553D8BFF));
+    final rot = phase * 12;
+    for (final wx in [body.left + 14 * s, body.right - 14 * s]) {
+      final o = Offset(wx, railY - 4 * s);
+      c.drawCircle(o, 7 * s, Paint()..color = _dark);
+      c.drawCircle(o, 4 * s, Paint()..color = _steel);
+      c.drawLine(o, o + Offset(math.cos(rot) * 4 * s, math.sin(rot) * 4 * s), Paint()
+        ..strokeWidth = 1.2 * s
+        ..color = _dark);
+    }
+    _text(c, run ? '◀ ▶' : '', body.center, 6 * s);
+    _limit(c, Offset(l - 2 * s, railY - 18 * s), sw[0], 'S1');
+    _limit(c, Offset(r + 2 * s, railY - 18 * s), sw[1], 'S2');
+  }
+
+  void _hoist(Canvas c, Rect a) {
+    const s = kPx;
+    final beam = Rect.fromLTWH(a.left + 10 * s, a.top + 6 * s, a.width - 20 * s, 10 * s);
+    c.drawRect(beam, Paint()..color = const Color(0xFFE0B23A));
+    for (var xx = beam.left; xx < beam.right; xx += 10 * s) {
+      c.drawLine(Offset(xx, beam.top), Offset(xx + 8 * s, beam.bottom), Paint()
+        ..color = const Color(0xFF6B5216)
+        ..strokeWidth = 0.8 * s);
+    }
+    final drum = Rect.fromCenter(center: Offset(a.center.dx, beam.bottom + 14 * s), width: 46 * s, height: 20 * s);
+    c.drawRRect(RRect.fromRectAndRadius(drum, Radius.circular(4 * s)), Paint()..color = _steel);
+    for (var i = 0; i < 8; i++) {
+      final xx = drum.left + 4 * s + i * 5.2 * s + (phase * 40 % 5.2) * s;
+      if (xx < drum.right - 2 * s) {
+        c.drawLine(Offset(xx, drum.top + 2 * s), Offset(xx + 2 * s, drum.bottom - 2 * s), Paint()
+          ..color = const Color(0xFF59616C)
+          ..strokeWidth = 0.8 * s);
+      }
+    }
+    final top = drum.bottom + 8 * s, bottom = a.bottom - 36 * s;
+    final hookY = bottom - x * (bottom - top);
+    c.drawLine(Offset(a.center.dx, drum.bottom), Offset(a.center.dx, hookY), Paint()
+      ..color = const Color(0xFFB8BEC4)
+      ..strokeWidth = 1.2 * s);
+    final block = Rect.fromCenter(center: Offset(a.center.dx, hookY + 6 * s), width: 16 * s, height: 12 * s);
+    c.drawRRect(RRect.fromRectAndRadius(block, Radius.circular(2 * s)), Paint()..color = const Color(0xFFE0B23A));
+    final load = Rect.fromCenter(center: Offset(a.center.dx, hookY + 26 * s), width: 50 * s, height: 26 * s);
+    c.drawLine(block.bottomCenter, load.topLeft + Offset(6 * s, 0), Paint()
+      ..color = _steel
+      ..strokeWidth = 0.8 * s);
+    c.drawLine(block.bottomCenter, load.topRight - Offset(6 * s, 0), Paint()
+      ..color = _steel
+      ..strokeWidth = 0.8 * s);
+    c.drawRect(load, Paint()..color = const Color(0xFF7A5A3A));
+    c.drawRect(load.deflate(3 * s), Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8 * s
+      ..color = const Color(0xFF4E3824));
+    c.drawLine(Offset(a.left + 8 * s, a.bottom - 6 * s), Offset(a.right - 8 * s, a.bottom - 6 * s), Paint()
+      ..color = _steel
+      ..strokeWidth = 2 * s);
+    _limit(c, Offset(a.right - 20 * s, top + 8 * s), sw[1], 'S2 أعلى');
+    _limit(c, Offset(a.right - 20 * s, bottom + 20 * s), sw[0], 'S1 أسفل', flip: true);
+  }
+
+  void _lift(Canvas c, Rect a) {
+    const s = kPx;
+    final shaft = Rect.fromLTWH(a.left + 30 * s, a.top + 8 * s, a.width - 80 * s, a.height - 12 * s);
+    c.drawRect(shaft, Paint()..color = const Color(0xFF1A2230));
+    c.drawRect(shaft, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2 * s
+      ..color = _steel);
+    const cabH = 52.0 * s;
+    final travel = shaft.height - cabH - 4 * s;
+    final names = ['الأرضي', 'الأول', 'الثاني'];
+    for (var i = 0; i < 3; i++) {
+      final fy = shaft.bottom - 2 * s - (i / 2) * travel;
+      c.drawLine(Offset(shaft.left - 22 * s, fy), Offset(shaft.left, fy), Paint()
+        ..color = _steel
+        ..strokeWidth = 2 * s);
+      _text(c, names[i], Offset(shaft.left - 12 * s, fy - 6 * s), 4.2 * s, dir: TextDirection.rtl);
+      _limit(c, Offset(shaft.right + 14 * s, fy - cabH / 2), sw[i], 'S${i + 1}');
+    }
+    final cy = shaft.bottom - 2 * s - x * travel - cabH;
+    final cab = Rect.fromLTWH(shaft.left + 6 * s, cy, shaft.width - 12 * s, cabH);
+    c.drawLine(Offset(cab.center.dx, shaft.top), Offset(cab.center.dx, cab.top), Paint()
+      ..color = const Color(0xFFB8BEC4)
+      ..strokeWidth = 0.9 * s);
+    c.drawRRect(RRect.fromRectAndRadius(cab, Radius.circular(3 * s)), Paint()..shader = const LinearGradient(colors: [Color(0xFFB8C2CF), Color(0xFF7D8998)]).createShader(cab));
+    c.drawLine(Offset(cab.center.dx, cab.top + 4 * s), Offset(cab.center.dx, cab.bottom - 4 * s), Paint()
+      ..color = const Color(0xFF4C5563)
+      ..strokeWidth = 0.9 * s);
+    if (run) _text(c, '⇅', cab.center, 10 * s, col: const Color(0xFF1F4FA8));
+  }
+
+  void _tank(Canvas c, Rect a) {
+    const s = kPx;
+    final tank = Rect.fromLTWH(a.left + 50 * s, a.top + 20 * s, a.width - 100 * s, a.height - 40 * s);
+    final lv = x.clamp(0.0, 1.0);
+    final water = Rect.fromLTRB(tank.left, tank.bottom - lv * tank.height, tank.right, tank.bottom);
+    c.drawRect(tank, Paint()..color = const Color(0xFF16202C));
+    c.drawRect(water, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF4FB6FF), Color(0xFF1E5FB0)]).createShader(water));
+    if (lv > 0.01) {
+      final wave = Path()..moveTo(water.left, water.top);
+      for (var xx = 0.0; xx <= water.width; xx += 4 * s) {
+        wave.lineTo(water.left + xx, water.top + math.sin(xx / (10 * s) + phase * 20) * 1.2 * s);
+      }
+      c.drawPath(wave, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1 * s
+        ..color = const Color(0xAAFFFFFF));
+    }
+    c.drawRect(tank, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6 * s
+      ..color = _steel);
+    _text(c, '${(lv * 100).round()}%', tank.center, 8 * s);
+    // floats on the right wall
+    const pts = [0.2, 0.85];
+    for (var i = 0; i < 2; i++) {
+      final fy = tank.bottom - pts[i] * tank.height;
+      final fl = Offset(tank.right - 10 * s, math.min(fy + 6 * s, tank.bottom - lv * tank.height + (lv * tank.height < pts[i] * tank.height ? 0 : 0)));
+      c.drawLine(Offset(tank.right, fy), fl, Paint()
+        ..strokeWidth = 0.8 * s
+        ..color = _steel);
+      c.drawCircle(fl, 3.4 * s, Paint()..color = const Color(0xFFFF8F1F));
+      _limit(c, Offset(tank.right + 18 * s, fy), sw[i], 'S${i + 1}');
+    }
+    // pump and pipe into the top
+    final pump = Offset(tank.left - 26 * s, tank.bottom - 14 * s);
+    c.drawCircle(pump, 12 * s, Paint()..color = run ? const Color(0xFF2FA36B) : const Color(0xFF3A4250));
+    for (var i = 0; i < 4; i++) {
+      final ang = phase * 30 + i * math.pi / 2;
+      c.drawLine(pump, pump + Offset(math.cos(ang), math.sin(ang)) * 8 * s, Paint()
+        ..strokeWidth = 1.4 * s
+        ..color = const Color(0xFFDDE6F5));
+    }
+    final pipe = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3 * s
+      ..color = _steel;
+    c.drawPath(Path()
+      ..moveTo(pump.dx, pump.dy - 12 * s)
+      ..lineTo(pump.dx, tank.top - 8 * s)
+      ..lineTo(tank.left + 20 * s, tank.top - 8 * s)
+      ..lineTo(tank.left + 20 * s, tank.top + 4 * s), pipe);
+    if (run) {
+      for (var i = 0; i < 4; i++) {
+        final yy = tank.top + 6 * s + ((phase * 60 + i * 9) % (tank.height * (1 - lv) / s + 1)) * s;
+        if (yy < water.top) c.drawCircle(Offset(tank.left + 20 * s, yy), 1.4 * s, Paint()..color = const Color(0xFF4FB6FF));
+      }
+    }
+    _text(c, 'طلمبة', pump + Offset(0, 17 * s), 4 * s, dir: TextDirection.rtl);
+    // outlet valve (tap it while running)
+    final v = Offset(tank.right - 16 * s, tank.bottom + 10 * s);
+    c.drawLine(Offset(v.dx, tank.bottom), Offset(v.dx, v.dy + 6 * s), pipe);
+    c.drawCircle(v, 5 * s, Paint()..color = valve ? const Color(0xFF2FE07A) : const Color(0xFFFF5A64));
+    _text(c, valve ? 'محبس مفتوح' : 'محبس مغلق', v + Offset(-22 * s, 0), 4 * s, dir: TextDirection.rtl);
+  }
+
+  @override
+  bool shouldRepaint(covariant MachinePainter old) => true;
 }
 
 // ------------------------------------------------------------------ effects

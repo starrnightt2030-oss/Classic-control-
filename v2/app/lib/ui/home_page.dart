@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_info.dart';
 import 'cards.dart';
-import 'diagrams_page.dart';
+import '../schem/ready_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
 import 'section_pages.dart';
@@ -37,8 +37,8 @@ class _HomePageState extends State<HomePage> {
             CcIcons.film, CC.amber, (_) => const ActionListPage(action: AutoAction.video)),
         _Section('assets/images/cards/sheet.webp', 'ورقة الدرس', 'صورة أو PDF منسّق: الشكل، والأجزاء بأرقامها، والشرح',
             CcIcons.sheet, CC.amber, (_) => const ActionListPage(action: AutoAction.sheet)),
-        _Section('assets/images/cards/diagrams.webp', 'المخططات', 'مخطط القوى ومخطط التحكم بالرموز الكلاسيك IEC 60617',
-            CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات', child: DiagramsPage())),
+        _Section('assets/images/cards/diagrams.webp', 'المخططات الجاهزة', '20 دائرة كلاسيك كنترول بمخطط القوى والتحكم الصحيح، تُشغَّل بالمحاكاة وتُطبع',
+            CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات الجاهزة', child: ReadyDiagramsPage())),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر', '17 دائرة كلاسيكية تعمل حيًّا: الضواغط والكونتاكتورات والمؤقتات والمحرك، ومهام بالترتيب',
             CcIcons.bolt, CC.green, (_) => const CircuitListPage()),
         _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'ورقة عمل فارغة: أدخل المكونات الحقيقية من المكتبة، ووصّل كل سلك بيدك، وشغّل. الخطأ يعطي شرارة أو يحرق المكوّن',

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:classic_control/schem/ladder.dart';
 import 'package:classic_control/schem/model.dart';
 import 'package:classic_control/sim/engine.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,5 +80,100 @@ void main() {
     for (var i = 0; i < r.length - 1; i++) {
       expect(r[i].dx == r[i + 1].dx || r[i].dy == r[i + 1].dy, isTrue);
     }
+  });
+
+  group('ready-made circuits', () {
+    SPlaced sym(SchemDoc d, String tag, String key) => d.syms.firstWhere((s) => s.tag == tag && s.sym == key);
+    void tap(Lab l, SchemDoc d, String tag, {String key = 'pb_no'}) {
+      final id = sym(d, tag, key).id;
+      l.actuate(id, 'press', true);
+      l.run(0.3);
+      l.actuate(id, 'press', false);
+      l.run(0.3);
+    }
+
+    for (final r in kReady) {
+      test('${r.id} builds, has no warnings and no short at power-on', () {
+        final d = r.build();
+        final s = d.toSim();
+        expect(s.warnings, isEmpty, reason: s.warnings.join(' / '));
+        s.lab.setPower(true);
+        s.lab.run(0.5);
+        expect(s.lab.short, isNull);
+        expect(s.wireIndex.length, d.wires.length, reason: 'every wire maps to the engine');
+        // nothing overlaps on the sheet
+        for (final a in d.syms) {
+          for (final b in d.syms) {
+            if (a.id.compareTo(b.id) < 0) expect(a.rect.deflate(0.05).overlaps(b.rect.deflate(0.05)), isFalse, reason: '${a.tag}/${a.sym} overlaps ${b.tag}/${b.sym}');
+          }
+        }
+      });
+    }
+
+    test('DOL starts and holds', () {
+      final d = readyById('c_dol')!.build();
+      final l = d.toSim().lab..setPower(true);
+      tap(l, d, 'S1');
+      l.run(4);
+      expect(motorRunning(l, sym(d, 'M1', 'motor3').id), isTrue);
+    });
+
+    test('reversing: forward, interlock, reverse', () {
+      final d = readyById('c_rev')!.build();
+      final l = d.toSim().lab..setPower(true);
+      final m = sym(d, 'M1', 'motor3').id;
+      tap(l, d, 'S1');
+      l.run(3);
+      expect(motorRunning(l, m), isTrue);
+      final dir = l[m].s.dir;
+      tap(l, d, 'S2');
+      expect(l['K2'].s.on, isFalse);
+      tap(l, d, 'S0', key: 'pb_nc');
+      l.run(3);
+      tap(l, d, 'S2');
+      l.run(3);
+      expect(motorRunning(l, m), isTrue);
+      expect(l[m].s.dir, -dir);
+      expect(l.short, isNull);
+    });
+
+    test('star-delta switches over', () {
+      final d = readyById('c_sd')!.build();
+      final l = d.toSim().lab..setPower(true);
+      final m = sym(d, 'M1', 'motor6').id;
+      tap(l, d, 'S1');
+      l.run(1);
+      expect(l[m].s.mode, 'star');
+      l.run(6);
+      expect(l[m].s.mode, 'delta');
+      expect(l.short, isNull);
+    });
+
+    test('two-direction star-delta', () {
+      final d = readyById('c_sd2')!.build();
+      final l = d.toSim().lab..setPower(true);
+      final m = sym(d, 'M1', 'motor6').id;
+      tap(l, d, 'S1');
+      l.run(1);
+      expect(l[m].s.mode, 'star');
+      l.run(6);
+      expect(l[m].s.mode, 'delta');
+      expect(l.short, isNull);
+    });
+
+    test('sequence by timer and tank floats', () {
+      final d = readyById('c_seq3')!.build();
+      final l = d.toSim().lab..setPower(true);
+      tap(l, d, 'S1');
+      l.run(8);
+      expect(l['K3'].s.on, isTrue);
+      final t = readyById('x_tank')!.build();
+      final lt = t.toSim().lab..setPower(true);
+      expect(lt['K1'].s.on, isTrue, reason: 'low float closed: the pump starts');
+      lt.actuate('B1', 'ls', true); // water above the low float
+      expect(lt['K1'].s.on, isTrue, reason: 'held in');
+      lt.actuate('B2', 'ls', true); // full
+      expect(lt['K1'].s.on, isFalse);
+    });
   });
 }

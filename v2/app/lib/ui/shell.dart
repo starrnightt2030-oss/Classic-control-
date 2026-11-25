@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'about_page.dart';
-import 'diagrams_page.dart';
+import '../schem/ready_page.dart';
 import 'home_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
@@ -39,7 +39,7 @@ class _ShellState extends State<Shell> {
     final pages = [
       HomePage(onGo: go),
       const LibraryPage(),
-      const DiagramsPage(),
+      const ReadyDiagramsPage(),
       const AboutPage(),
     ];
     return LayoutBuilder(builder: (context, c) {

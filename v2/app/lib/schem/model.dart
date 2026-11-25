@@ -32,9 +32,10 @@ class SPlaced {
 
 class SWire {
   final String a, b; // '<symId>.<pin>'
-  SWire(this.a, this.b);
-  Map<String, Object?> toJson() => {'a': a, 'b': b};
-  static SWire fromJson(Map<String, dynamic> j) => SWire(j['a'] as String, j['b'] as String);
+  final double? y; // height of the horizontal run (grid), when the drawing fixes it
+  SWire(this.a, this.b, {this.y});
+  Map<String, Object?> toJson() => {'a': a, 'b': b, if (y != null) 'y': y};
+  static SWire fromJson(Map<String, dynamic> j) => SWire(j['a'] as String, j['b'] as String, y: (j['y'] as num?)?.toDouble());
 }
 
 /// What the student built, translated for the engine.
@@ -50,6 +51,8 @@ class SchemSim {
 class SchemDoc {
   final List<SPlaced> syms = [];
   final List<SWire> wires = [];
+  /// mechanical interlocks between two device tags (reversing / star-delta contactors)
+  final List<List<String>> mech = [];
   String title = 'دائرة جديدة';
   double sheetW = 64, sheetH = 42; // grid units
 
@@ -122,6 +125,11 @@ class SchemDoc {
     for (final s in syms) {
       final k = s.d.kind;
       if (s.d.role != SymRole.contact) continue;
+      final fixed = s.p['no'];
+      if (fixed is String) {
+        out[s.id] = fixed;
+        continue;
+      }
       switch (k) {
         case 'OLNC':
           out[s.id] = '95-96';
@@ -206,10 +214,12 @@ class SchemDoc {
           pin['${s.id}.1'] = '${s.id}.1';
           pin['${s.id}.2'] = '${s.id}.2';
         case SymRole.device:
-          l.comps.add(Comp(s.id, s.d.engine, p: {...s.d.params, ...s.p}));
-          compOf[s.id] = s.id;
+          // shared devices (a limit switch drawn as its NO and its NC contact) are one engine device per tag
+          final id = s.d.shared ? s.tag : s.id;
+          if (!s.d.shared || l.byId(id) == null) l.comps.add(Comp(id, s.d.engine, p: {...s.d.params, ...s.p}));
+          compOf[s.id] = id;
           for (final pn in s.d.pins) {
-            pin['${s.id}.${pn.id}'] = '${s.id}.${pn.id}';
+            pin['${s.id}.${pn.id}'] = '$id.${pn.id}';
           }
       }
     }
@@ -223,6 +233,9 @@ class SchemDoc {
     }
     for (final c in l.comps) {
       if (c.p['burnt'] == true) c.s.dead = true;
+    }
+    for (final m in mech) {
+      if (l.byId(m[0]) != null && l.byId(m[1]) != null) l.mech.add(m);
     }
     return SchemSim(l, pin, wi, compOf, warn);
   }
@@ -273,6 +286,7 @@ class SchemDoc {
         'sheet': [sheetW, sheetH],
         'syms': [for (final s in syms) s.toJson()],
         'wires': [for (final w in wires) w.toJson()],
+        if (mech.isNotEmpty) 'mech': mech,
       });
 
   static SchemDoc fromJsonString(String s) {
@@ -290,14 +304,25 @@ class SchemDoc {
     for (final x in (j['wires'] as List)) {
       d.wires.add(SWire.fromJson(x as Map<String, dynamic>));
     }
+    for (final m in (j['mech'] as List? ?? const [])) {
+      d.mech.add((m as List).cast<String>());
+    }
     return d;
   }
 }
 
 /// Orthogonal route between two pins (grid units): leave each pin straight out,
 /// then one horizontal run.
-List<Offset> schemRoute(Offset a, bool upA, Offset b, bool upB) {
+List<Offset> schemRoute(Offset a, bool upA, Offset b, bool upB, [double? via]) {
   const out = 0.8;
+  if (via != null) {
+    final pts = [a, Offset(a.dx, via), Offset(b.dx, via), b];
+    final clean = <Offset>[pts.first];
+    for (final p in pts.skip(1)) {
+      if ((p - clean.last).distance > 0.01) clean.add(p);
+    }
+    return clean;
+  }
   final a1 = Offset(a.dx, a.dy + (upA ? -out : out));
   final b1 = Offset(b.dx, b.dy + (upB ? -out : out));
   if ((a.dx - b.dx).abs() < 0.01) {

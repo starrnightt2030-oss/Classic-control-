@@ -33,6 +33,8 @@ class SymDef {
   /// contact kind for [SymRole.contact]: NO · NC · TNO · TNC · OLNO · OLNC
   final String kind;
   final Map<String, Object?> params;
+  /// several symbols with the same tag are one device (limit switch NO + NC)
+  final bool shared;
   const SymDef({
     required this.key,
     required this.nameAr,
@@ -45,6 +47,7 @@ class SymDef {
     this.engine = '',
     this.kind = '',
     this.params = const {},
+    this.shared = false,
   });
 }
 
@@ -55,7 +58,7 @@ const kSymCategories = <(String, int, List<String>)>[
   ('الحماية', 0xFFFF5A64, ['mcb1', 'mcb3', 'fuse', 'ol3', 'olnc', 'olno']),
   ('الكونتاكتور والمرحل', 0xFF4FD8FF, ['coil_kc', 'kc3', 'no', 'nc', 'coil_ka']),
   ('المؤقتات', 0xFF3D8BFF, ['coil_kt', 'tno', 'tnc']),
-  ('أوامر التشغيل', 0xFFB07CFF, ['pb_no', 'pb_nc', 'estop', 'sel']),
+  ('أوامر التشغيل', 0xFFB07CFF, ['pb_no', 'pb_nc', 'estop', 'sel', 'ls_no', 'ls_nc']),
   ('الأحمال', 0xFFC9A27E, ['lamp', 'motor3', 'motor6']),
 ];
 
@@ -111,6 +114,12 @@ final Map<String, SymDef> kSyms = {
     const SymDef(key: 'pb_nc', nameAr: 'ضاغط إيقاف NC', category: 'أوامر التشغيل', prefix: 'S', w: 2, h: 4, pins: [SymPin('11', 1, 0, '11'), SymPin('12', 1, 4, '12')], role: SymRole.device, engine: 'pb_nc'),
     const SymDef(key: 'estop', nameAr: 'مفتاح طوارئ', category: 'أوامر التشغيل', prefix: 'S', w: 2, h: 4, pins: [SymPin('11', 1, 0, '11'), SymPin('12', 1, 4, '12')], role: SymRole.device, engine: 'estop'),
     const SymDef(key: 'sel', nameAr: 'مفتاح اختيار', category: 'أوامر التشغيل', prefix: 'S', w: 2, h: 4, pins: [SymPin('13', 1, 0, '13'), SymPin('14', 1, 4, '14')], role: SymRole.device, engine: 'sel'),
+    const SymDef(
+        key: 'ls_no', nameAr: 'مفتاح نهاية شوط: النقطة المفتوحة 23-24', category: 'أوامر التشغيل', prefix: 'B', w: 2, h: 4,
+        pins: [SymPin('23', 1, 0, '23'), SymPin('24', 1, 4, '24')], role: SymRole.device, engine: 'ls', shared: true),
+    const SymDef(
+        key: 'ls_nc', nameAr: 'مفتاح نهاية شوط: النقطة المغلقة 11-12', category: 'أوامر التشغيل', prefix: 'B', w: 2, h: 4,
+        pins: [SymPin('11', 1, 0, '11'), SymPin('12', 1, 4, '12')], role: SymRole.device, engine: 'ls', shared: true),
     const SymDef(
         key: 'lamp', nameAr: 'لمبة بيان', category: 'الأحمال', prefix: 'H', w: 2, h: 4, pins: [SymPin('X1', 1, 0, 'X1'), SymPin('X2', 1, 4, 'X2')], role: SymRole.device, engine: 'lamp',
         params: {'col': 'g', 'V': 220.0}),
@@ -326,12 +335,18 @@ void paintSymbol(Canvas c, SymDef d, {SymLook? look, String tag = '', Map<String
     case 'pb_nc':
     case 'estop':
     case 'sel':
-      final no = d.key == 'pb_no' || d.key == 'sel';
+    case 'ls_no':
+    case 'ls_nc':
+      final no = d.key == 'pb_no' || d.key == 'sel' || d.key == 'ls_no';
       final closed = look?.closed ?? !no;
       contact(1, no, closed);
       final m = bladeMid(1, no, closed);
       dashed(m.dx, m.dy, -0.1, m.dy);
-      if (d.key == 'estop') {
+      if (d.key.startsWith('ls')) {
+        // roller lever
+        c.drawLine(Offset(-0.1 * g, m.dy * g), Offset(-0.45 * g, (m.dy - 0.45) * g), pen);
+        c.drawCircle(Offset(-0.55 * g, (m.dy - 0.55) * g), 0.2 * g, pen);
+      } else if (d.key == 'estop') {
         c.drawArc(Rect.fromCircle(center: Offset(-0.35 * g, m.dy * g), radius: 0.4 * g), math.pi / 2, math.pi, true, Paint()..color = look != null && !closed ? kBad : const Color(0xFFE53935));
         c.drawArc(Rect.fromCircle(center: Offset(-0.35 * g, m.dy * g), radius: 0.4 * g), math.pi / 2, math.pi, true, pen);
       } else if (d.key == 'sel') {

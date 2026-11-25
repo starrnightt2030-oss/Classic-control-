@@ -40,6 +40,8 @@ SymLook? lookOf(SPlaced s, SchemSim? sim) {
           return SymLook(closed: !c.s.lat);
         case 'sel':
           return SymLook(closed: c.s.pos != 0);
+        case 'ls':
+          return SymLook(closed: s.sym == 'ls_no' ? c.s.act : !c.s.act);
         case 'lamp':
           return SymLook(energised: !c.s.dead && c.s.v > c.num_('V') * 0.6, fault: c.s.dead);
         case 'motor':
@@ -188,7 +190,7 @@ class SheetPainter extends CustomPainter {
       final w = doc.wires[i];
       final a = doc.pinPos(w.a), b = doc.pinPos(w.b);
       if (a == null || b == null) continue;
-      final pts = schemRoute(a, doc.pinUp(w.a), b, doc.pinUp(w.b));
+      final pts = schemRoute(a, doc.pinUp(w.a), b, doc.pinUp(w.b), w.y);
       final path = Path()..moveTo(pts.first.dx * g, pts.first.dy * g);
       for (final p in pts.skip(1)) {
         path.lineTo(p.dx * g, p.dy * g);
@@ -274,7 +276,7 @@ class SheetPainter extends CustomPainter {
 double wireDistance(SchemDoc d, SWire w, Offset p) {
   final a = d.pinPos(w.a), b = d.pinPos(w.b);
   if (a == null || b == null) return double.infinity;
-  final pts = schemRoute(a, d.pinUp(w.a), b, d.pinUp(w.b));
+  final pts = schemRoute(a, d.pinUp(w.a), b, d.pinUp(w.b), w.y);
   var best = double.infinity;
   for (var i = 0; i < pts.length - 1; i++) {
     final s = pts[i], e = pts[i + 1];

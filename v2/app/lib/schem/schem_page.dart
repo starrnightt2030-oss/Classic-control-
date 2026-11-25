@@ -14,6 +14,7 @@ import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../ui/theme.dart';
 import 'export.dart';
+import 'ladder.dart';
 import 'model.dart';
 import 'sheet_paint.dart';
 import 'symbols.dart';
@@ -28,7 +29,10 @@ class SchemPage extends StatefulWidget {
 
   /// previews: 0 normal · 1 DOL example running · 2 library open · 3 DOL example editing
   final int demo;
-  const SchemPage({super.key, this.deliver, this.demo = 0});
+
+  /// open this drawing (a ready-made circuit) instead of the saved sheet; it is not autosaved
+  final SchemDoc? initial;
+  const SchemPage({super.key, this.deliver, this.demo = 0, this.initial});
   @override
   State<SchemPage> createState() => _SchemPageState();
 }
@@ -85,10 +89,16 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final s = widget.demo > 0 ? null : prefs.getString(_prefKey);
+    final s = widget.demo > 0 || widget.initial != null ? null : prefs.getString(_prefKey);
     SchemDoc d;
     try {
-      d = widget.demo == 1 || widget.demo == 3 ? dolSchematic() : (s == null ? SchemDoc() : SchemDoc.fromJsonString(s));
+      d = widget.initial ??
+          switch (widget.demo) {
+            1 || 3 => readyById('c_dol')!.build(),
+            4 => readyById('c_sd')!.build(),
+            5 => readyById('c_rev_auto')!.build(),
+            _ => s == null ? SchemDoc() : SchemDoc.fromJsonString(s),
+          };
     } catch (_) {
       d = SchemDoc();
     }
@@ -99,6 +109,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fit();
       if (widget.demo == 2) setState(() => libOpen = true);
+      if (widget.demo == 4) Future<void>.delayed(const Duration(milliseconds: 500), () {
+        _simulate();
+        final s1 = doc.syms.firstWhere((s) => s.tag == 'S1');
+        sim?.lab.actuate(s1.id, 'press', true);
+        Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.lab.actuate(s1.id, 'press', false));
+      });
       if (widget.demo == 1) {
         Future<void>.delayed(const Duration(milliseconds: 500), () {
           _simulate();
@@ -111,6 +127,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   }
 
   void _persist() {
+    if (widget.initial != null || widget.demo > 0) return;
     _save?.cancel();
     _save = Timer(const Duration(milliseconds: 600), () async {
       final prefs = await SharedPreferences.getInstance();
@@ -557,6 +574,10 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
         _pressBy[pointer] = id;
         AudioService.instance.sfx('pushbutton_click');
         l.actuate(id, 'press', true);
+      case 'ls':
+        _pressBy[pointer] = id;
+        AudioService.instance.sfx('relay_click');
+        l.actuate(id, 'ls', true);
       case 'estop':
         AudioService.instance.sfx('estop_latch');
         l.actuate(id, 'estop');
@@ -585,7 +606,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     final id = _pressBy.remove(pointer);
     final l = sim?.lab;
     if (id != null && l != null) {
-      l.actuate(id, 'press', false);
+      l.actuate(id, l.byId(id)?.type == 'ls' ? 'ls' : 'press', false);
       _handle(l.drain());
       setState(() {});
     }

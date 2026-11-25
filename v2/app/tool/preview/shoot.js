@@ -15,6 +15,8 @@ const puppeteer = require('puppeteer');
     ['schem_edit_desktop', '?page=schem&demo=3', 1600, 1000],
     ['schem_run_desktop', '?page=schem&demo=1', 1600, 1000],
     ['schem_library_desktop', '?page=schem&demo=2', 1600, 1000],
+    ['schem_sd_desktop', '?page=schem&demo=4', 1600, 1000],
+    ['schem_revauto_desktop', '?page=schem&demo=5', 1600, 1000],
     ['schem_run_phone', '?page=schem&demo=1', 412, 915],
   ];
   for (const [name, q, w, h] of shots) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_info.dart';
 import 'cards.dart';
+import 'component_page.dart';
 import '../schem/ready_page.dart';
 import 'icons.dart';
 import 'library_page.dart';

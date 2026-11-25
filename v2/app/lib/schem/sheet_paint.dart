@@ -54,7 +54,7 @@ SymLook? lookOf(SPlaced s, SchemSim? sim) {
           return SymLook(energised: !c.s.dead && c.s.v > c.num_('V') * 0.6, fault: c.s.dead);
         case 'motor1':
           final bad = c.s.mode == 'single' || c.s.mode == 'over' || c.s.mode == 'dead';
-          final mode = {'run': c.s.dir < 0 ? 'RUN ◄' : 'RUN ►', 'single': 'HUM', 'over': 'OVERVOLT', 'dead': 'BURNT'}[c.s.mode];
+          final mode = {'run': c.s.dir < 0 ? 'RUN <' : 'RUN >', 'single': 'HUM', 'over': 'OVERVOLT', 'dead': 'BURNT'}[c.s.mode];
           return SymLook(energised: c.s.mode == 'run' && c.s.spd > 0.02, fault: bad, angle: c.s.ang, note: mode == null ? null : '$mode · ${c.s.current.toStringAsFixed(1)} A');
         case 'motor':
           final run = c.s.mode == 'star' || c.s.mode == 'delta';
@@ -81,10 +81,12 @@ class SheetPainter extends CustomPainter {
   final int? selWire;
   final String? pending;
   final (Offset, Offset, bool)? drag; // from pin (grid), to (grid), from-pin up
+  /// instruments on the sheet: red probe pin, black probe pin, clamped wire
+  final (String?, String?, int?)? probes;
   final bool print; // no grid dots, no pin markers
   final String date;
   SheetPainter(this.doc,
-      {this.sim, this.flows = const {}, this.flash = const {}, this.phase = 0, this.selected, this.selWire, this.pending, this.drag, this.print = false, this.date = ''});
+      {this.sim, this.flows = const {}, this.flash = const {}, this.phase = 0, this.selected, this.selWire, this.pending, this.drag, this.probes, this.print = false, this.date = ''});
 
   @override
   void paint(Canvas c, Size size) {
@@ -121,6 +123,8 @@ class SheetPainter extends CustomPainter {
       }
     }
     if (!print && sim == null) _pins(c);
+    final pr = probes;
+    if (pr != null) _instruments(c, pr);
     final dg = drag;
     if (dg != null) {
       final a = dg.$1 * g, b = dg.$2 * g;
@@ -133,6 +137,75 @@ class SheetPainter extends CustomPainter {
         ..strokeWidth = 2
         ..color = const Color(0xFF3D8BFF));
       c.drawCircle(b, 6, Paint()..color = const Color(0x553D8BFF));
+    }
+  }
+
+  void _instruments(Canvas c, (String?, String?, int?) pr) {
+    const g = kG;
+    void probe(String? pin, Color col, bool left) {
+      final at = pin == null ? null : doc.pinPos(pin);
+      if (at == null) return;
+      final o = at * g;
+      final dir = Offset(left ? -0.42 : 0.42, -0.9);
+      final tip = o + dir * 9, end = o + dir * 52;
+      // lead
+      final lead = Path()
+        ..moveTo(end.dx, end.dy)
+        ..quadraticBezierTo(end.dx + (left ? -30 : 30), end.dy - 10, end.dx + (left ? -44 : 44), end.dy + 26);
+      c.drawPath(lead, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = col);
+      c.drawLine(tip, end, Paint()
+        ..strokeWidth = 7
+        ..strokeCap = StrokeCap.round
+        ..color = col);
+      c.drawLine(tip + dir * 3.2, tip + dir * 3.2 + Offset(-dir.dy, dir.dx) * 6, Paint()
+        ..strokeWidth = 2
+        ..color = col);
+      c.drawLine(o, tip, Paint()
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFFB8C0CC));
+      c.drawCircle(o, 5, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = col);
+    }
+
+    probe(pr.$1, const Color(0xFFE53935), false);
+    probe(pr.$2, const Color(0xFF111111), true);
+    final wi = pr.$3;
+    if (wi != null && wi < doc.wires.length) {
+      final r = doc.route(doc.wires[wi]);
+      if (r != null && r.length >= 2) {
+        var best = 0, bl = -1.0;
+        for (var k = 0; k < r.length - 1; k++) {
+          final d = (r[k + 1] - r[k]).distance;
+          if (d > bl) {
+            bl = d;
+            best = k;
+          }
+        }
+        final m = (r[best] + r[best + 1]) / 2 * g;
+        final vertical = (r[best].dx - r[best + 1].dx).abs() < 0.01;
+        c.save();
+        c.translate(m.dx, m.dy);
+        if (vertical) c.rotate(math.pi / 2);
+        final jaw = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xFFE8541E);
+        c.drawOval(const Rect.fromLTRB(-8, -15, 8, 15), Paint()..color = const Color(0x33E8541E));
+        c.drawArc(const Rect.fromLTRB(-8, -15, 8, 15), -math.pi * 0.45, math.pi * 0.9, false, jaw);
+        c.drawArc(const Rect.fromLTRB(-8, -15, 8, 15), math.pi * 0.55, math.pi * 0.9, false, jaw);
+        c.drawLine(const Offset(0, -15), const Offset(0, -34), Paint()
+          ..strokeWidth = 9
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xFF2B2F27));
+        c.restore();
+      }
     }
   }
 

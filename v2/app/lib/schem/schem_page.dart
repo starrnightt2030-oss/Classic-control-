@@ -13,12 +13,15 @@ import '../lab/projects.dart';
 import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../sim/measure.dart';
+import '../sim/plant.dart';
 import '../ui/theme.dart';
 import 'diagnose.dart';
 import 'export.dart';
 import 'ladder.dart';
 import 'meters_ui.dart';
 import 'model.dart';
+import 'plant_io.dart';
+import 'plant_paint.dart';
 import 'sheet_paint.dart';
 import 'symbols.dart';
 
@@ -35,7 +38,10 @@ class SchemPage extends StatefulWidget {
 
   /// open this drawing (a ready-made circuit) instead of the saved sheet; it is not autosaved
   final SchemDoc? initial;
-  const SchemPage({super.key, this.deliver, this.demo = 0, this.initial});
+
+  /// open this machine next to the drawing (a key of kPlants)
+  final String? plant;
+  const SchemPage({super.key, this.deliver, this.demo = 0, this.initial, this.plant});
   @override
   State<SchemPage> createState() => _SchemPageState();
 }
@@ -83,6 +89,13 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   bool _diagBusy = false;
   bool get diagnosing => faults != null;
 
+  // the machine the drawing drives
+  PlantDef? plantDef;
+  Plant? plant;
+  SchemPlantIo? _pio;
+  Offset? plantPos;
+  int _frame = 0;
+
   // simulation
   SchemSim? sim;
   late final Ticker _ticker;
@@ -100,6 +113,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     _ticker = createTicker(_tick);
+    plantDef = plantByKey(widget.plant);
+    plant = plantDef?.make();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _load();
   }
@@ -768,6 +783,187 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     );
   }
 
+  // ------------------------------------------------------------- machines
+  List<String> _missingTags(PlantDef d) => [
+        for (final t in d.tags)
+          if (!t.extra && !doc.syms.any((s) => s.tag == t.tag)) t.tag
+      ];
+
+  void _pickPlant() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.8),
+          child: ListView(shrinkWrap: true, children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text('الماكينات', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text('الماكينة بتتربط بالرسم بأسماء الأجهزة (M1 وY1 وB1…). شغّل المحاكاة والماكينة هتتحرك بدايرتك، وحساساتها هتحس لوحدها.', style: TextStyle(color: CC.muted, height: 1.5)),
+            ),
+            for (final d in kPlants)
+              ListTile(
+                leading: Icon(Icons.precision_manufacturing_rounded, color: plantDef?.key == d.key ? CC.amber : CC.accentSoft),
+                title: Text(d.title),
+                subtitle: Text(d.desc, style: const TextStyle(color: CC.muted, height: 1.4)),
+                selected: plantDef?.key == d.key,
+                trailing: IconButton(
+                  tooltip: 'افتح الدايرة الجاهزة',
+                  icon: const Icon(Icons.description_outlined),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _loadReadyFor(d);
+                  },
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _setPlant(d);
+                },
+              ),
+            if (plant != null)
+              ListTile(
+                leading: const Icon(Icons.close_rounded, color: CC.muted),
+                title: const Text('اقفل الماكينة'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    plant = null;
+                    plantDef = null;
+                    _pio = null;
+                  });
+                },
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  void _setPlant(PlantDef d) {
+    final s = sim;
+    setState(() {
+      plantDef = d;
+      plant = d.make();
+      _pio = s == null ? null : SchemPlantIo(doc, s);
+    });
+    AudioService.instance.sfx('part_select');
+    final miss = _missingTags(d);
+    if (miss.isNotEmpty) _toast('سمّي الأجهزة في رسمك: ${miss.join('، ')}، أو افتح الدايرة الجاهزة للماكينة دي.');
+  }
+
+  /// replace the sheet with the machine's ready-made circuit (undoable)
+  void _loadReadyFor(PlantDef d) {
+    final r = readyById(d.ready);
+    if (r == null || !_editable()) return;
+    if (running) _simulate();
+    _snapshot();
+    setState(() {
+      doc = r.build();
+      sel = null;
+      selWire = null;
+    });
+    _changed();
+    _setPlant(d);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _fit());
+  }
+
+  void _plantTask(PlantDef d) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(d.title),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(d.desc, style: const TextStyle(height: 1.6)),
+            const SizedBox(height: 12),
+            const Text('المطلوب', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(d.task, style: const TextStyle(height: 1.6)),
+            const SizedBox(height: 12),
+            const Text('أسماء الأجهزة', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            for (final t in d.tags)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text('${t.tag}: ${t.nameAr}${t.extra ? ' (اختياري)' : ''}', style: const TextStyle(color: CC.text2)),
+              ),
+          ]),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))],
+      ),
+    );
+  }
+
+  Widget _plantPanel(BuildContext context) {
+    final d = plantDef!, pl = plant!;
+    final mq = MediaQuery.of(context);
+    final sz = mq.size;
+    final w = math.min(340.0, sz.width - 24), h = w * 0.62;
+    final p0 = plantPos ?? Offset(sz.width - w - 12, mq.padding.top + 70);
+    final pos = Offset(p0.dx.clamp(0.0, math.max(0.0, sz.width - w)).toDouble(), p0.dy.clamp(0.0, math.max(0.0, sz.height - h - 90)).toDouble());
+    final miss = _missingTags(d);
+    return Positioned(
+      left: pos.dx,
+      top: pos.dy,
+      width: w,
+      child: Glass(
+        radius: 20,
+        tint: const Color(0xEE0A1228),
+        padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (e) => setState(() => plantPos = pos + e.delta),
+            child: Row(children: [
+              const Icon(Icons.drag_indicator_rounded, size: 18, color: CC.muted),
+              const SizedBox(width: 4),
+              Expanded(child: Text(d.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700))),
+              IconButton(tooltip: 'المطلوب', visualDensity: VisualDensity.compact, onPressed: () => _plantTask(d), icon: const Icon(Icons.info_outline_rounded, size: 20)),
+              IconButton(
+                  tooltip: 'رجّع الماكينة لأولها', visualDensity: VisualDensity.compact, onPressed: () => setState(() => plant = d.make()), icon: const Icon(Icons.restart_alt_rounded, size: 20)),
+              IconButton(
+                  tooltip: 'اقفل',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => setState(() {
+                        plant = null;
+                        plantDef = null;
+                        _pio = null;
+                      }),
+                  icon: const Icon(Icons.close_rounded, size: 20)),
+            ]),
+          ),
+          SizedBox(
+            height: h,
+            child: GestureDetector(
+              onTapUp: (e) => setState(() => pl.tap(e.localPosition.dx / w, e.localPosition.dy / h)),
+              child: CustomPaint(painter: PlantPainter(pl, _pio, _frame), size: Size(w - 20, h)),
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (miss.isNotEmpty)
+            Text('ناقص في الرسم: ${miss.join('، ')}', style: const TextStyle(color: CC.red, fontSize: 12.5))
+          else if (!running)
+            const Text('شغّل المحاكاة عشان الماكينة تتحرك مع دايرتك', style: TextStyle(color: CC.muted, fontSize: 12.5))
+          else if (pl.count.isEmpty)
+            const Text('الماكينة شغالة مع دايرتك', style: TextStyle(color: CC.green, fontSize: 12.5)),
+          if (pl.count.isNotEmpty)
+            Wrap(spacing: 6, runSpacing: 4, children: [
+              for (final e in pl.count.entries)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0x223D8BFF), borderRadius: BorderRadius.circular(10)),
+                  child: Text('${e.key}: ${e.value}', style: const TextStyle(fontSize: 12)),
+                ),
+            ]),
+        ]),
+      ),
+    );
+  }
+
   void _pickMeter() {
     showModalBottomSheet<void>(
       context: context,
@@ -928,7 +1124,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     }
     // voltage
     if (pa == null || pb == null || pa.$2 != pb.$2) {
-      return MeterReading(mode == 'vdc' ? '0.00' : '0.0', 'V', note: pa == null && pb == null ? 'مفيش جهد على النقطتين' : (pa == null || pb == null ? 'نقطة من الاتنين مش واصلها جهد' : 'النقطتين من مصدرين مختلفين'));
+      return MeterReading(mode == 'vdc' ? '0.00' : '0.0', 'V',
+          note: pa == null && pb == null ? 'مفيش جهد على النقطتين' : (pa == null || pb == null ? 'نقطة من الاتنين مش واصلها جهد' : 'النقطتين من مصدرين مختلفين'));
     }
     final dc = pa.$2.startsWith('D:');
     if (mode == 'vac') {
@@ -1052,6 +1249,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       _ticker.stop();
       setState(() {
         sim = null;
+        _pio = null;
         flows = {};
         flash = {};
         _pressBy.clear();
@@ -1075,9 +1273,19 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       sel = null;
       selWire = null;
     });
+    final pl = plant, pd = plantDef;
+    if (pl != null && pd != null) {
+      pl.resync();
+      _pio = SchemPlantIo(doc, s);
+    }
     _handle(s.lab.drain());
     flows = _flows();
-    if (s.warnings.isNotEmpty) _toast(s.warnings.first);
+    final miss = pd == null || pl == null ? const <String>[] : _missingTags(pd);
+    if (s.warnings.isNotEmpty) {
+      _toast(s.warnings.first);
+    } else if (miss.isNotEmpty) {
+      _toast('الماكينة محتاجة في الرسم: ${miss.join('، ')}');
+    }
     _last = Duration.zero;
     if (!_ticker.isActive) _ticker.start();
   }
@@ -1103,6 +1311,11 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       return;
     }
     s.lab.step(dt);
+    final pl = plant, io = _pio;
+    if (pl != null && io != null) {
+      pl.tick(dt, io);
+      _frame++;
+    }
     _handle(s.lab.drain());
     flows = _flows();
     setState(() {});
@@ -1171,7 +1384,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     final sm = sim;
     if (sm == null) return;
     final l = sm.lab;
-    final id = sm.compOf[s.id];
+    final id = s.d.shared ? s.tag : sm.compOf[s.id];
     if (id == null) return;
     final c = l.byId(id);
     switch (s.d.engine) {
@@ -1330,8 +1543,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                           _changed();
                         }),
                 ]),
-                if (doc.hostTags(kind: role == SymRole.hostPart ? 'NO' : s.d.kind).isEmpty)
-                  const Text('أضف أولًا الملف أو الأوفرلود الذي يتبعه هذا التلامس.', style: TextStyle(color: CC.muted)),
+                if (doc.hostTags(kind: role == SymRole.hostPart ? 'NO' : s.d.kind).isEmpty) const Text('أضف أولًا الملف أو الأوفرلود الذي يتبعه هذا التلامس.', style: TextStyle(color: CC.muted)),
                 const SizedBox(height: 12),
               ] else if (role != SymRole.source) ...[
                 TextField(
@@ -1599,6 +1811,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
           ),
         ),
         if (showUi) ..._overlays(context) else _restore(),
+        if (plant != null && plantDef != null) _plantPanel(context),
         if (meter != null) _meterPanel(context),
       ]),
     );
@@ -1619,14 +1832,14 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     final status = diagnosing && pending == null && _wireFrom == null
         ? diagText
         : pending != null
-        ? 'اختر الطرف الثاني للسلك…'
-        : _wireFrom != null
-            ? 'اسحب إلى الطرف الآخر ثم اترك…'
-            : running
-                ? (flash.isNotEmpty ? 'قصر كهربائي! أوقف المحاكاة وصحّح التوصيل' : 'المحاكاة تعمل · اضغط على الضواغط والقواطع في الرسم')
-                : _leg != null
-                    ? 'حرّك السلك لمكانه ثم اترك…'
-                    : '${doc.title} · اسحب من طرف رمز إلى طرف آخر لرسم سلك، واسحب السلك نفسه لتنسيقه';
+            ? 'اختر الطرف الثاني للسلك…'
+            : _wireFrom != null
+                ? 'اسحب إلى الطرف الآخر ثم اترك…'
+                : running
+                    ? (flash.isNotEmpty ? 'قصر كهربائي! أوقف المحاكاة وصحّح التوصيل' : 'المحاكاة تعمل · اضغط على الضواغط والقواطع في الرسم')
+                    : _leg != null
+                        ? 'حرّك السلك لمكانه ثم اترك…'
+                        : '${doc.title} · اسحب من طرف رمز إلى طرف آخر لرسم سلك، واسحب السلك نفسه لتنسيقه';
     return [
       Positioned(
         top: top + 10,
@@ -1684,6 +1897,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 _SimButton(on: running, onTap: _simulate),
                 _tool(Icons.speed_rounded, 'أجهزة القياس', _pickMeter, active: meter != null),
                 _tool(Icons.troubleshoot_rounded, 'تشخيص الأعطال', _diagMenu, active: diagnosing),
+                _tool(Icons.precision_manufacturing_rounded, 'الماكينة', _pickPlant, active: plant != null),
                 if (diagnosing) _tool(Icons.build_rounded, 'إصلاح المختار', sel != null || selWire != null ? _repair : null),
                 if (diagnosing) _tool(Icons.lightbulb_outline_rounded, 'تلميح', _hint),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
@@ -1732,33 +1946,37 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     return Glass(
       radius: 24,
       tint: const Color(0xFA0A1228),
-      child: ListView(padding: const EdgeInsets.fromLTRB(8, 10, 8, 12), children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: Text('مكتبة الرموز IEC', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-        ),
-        for (final (name, col, keys) in kSymCategories)
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: true,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 8),
-              leading: Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: Color(col))),
-              title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-              children: [
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 6,
-                  crossAxisSpacing: 6,
-                  childAspectRatio: 0.78,
-                  children: [for (final k in keys) _libItem(kSyms[k]!)],
-                ),
-              ],
-            ),
+      // the tiles paint their ink on this, not under the glass tint
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListView(padding: const EdgeInsets.fromLTRB(8, 10, 8, 12), children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
+            child: Text('مكتبة الرموز IEC', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ),
-      ]),
+          for (final (name, col, keys) in kSymCategories)
+            Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                tilePadding: const EdgeInsets.symmetric(horizontal: 8),
+                leading: Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: Color(col))),
+                title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                children: [
+                  GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    childAspectRatio: 0.78,
+                    children: [for (final k in keys) _libItem(kSyms[k]!)],
+                  ),
+                ],
+              ),
+            ),
+        ]),
+      ),
     );
   }
 

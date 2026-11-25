@@ -270,6 +270,7 @@ class SchemDoc {
       }
     }
     var hasSup = false;
+    final sharedUsed = <String>{};
     for (final s in syms) {
       switch (s.d.role) {
         case SymRole.source:
@@ -298,6 +299,14 @@ class SchemDoc {
         case SymRole.device:
           // shared devices (a limit switch drawn as its NO and its NC contact) are one engine device per tag
           final id = s.d.shared ? s.tag : s.id;
+          if (s.d.shared && !sharedUsed.add('$id/${s.d.kind}')) {
+            // the same contact drawn again: one more contact block on that switch
+            l.comps.add(Comp(s.id, 'contact', p: {'kind': s.d.kind == 'NC' ? 'NC' : 'NO'}, attach: id));
+            compOf[s.id] = s.id;
+            pin['${s.id}.${s.d.pins.first.id}'] = '${s.id}.1';
+            pin['${s.id}.${s.d.pins.last.id}'] = '${s.id}.2';
+            continue;
+          }
           if (!s.d.shared || l.byId(id) == null) l.comps.add(Comp(id, s.d.engine, p: {...s.d.params, ...s.p}));
           compOf[s.id] = id;
           for (final pn in s.d.pins) {

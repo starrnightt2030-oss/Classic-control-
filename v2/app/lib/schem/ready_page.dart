@@ -72,7 +72,7 @@ class _CardState extends State<_Card> {
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
         onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => SchemPage(initial: widget.r.build(), deliver: (b, n, m) => ExportService.deliverBytes(b, n, mime: m)))),
+            builder: (_) => SchemPage(initial: widget.r.build(), plant: widget.r.plant, deliver: (b, n, m) => ExportService.deliverBytes(b, n, mime: m)))),
         child: Ink(
           decoration: panelBox(radius: 22),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

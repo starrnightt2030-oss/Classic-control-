@@ -36,6 +36,12 @@ E coil(String t, [double v = 220]) => E('coil_kc', t, {'coilV': v});
 E relay(String t) => E('coil_ka', t);
 E timer(String t, String mode, double s) => E('coil_kt', t, {'mode': mode, 'T': s});
 E lamp(String t, String col) => E('lamp', t, {'col': col});
+E prox(String t) => E('prox_ind', t);
+E photo(String t) => E('photo', t);
+E reed(String t) => E('reed_no', t);
+E valve(String t) => E('yv', t, const {'V': 220.0, 'W': 6.0, 'pf': 0.7});
+E floatNo(String t) => E('float_no', t);
+E floatNc(String t) => E('float_nc', t);
 
 class _Lay {
   final SchemDoc d;
@@ -242,7 +248,10 @@ class _Lay {
 class ReadyCircuit {
   final String id, group, title, desc;
   final SchemDoc Function() build;
-  const ReadyCircuit(this.id, this.group, this.title, this.desc, this.build);
+
+  /// the machine this circuit drives (lib/sim/plant.dart), if any
+  final String? plant;
+  const ReadyCircuit(this.id, this.group, this.title, this.desc, this.build, {this.plant});
 }
 
 SchemDoc _make(String title, double Function(_Lay) power, List<Object> control, {List<List<String>> mech = const []}) {
@@ -425,7 +434,7 @@ final List<ReadyCircuit> kReady = [
               ],
             ]),
           ], mech: [['K1', 'K2']])),
-  ReadyCircuit('c_rev_auto', 'عكس الحركة', 'عكس الحركة التلقائي الترددي بمفاتيح نهاية الشوط', 'تذهب العربة وتعود بين LS1 و LS2 حتى تضغط S0.',
+  ReadyCircuit('c_rev_auto', 'عكس الحركة', 'عكس الحركة التلقائي الترددي بمفاتيح نهاية الشوط', 'تذهب العربة وتعود بين LS1 و LS2 حتى تضغط S0.', plant: 'cart',
       () => _make('الحركة الترددية', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
             olnc('F2'),
             stop('S0'),
@@ -516,7 +525,7 @@ final List<ReadyCircuit> kReady = [
             lsNc('B2'),
             Par([[coil('K1')], [lamp('H1', 'b')]]),
           ])),
-  ReadyCircuit('x_hoist', 'دوائر إضافية', 'ونش رفع وإنزال بضغط مستمر ومفاتيح حد', 'الرفع والإنزال ما دام الضاغط مضغوطًا، ومفتاح الحد يوقف الحركة عند النهاية.',
+  ReadyCircuit('x_hoist', 'دوائر إضافية', 'ونش رفع وإنزال بضغط مستمر ومفاتيح حد', 'الرفع والإنزال ما دام الضاغط مضغوطًا، ومفتاح الحد يوقف الحركة عند النهاية.', plant: 'hoist',
       () => _make('ونش رفع وإنزال', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
             olnc('F2'),
             stop('S0'),
@@ -525,6 +534,59 @@ final List<ReadyCircuit> kReady = [
               [start('S2'), lsNc('B1'), nc('K1', '21-22'), Par([[coil('K2')], [lamp('H2', 'b')]])],
             ]),
           ], mech: [['K1', 'K2']])),
+  // ---- machines and production lines (each drives a scene from lib/sim/plant.dart)
+  ReadyCircuit('x_lift', 'ماكينات وخطوط إنتاج', 'أسانسير 3 أدوار بريليهات طلب', 'كل زرار طلب بيمسك ريليه لحد ما الكابينة توصل الدور. KP بيفتكر إن الكابينة تحت الدور الأول عشان يحدد الاتجاه.',
+      () => _make('أسانسير 3 أدوار', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('KA1', '13-14')]]), lsNc('B1'), relay('KA1')],
+              [Par([[start('S2')], [no('KA2', '13-14')]]), lsNc('B2'), relay('KA2')],
+              [Par([[start('S3')], [no('KA3', '13-14')]]), lsNc('B3'), relay('KA3')],
+              [Par([[lsNo('B1')], [no('KP', '13-14')]]), lsNc('B2'), lsNc('B3'), relay('KP')],
+              [
+                Par([[no('KA3', '23-24')], [no('KA2', '23-24'), no('KP', '23-24')]]),
+                lsNc('B3'),
+                nc('K2', '21-22'),
+                Par([[coil('K1')], [lamp('H1', 'g')]])
+              ],
+              [
+                Par([[no('KA1', '23-24')], [no('KA2', '33-34'), nc('KP', '31-32')]]),
+                lsNc('B1'),
+                nc('K1', '21-22'),
+                Par([[coil('K2')], [lamp('H2', 'b')]])
+              ],
+            ]),
+          ], mech: [['K1', 'K2']]), plant: 'lift'),
+  ReadyCircuit('x_sort', 'ماكينات وخطوط إنتاج', 'سير فرز المعادن ببستم نيوماتيك', 'السير شغال بالإمساك الذاتي، والحساس الحثي B2 بيشغّل صمام البستم Y1 طول ما فيه معدن قدامه.',
+      () => _make('سير فرز المعادن', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('K1', '13-14')]]), Par([[coil('K1')], [lamp('H1', 'g')]])],
+              [no('K1', '23-24'), prox('B2'), valve('Y1')],
+            ]),
+          ]), plant: 'sort'),
+  ReadyCircuit('x_press', 'ماكينات وخطوط إنتاج', 'مكبس نيوماتيك: دورة واحدة بزرار', 'S1 بيشتغل بس لو القطعة موجودة (B3). الذراع تنزل لحد B2، وKA2 بيفصل KA1 فالذراع ترجع.',
+      () => _make('مكبس نيوماتيك', (l) => 2, [
+            stop('S0'),
+            Par([
+              [Par([[start('S1'), photo('B3')], [no('KA1', '13-14')]]), nc('KA2', '21-22'), relay('KA1')],
+              [reed('B2'), relay('KA2')],
+              [no('KA1', '23-24'), valve('Y1')],
+            ]),
+          ]), plant: 'press'),
+  ReadyCircuit('x_fill', 'ماكينات وخطوط إنتاج', 'خط تعبئة زجاجات أوتوماتيك', 'KA0 بيمسك تشغيل الخط. الفوتوسل B1 بيشغّل KA1: السير يقف والصمام Y1 يفتح، لحد ما حساس المستوى B2 يحس إن الزجاجة اتملت.',
+      () => _make('خط تعبئة زجاجات', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('KA0', '13-14')]]), relay('KA0')],
+              [no('KA0', '23-24'), Par([[nc('KA1', '21-22')], [floatNo('B2')]]), Par([[coil('K1')], [lamp('H1', 'g')]])],
+              [photo('B1'), relay('KA1')],
+              [no('KA1', '13-14'), floatNc('B2'), valve('Y1')],
+            ]),
+          ]), plant: 'fill'),
 ];
 
 ReadyCircuit? readyById(String id) {

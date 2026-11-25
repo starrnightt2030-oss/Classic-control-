@@ -16,6 +16,7 @@ import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../sim/measure.dart';
 import '../sim/plant.dart';
+import '../ui/perf.dart';
 import '../ui/theme.dart';
 import 'diagnose.dart';
 import 'export.dart';
@@ -1339,10 +1340,16 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       _frame++;
     }
     _handle(s.lab.drain());
-    flows = _flows();
     _sounds(s);
+    // the physics steps every frame; the screen is redrawn at Perf.simFps, which is
+    // smooth for this kind of motion and halves the work on big touch screens
+    if (_clock - _drawnAt < Perf.simFrame * 0.9) return;
+    _drawnAt = _clock;
+    flows = _flows();
     setState(() {});
   }
+
+  double _drawnAt = -1;
 
   /// what the running circuit sounds like: motors, coils, buzzers, horns, air valves,
   /// and the machine (belt, water, the press landing, the lift arriving)
@@ -1876,9 +1883,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
               width: doc.sheetW * kG,
               height: doc.sheetH * kG,
               child: Stack(children: [
+                Positioned.fill(child: RepaintBoundary(child: CustomPaint(painter: SheetBgPainter(doc, date: todayText())))),
                 Positioned.fill(
                   child: CustomPaint(
+                    isComplex: true,
                     painter: SheetPainter(doc,
+                        paper: false,
                         sim: sim,
                         flows: flows,
                         flash: flash,

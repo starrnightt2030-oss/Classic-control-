@@ -1,10 +1,13 @@
 // Painting the schematic sheet: frame, title block, wires, symbols, live state.
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 
 import 'model.dart';
 import 'symbols.dart';
+import '../ui/perf.dart';
 
 /// live look of one symbol from the running simulation
 SymLook? lookOf(SPlaced s, SchemSim? sim) {
@@ -71,6 +74,49 @@ SymLook? lookOf(SPlaced s, SchemSim? sim) {
   }
 }
 
+/// the paper: shadow, white sheet, grid dots, border and title block
+void paintPaper(Canvas c, SchemDoc doc, {bool print = false, String date = ''}) {
+  const g = kG;
+  final w = doc.sheetW * g, h = doc.sheetH * g;
+  final sheet = Rect.fromLTWH(0, 0, w, h);
+  if (!print) c.drawShadow(Path()..addRect(sheet), Colors.black, 16, false);
+  c.drawRect(sheet, Paint()..color = Colors.white);
+  if (!print) {
+    final xy = <double>[
+      for (var x = 1; x < doc.sheetW; x++)
+        for (var y = 1; y < doc.sheetH; y++) ...[x * g, y * g]
+    ];
+    final pts = Float32List.fromList(xy);
+    c.drawRawPoints(
+        PointMode.points,
+        pts,
+        Paint()
+          ..color = const Color(0xFFD5DBE5)
+          ..strokeWidth = 1.8
+          ..strokeCap = StrokeCap.round);
+  }
+  SheetPainter._frame(c, w, h, doc, date);
+}
+
+/// The paper under a live sheet, in its own layer: it only repaints when the sheet's
+/// size, title or date change, not on every frame of a running simulation.
+class SheetBgPainter extends CustomPainter {
+  final SchemDoc doc;
+  final String date;
+  final double w, h;
+  final String title;
+  SheetBgPainter(this.doc, {this.date = ''})
+      : w = doc.sheetW,
+        h = doc.sheetH,
+        title = doc.title;
+
+  @override
+  void paint(Canvas c, Size size) => paintPaper(c, doc, date: date);
+
+  @override
+  bool shouldRepaint(covariant SheetBgPainter old) => old.w != w || old.h != h || old.title != title || old.date != date;
+}
+
 class SheetPainter extends CustomPainter {
   final SchemDoc doc;
   final SchemSim? sim;
@@ -85,25 +131,28 @@ class SheetPainter extends CustomPainter {
   final (String?, String?, int?)? probes;
   final bool print; // no grid dots, no pin markers
   final String date;
+
+  /// false when the paper (shadow, grid, frame, title block) is drawn underneath by a
+  /// [SheetBgPainter] that is only repainted when the sheet itself changes
+  final bool paper;
   SheetPainter(this.doc,
-      {this.sim, this.flows = const {}, this.flash = const {}, this.phase = 0, this.selected, this.selWire, this.pending, this.drag, this.probes, this.print = false, this.date = ''});
+      {this.sim,
+      this.flows = const {},
+      this.flash = const {},
+      this.phase = 0,
+      this.selected,
+      this.selWire,
+      this.pending,
+      this.drag,
+      this.probes,
+      this.print = false,
+      this.date = '',
+      this.paper = true});
 
   @override
   void paint(Canvas c, Size size) {
     const g = kG;
-    final w = doc.sheetW * g, h = doc.sheetH * g;
-    final sheet = Rect.fromLTWH(0, 0, w, h);
-    if (!print) c.drawShadow(Path()..addRect(sheet), Colors.black, 16, false);
-    c.drawRect(sheet, Paint()..color = Colors.white);
-    if (!print) {
-      final dot = Paint()..color = const Color(0xFFD5DBE5);
-      for (var x = 1; x < doc.sheetW; x++) {
-        for (var y = 1; y < doc.sheetH; y++) {
-          c.drawCircle(Offset(x * g, y * g), 0.9, dot);
-        }
-      }
-    }
-    _frame(c, w, h);
+    if (paper) paintPaper(c, doc, print: print, date: date);
     _wires(c);
     final nums = doc.contactNumbers();
     for (final s in doc.syms) {
@@ -220,7 +269,7 @@ class SheetPainter extends CustomPainter {
     tp.paint(c, box.topLeft + const Offset(5, 1));
   }
 
-  void _frame(Canvas c, double w, double h) {
+  static void _frame(Canvas c, double w, double h, SchemDoc doc, String date) {
     final pen = Paint()
       ..style = PaintingStyle.stroke
       ..color = kInk
@@ -234,12 +283,8 @@ class SheetPainter extends CustomPainter {
     c.drawLine(Offset(r.left, r.top + 30), Offset(r.right, r.top + 30), pen..strokeWidth = 1);
     c.drawLine(Offset(r.left + 220, r.top + 30), Offset(r.left + 220, r.bottom), pen);
     void t(String s, Offset at, double size, {bool bold = false, TextDirection dir = TextDirection.rtl, double maxW = 340}) {
-      final tp = TextPainter(
-          text: TextSpan(text: s, style: TextStyle(fontSize: size, color: kInk, fontWeight: bold ? FontWeight.w700 : FontWeight.w500, fontFamily: 'Cairo')),
-          textDirection: dir,
-          maxLines: 1,
-          ellipsis: '…')
-        ..layout(maxWidth: maxW);
+      final tp = TextCache.get(s, TextStyle(fontSize: size, color: kInk, fontWeight: bold ? FontWeight.w700 : FontWeight.w500, fontFamily: 'Cairo'),
+          dir: dir, maxLines: 1, ellipsis: '…', maxWidth: maxW);
       tp.paint(c, at - Offset(dir == TextDirection.rtl ? tp.width : 0, tp.height / 2));
     }
 
@@ -365,9 +410,7 @@ class SheetPainter extends CustomPainter {
         if (bl > 1.6) {
           final mid = (pts[best] + pts[best + 1]) / 2 * g;
           final vertical = (pts[best].dx - pts[best + 1].dx).abs() < 0.01;
-          final tp = TextPainter(
-              text: TextSpan(text: '${nums[i]}', style: const TextStyle(fontSize: 8.5, color: Color(0xFF6B7588), fontFamily: 'JetBrainsMono')), textDirection: TextDirection.ltr)
-            ..layout();
+          final tp = TextCache.get('${nums[i]}', const TextStyle(fontSize: 8.5, color: Color(0xFF6B7588), fontFamily: 'JetBrainsMono'));
           tp.paint(c, mid + (vertical ? Offset(3, -tp.height / 2) : Offset(-tp.width / 2, -tp.height - 1)));
         }
       }
@@ -395,12 +438,8 @@ void paintBom(Canvas c, SchemDoc d, {double k = 2, String date = ''}) {
   c.scale(k);
   c.drawRect(const Rect.fromLTWH(0, 0, w, h), Paint()..color = Colors.white);
   void t(String s, double xRight, double y, double size, {bool bold = false, Color col = kInk, double maxW = 500, TextDirection dir = TextDirection.rtl}) {
-    final tp = TextPainter(
-        text: TextSpan(text: s, style: TextStyle(fontSize: size, color: col, fontWeight: bold ? FontWeight.w700 : FontWeight.w500, fontFamily: 'Cairo', height: 1.3)),
-        textDirection: dir,
-        maxLines: 2,
-        ellipsis: '…')
-      ..layout(maxWidth: maxW);
+    final tp = TextCache.get(s, TextStyle(fontSize: size, color: col, fontWeight: bold ? FontWeight.w700 : FontWeight.w500, fontFamily: 'Cairo', height: 1.3),
+        dir: dir, maxLines: 2, ellipsis: '…', maxWidth: maxW);
     tp.paint(c, Offset(dir == TextDirection.rtl ? xRight - tp.width : xRight, y));
   }
 

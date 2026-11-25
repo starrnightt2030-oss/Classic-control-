@@ -6,7 +6,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../schem/plant_paint.dart';
 import '../sim/engine.dart';
+import '../sim/plant.dart';
+import '../ui/perf.dart';
 import 'catalog.dart';
 import 'model.dart';
 
@@ -83,7 +86,13 @@ double routeDistance(Path path, Offset mm) {
 class PlatePainter extends CustomPainter {
   final LabDoc doc;
   final String? selected;
-  PlatePainter(this.doc, this.selected);
+  PlatePainter(this.doc, this.selected) : _sig = _signature(doc, selected);
+
+  /// what the plate shows: its size, the bench, the door and the rails. The plate is
+  /// only repainted when one of these changes, not on every frame of a simulation.
+  final int _sig;
+  static int _signature(LabDoc d, String? sel) => Object.hash(d.plateW, d.plateH, d.benchW, d.doorH, sel,
+      Object.hashAll([for (final p in d.parts) if (p.def == 'din_rail') Object.hash(p.id, p.x, p.y, p.len)]));
 
   @override
   void paint(Canvas c, Size size) {
@@ -185,7 +194,7 @@ class PlatePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant PlatePainter old) => true;
+  bool shouldRepaint(covariant PlatePainter old) => old._sig != _sig || old.doc != doc;
 }
 
 // ------------------------------------------------------------------ wires
@@ -367,10 +376,7 @@ class WirePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..color = const Color(0xFF9AA0A6));
-    final tp = TextPainter(
-      text: TextSpan(text: '$n', style: TextStyle(fontSize: 3.2 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), fontFamily: 'JetBrainsMono')),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final tp = TextCache.get('$n', TextStyle(fontSize: 3.2 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), fontFamily: 'JetBrainsMono'));
     c.save();
     c.translate(mark.center.dx, mark.center.dy);
     c.rotate(-math.pi / 2);
@@ -447,10 +453,7 @@ class MotorPlatePainter extends CustomPainter {
     void stud(Offset o, String label) {
       c.drawCircle(o, 4.6 * s, Paint()..color = const Color(0xFFB8BEC4));
       c.drawCircle(o, 3.0 * s, Paint()..color = const Color(0xFF7E868E));
-      final tp = TextPainter(
-          text: TextSpan(text: label, style: TextStyle(fontSize: 3.0 * s, color: const Color(0xFFE6EBEF), fontWeight: FontWeight.w700)),
-          textDirection: TextDirection.ltr)
-        ..layout();
+      final tp = TextCache.get(label, TextStyle(fontSize: 3.0 * s, color: const Color(0xFFE6EBEF), fontWeight: FontWeight.w700));
       tp.paint(c, o + Offset(-tp.width / 2, label.endsWith('1') ? -9.6 * s : 5.6 * s));
     }
 
@@ -505,9 +508,7 @@ class SideLugPainter extends CustomPainter {
       c.drawLine(o - Offset(2.2 * s, 0), o + Offset(2.2 * s, 0), Paint()
         ..color = const Color(0xFF7A5E22)
         ..strokeWidth = 0.9 * s);
-      final tp = TextPainter(
-          text: TextSpan(text: labels[i], style: TextStyle(fontSize: 3.6 * s, color: const Color(0xFFE8EDF2), fontWeight: FontWeight.w800)), textDirection: TextDirection.ltr)
-        ..layout();
+      final tp = TextCache.get(labels[i], TextStyle(fontSize: 3.6 * s, color: const Color(0xFFE8EDF2), fontWeight: FontWeight.w800));
       tp.paint(c, Offset(o.dx - tp.width / 2, r.top - tp.height - 0.6 * s));
     }
   }
@@ -525,12 +526,19 @@ class MachinePainter extends CustomPainter {
   final bool run, valve;
   final String motor;
   final double phase;
-  MachinePainter(this.kind, {this.x = 0, this.sw = const [false, false, false], this.run = false, this.valve = true, this.motor = '', this.phase = 0});
+
+  /// sorting belt, press, filling line: the machine of lib/sim/plant.dart drawn in the
+  /// scene area, the circuit it reads, and whether its valve coil (A1-A2) is energised
+  final Plant? plant;
+  final PlantIo? io;
+  final bool coil;
+  MachinePainter(this.kind,
+      {this.x = 0, this.sw = const [false, false, false, false], this.run = false, this.valve = true, this.motor = '', this.phase = 0, this.plant, this.io, this.coil = false});
 
   static const _steel = Color(0xFF8C96A3), _dark = Color(0xFF151A22), _frame = Color(0xFF2B3442);
 
   void _text(Canvas c, String t, Offset at, double size, {Color col = const Color(0xFFDDE6F5), bool bold = true, TextDirection dir = TextDirection.ltr, bool center = true}) {
-    final tp = TextPainter(text: TextSpan(text: t, style: TextStyle(fontSize: size, color: col, fontWeight: bold ? FontWeight.w800 : FontWeight.w500)), textDirection: dir)..layout();
+    final tp = TextCache.get(t, TextStyle(fontSize: size, color: col, fontWeight: bold ? FontWeight.w800 : FontWeight.w500), dir: dir);
     tp.paint(c, at - Offset(center ? tp.width / 2 : 0, tp.height / 2));
   }
 
@@ -568,22 +576,47 @@ class MachinePainter extends CustomPainter {
     // terminal strip along the bottom
     final strip = Rect.fromLTWH(6 * s, size.height - 20 * s, size.width - 12 * s, 16 * s);
     c.drawRRect(RRect.fromRectAndRadius(strip, Radius.circular(2 * s)), Paint()..color = _frame);
-    final n = kind == 'lift' ? 3 : 2;
+    final n = machSwitches(kind);
     final names = switch (kind) {
       'tank' => ['عوامة سفلى', 'عوامة عليا'],
       'lift' => ['الأرضي', 'الأول', 'الثاني'],
       'hoist' => ['أسفل', 'أعلى'],
+      'sort' => ['آخر السير', 'معدن', 'بستم راجع', 'بستم طالع'],
+      'press' => ['ذراع فوق', 'ذراع تحت', 'قطعة'],
+      'fill' => ['زجاجة', 'اتملت'],
       _ => ['يسار', 'يمين'],
     };
+    // the plant machines name their sensors B1…Bn, as in the schematic exercises
+    final pre = kLabPlants.contains(kind) ? 'B' : 'S';
     final terms = MachineGeo.terms(kind);
     for (var i = 1; i <= n; i++) {
       final a = terms['S${i}1']!, b = terms['S${i}4']!;
       final cx = (a.$1 + b.$1) / 2 * s;
-      _text(c, 'S$i ${names[i - 1]}', Offset(cx, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: sw[i - 1] ? const Color(0xFF2FE07A) : const Color(0xFFDDE6F5));
+      final on = i <= sw.length && sw[i - 1];
+      _text(c, '$pre$i ${names[i - 1]}', Offset(cx, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: on ? const Color(0xFF2FE07A) : const Color(0xFFDDE6F5));
       _text(c, 'NC', Offset(((terms['S${i}1']!.$1 + terms['S${i}2']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
       _text(c, 'NO', Offset(((terms['S${i}3']!.$1 + terms['S${i}4']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
+    final a1 = terms['A1'], a2 = terms['A2'];
+    if (a1 != null && a2 != null) {
+      _text(c, 'Y1 صمام', Offset((a1.$1 + a2.$1) / 2 * s, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: coil ? const Color(0xFFFFC14D) : const Color(0xFFDDE6F5));
+      _text(c, 'A1  A2', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
+    }
     final area = Rect.fromLTRB(10 * s, 12 * s, size.width - 10 * s, strip.top - 12 * s);
+    final pl = plant;
+    if (pl != null) {
+      if (kind != 'press') {
+        _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : 'السير يقوده المحرك $motor', Offset(area.left, 6.5 * s), 4.2 * s,
+            col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
+      }
+      final scene = Rect.fromLTRB(area.left, area.top + 4 * s, area.right, area.bottom + 6 * s);
+      c.save();
+      c.translate(scene.left, scene.top);
+      c.clipRect(Offset.zero & scene.size);
+      PlantPainter(pl, io ?? _Idle(coil), 0).paint(c, scene.size);
+      c.restore();
+      return;
+    }
     _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : 'يقودها المحرك $motor', Offset(area.left, 6.5 * s), 4.2 * s,
         col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
     switch (kind) {
@@ -932,4 +965,18 @@ class SirenPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SirenPainter old) => true;
+}
+
+/// a machine with the power off: nothing runs, the valve shows the coil state
+class _Idle implements PlantIo {
+  final bool coil;
+  const _Idle(this.coil);
+  @override
+  double motor(String tag) => 0;
+  @override
+  bool on(String tag) => coil;
+  @override
+  void sense(String tag, bool active) {}
+  @override
+  bool has(String tag) => true;
 }

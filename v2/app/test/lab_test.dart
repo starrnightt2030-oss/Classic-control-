@@ -134,4 +134,48 @@ void main() {
     expect(until(l, () => l['Q1'].s.trip, timeout: 40), isTrue, reason: 'MPCB set at 2 A trips a 8.5 A motor');
     expect(isOn(l, 'Q1'), isFalse);
   });
+
+  test('current paths follow the energised loads', () {
+    final d = dolTemplate();
+    final l = d.toLab()..setPower(true);
+    // stopped: only the stop lamp H2 draws current
+    var f = l.flowPaths();
+    int idx(String a, String b) => d.wires.indexWhere((w) => (w.a == a && w.b == b) || (w.a == b && w.b == a));
+    expect(f.containsKey(idx('K1A.62', 'H2.X1')), isTrue);
+    expect(f.containsKey(idx('X0.L1', 'Q1.1')), isTrue);
+    expect(f.containsKey(idx('F2.2', 'M1.U1')), isFalse, reason: 'motor not running yet');
+    // line side flows towards the lamp, neutral side back to the supply
+    expect(f[idx('K1A.62', 'H2.X1')], 1);
+    expect(f[idx('X0.N', 'K1.A2')], -1);
+    press(l, 'S1');
+    until(l, () => motorRunning(l, 'M1'));
+    f = l.flowPaths();
+    expect(f[idx('F2.2', 'M1.U1')], 1, reason: 'motor feed carries current to the motor');
+    expect(f.containsKey(idx('K1A.62', 'H2.X1')), isFalse);
+    expect(f.containsKey(idx('K1.14', 'K1.A1')), isTrue, reason: 'hold-in path through 13-14');
+  });
+
+  test('a short records its net and trips the breaker; overvoltage burns a lamp', () {
+    final s = shortDemo().toLab()..setPower(true);
+    expect(s.short, isNotNull);
+    expect(s.short!.breaker, 'Q1');
+    expect(s.short!.terms, containsAll(['Q1.2', 'Q1.4']));
+    expect(s['Q1'].s.trip, isTrue);
+
+    final b = burnDemo().toLab()..setPower(true);
+    expect(b['H1'].s.dead, isTrue);
+    expect(b.drain().any((e) => e.t == 'pop' && e.id == 'H1'), isTrue);
+    // a burnt part stays dead in the next run until replaced
+    final d = burnDemo();
+    d.byId('H1')!.p['burnt'] = true;
+    final again = d.toLab()..setPower(true);
+    expect(again['H1'].s.v, 0);
+    expect(again.drain().any((e) => e.t == 'pop'), isFalse);
+  });
+
+  test('empty worksheet has only rails', () {
+    final d = emptyPanel();
+    expect(d.parts.every((p) => p.def == 'din_rail'), isTrue);
+    expect(d.wires, isEmpty);
+  });
 }

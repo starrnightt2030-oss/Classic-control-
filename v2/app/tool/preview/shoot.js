@@ -8,6 +8,8 @@ const puppeteer = require('puppeteer');
     ['lab_run_desktop', '?demo=1', 1600, 1000],
     ['lab_library_desktop', '?demo=2', 1600, 1000],
     ['lab_run_phone', '?demo=1', 412, 915],
+    ['lab_short_desktop', '?demo=3', 1600, 1000],
+    ['lab_burn_desktop', '?demo=4', 1600, 1000],
   ];
   for (const [name, q, w, h] of shots) {
     const page = await browser.newPage();

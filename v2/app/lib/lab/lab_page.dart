@@ -17,11 +17,11 @@ import 'model.dart';
 import 'paint.dart';
 import 'templates.dart';
 
-const _prefKey = 'lab_doc_v2';
+const _prefKey = 'lab_doc_v3';
 const showUiBottom = 100.0;
 
 class LabPage extends StatefulWidget {
-  /// 0 normal · 1 start the DOL demo running · 2 open the library (CI screenshots)
+  /// 0 normal · 1 DOL demo running · 2 library open · 3 short circuit · 4 burnt lamp (CI screenshots)
   final int demo;
   const LabPage({super.key, this.demo = 0});
   @override
@@ -61,6 +61,17 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // faults (free mode)
   FaultSession? fault;
 
+  // hand wiring by dragging from a terminal
+  String? _wireFrom;
+  Offset? _wireTo;
+
+  // effects: sparks at shorts, smoke from burnt parts, flashing shorted wires
+  final List<LabFx> fx = [];
+  double _clock = 0;
+  Set<int> flash = {};
+  double _flashUntil = 0;
+  Map<int, int> flows = {};
+
   // multimeter
   bool meter = false;
   String? probeRed, probeBlack;
@@ -91,9 +102,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     final s = widget.demo > 0 ? null : prefs.getString(_prefKey);
     LabDoc d;
     try {
-      d = s == null ? dolTemplate() : LabDoc.fromJsonString(s);
+      d = switch (widget.demo) {
+        1 => dolTemplate(),
+        3 => shortDemo(),
+        4 => burnDemo(),
+        _ => s == null || widget.demo > 0 ? emptyPanel() : LabDoc.fromJsonString(s),
+      };
     } catch (_) {
-      d = dolTemplate();
+      d = emptyPanel();
     }
     setState(() {
       doc = d;
@@ -109,6 +125,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         });
       }
       if (widget.demo == 2) setState(() => libOpen = true);
+      if (widget.demo == 3 || widget.demo == 4) Future<void>.delayed(const Duration(milliseconds: 600), _power);
     });
   }
 
@@ -264,7 +281,11 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _downMm = mm;
     _moved = false;
     _blocked = false;
-    if (_termAt(mm) != null) return; // terminals: handled on up (tap)
+    final t0 = _termAt(mm);
+    if (t0 != null) {
+      if (!meter) setState(() => _wireFrom = t0); // drag out a wire (or tap: handled on up)
+      return;
+    }
     final p = _partAt(mm);
     if (p != null && (p.id == selPart || !p.structural)) {
       final root = p.attach != null ? doc.byId(p.attach!) ?? p : p;
@@ -277,6 +298,11 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   void _move(PointerMoveEvent e) {
+    if (e.pointer == _pointer && _wireFrom != null && _downMm != null) {
+      final mm = e.localPosition / kPx;
+      if (_wireTo != null || (mm - _downMm!).distance > 2.5) setState(() => _wireTo = mm);
+      return;
+    }
     if (e.pointer != _pointer || dragId == null || _downMm == null) return;
     final mm = e.localPosition / kPx;
     final d = mm - _downMm!;
@@ -307,6 +333,22 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     if (e.pointer != _pointer) return;
     _pointer = null;
+    if (_wireFrom != null && _wireTo != null) {
+      final from = _wireFrom!;
+      final to = _termAt(mm);
+      setState(() {
+        _wireFrom = null;
+        _wireTo = null;
+        pending = null;
+      });
+      if (to != null && to != from) {
+        _connect(from, to);
+      } else {
+        AudioService.instance.sfx('ui_whoosh');
+      }
+      return;
+    }
+    _wireFrom = null;
     if (dragId != null && _moved) {
       final p = doc.byId(dragId!)!;
       _drop(p);
@@ -324,6 +366,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     if (e.pointer != _pointer) return;
     _pointer = null;
+    _wireFrom = null;
+    _wireTo = null;
     if (dragId != null && _moved) _drop(doc.byId(dragId!)!);
     setState(() => dragId = null);
   }
@@ -379,20 +423,28 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       setState(() => pending = null);
       return;
     }
-    if (count >= 2) {
-      _toast('الطرف عليه سلكان بالفعل.');
+    final a = pending!;
+    pending = null;
+    _connect(a, t);
+  }
+
+  /// a new wire between two terminals (max two wires under one screw)
+  void _connect(String a, String t) {
+    int count(String k) => doc.wires.where((w) => w.a == k || w.b == k).length;
+    if (count(a) >= 2 || count(t) >= 2) {
+      _toast('الطرف عليه سلكان بالفعل. لا يُربط أكثر من سلكين تحت مسمار واحد.');
       AudioService.instance.sfx('soft_fail');
+      setState(() {});
       return;
     }
-    if (doc.wires.any((w) => (w.a == t && w.b == pending) || (w.b == t && w.a == pending))) {
-      setState(() => pending = null);
+    if (doc.wires.any((w) => (w.a == t && w.b == a) || (w.b == t && w.a == a))) {
+      setState(() {});
       return;
     }
     _snapshot();
-    final c = color == 'auto' ? _autoColor(pending!, t) : color;
-    doc.wires.add(LabWire(pending!, t, c));
+    final c = color == 'auto' ? _autoColor(a, t) : color;
+    doc.wires.add(LabWire(a, t, c));
     AudioService.instance.sfx('screw_tighten');
-    pending = null;
     _changed();
   }
 
@@ -555,7 +607,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         }
       }
       if (_undo.isNotEmpty) _undo.removeLast();
-      _toast('المكان مشغول. اترك مسافة بين المكونات وبعيدًا عن مجاري الأسلاك.');
+      _toast('المكان مشغول. اترك مسافة بين المكونات.');
       AudioService.instance.sfx('soft_fail');
     } else {
       AudioService.instance.sfx(p.d.mount == Mount.din ? 'din_rail_click' : 'assemble_snap');
@@ -571,7 +623,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     final id = doc.nextId(d.prefix);
     final p = Placed(id, def, 0, 0, p: {
       ...d.params,
-      if (kStructural.contains(def)) 'len': def == 'duct_v' ? 300.0 : 400.0,
+      if (kStructural.contains(def)) 'len': 400.0,
     });
     p.x = (c.dx - p.size.width / 2).clamp(0.0, doc.plateW - p.size.width).toDouble();
     p.y = (c.dy - p.size.height / 2).clamp(0.0, doc.plateH - p.size.height).toDouble();
@@ -610,9 +662,11 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _power() {
     if (running) {
       AudioService.instance.sfx('mcb_trip');
-      _ticker.stop();
+      if (fx.isEmpty) _ticker.stop();
       setState(() {
         sim = null;
+        flows = {};
+        flash = {};
         _pressBy.clear();
       });
       return;
@@ -629,19 +683,78 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       selWire = null;
     });
     _handle(l.drain());
-    _ticker.start();
+    flows = l.flowPaths();
+    if (!_ticker.isActive) _ticker.start();
   }
 
   void _tick(Duration now) {
-    final l = sim;
-    if (l == null) return;
     final dt = _last == Duration.zero ? 0.016 : ((now - _last).inMicroseconds / 1e6).clamp(0.0, 0.1).toDouble();
     _last = now;
-    l.step(dt);
+    _clock += dt;
     _phase = (_phase + dt * 0.8) % 1;
-    _handle(l.drain());
-    fault?.tick(dt);
+    fx.removeWhere((f) => _clock - f.born > f.life);
+    if (flash.isNotEmpty && _clock > _flashUntil) flash = {};
+    final l = sim;
+    if (l != null) {
+      l.step(dt);
+      _handle(l.drain());
+      flows = l.flowPaths();
+      fault?.tick(dt);
+    } else if (fx.isEmpty) {
+      _ticker.stop();
+      _last = Duration.zero;
+    }
     setState(() {});
+  }
+
+  /// sparks where the two sources met, the shorted wires flash red
+  void _sparkAt(ShortInfo sh) {
+    final terms = sh.terms;
+    final idx = <int>{for (var i = 0; i < doc.wires.length; i++) if (terms.contains(doc.wires[i].a) || terms.contains(doc.wires[i].b)) i};
+    flash = idx;
+    _flashUntil = _clock + (widget.demo > 0 ? 1e9 : 1.8);
+    // the newest wire in the shorted net is the most likely culprit
+    final spots = <Offset>[];
+    final newest = idx.isEmpty ? null : idx.reduce(math.max);
+    if (newest != null) {
+      final w = doc.wires[newest];
+      for (final k in [w.a, w.b]) {
+        final o = doc.termPos(k);
+        if (o != null) spots.add(o);
+      }
+    }
+    if (spots.isEmpty) {
+      for (final k in terms.take(2)) {
+        final o = doc.termPos(k);
+        if (o != null) spots.add(o);
+      }
+    }
+    for (final o in spots) {
+      fx.add(LabFx('spark', o, _clock, fx.length * 31 + o.dx.round(), loop: widget.demo > 0));
+    }
+    HapticFeedback.heavyImpact();
+    if (!_ticker.isActive) _ticker.start();
+  }
+
+  /// a part burnt out: it stays burnt (also after power off) until replaced
+  void _burn(String id) {
+    final p = doc.byId(id);
+    if (p == null) return;
+    p.p['burnt'] = true;
+    final r = p.rect;
+    fx.add(LabFx('spark', Offset(r.center.dx, r.top + r.height * 0.3), _clock, id.hashCode, loop: widget.demo > 0));
+    fx.add(LabFx('smoke', Offset(r.center.dx, r.top + r.height * 0.25), _clock, id.hashCode + 1, loop: widget.demo > 0));
+    HapticFeedback.heavyImpact();
+    _persist();
+    if (!_ticker.isActive) _ticker.start();
+  }
+
+  void _replace(Placed p) {
+    _snapshot();
+    p.p.remove('burnt');
+    AudioService.instance.sfx('assemble_snap');
+    _toast('تم تركيب ${p.d.nameAr} جديد مكان المحترق.');
+    _changed();
   }
 
   void _handle(List<SimEvent> evs) {
@@ -656,7 +769,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           a.sfx('timer_tick');
         case 'short':
           a.sfx('short_circuit_bang');
-          _toast('قصر! فصل ${e.id ?? 'المصدر'}. راجع آخر سلك وصّلته.');
+          final sh = sim?.short;
+          if (sh != null) _sparkAt(sh);
+          _toast('قصر كهربائي! فصل ${e.id ?? 'المصدر الرئيسي'}. الأسلاك الحمراء الوامضة هي مسار القصر.');
         case 'trip':
           if (e.data['why'] != 'short') a.sfx('mcb_trip');
         case 'mainTrip':
@@ -669,8 +784,11 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         case 'burn':
         case 'mburn':
         case 'pop':
-          a.sfx('error_buzz');
-          _toast('احترق ${e.id} بسبب جهد غير مناسب.');
+          a.sfx('short_circuit_bang');
+          if (e.id != null) _burn(e.id!);
+          _toast(e.t == 'mburn'
+              ? 'احترق المحرك ${e.id}: عمل على فاز ناقص بدون حماية أوفرلود.'
+              : 'احترق ${e.id} لأنه وُصّل على جهد أعلى من جهده. استبدله من الخصائص.');
         case 'motor':
           final m = e.data['mode'], p = e.data['prev'];
           if ((m == 'star' || m == 'delta') && p == 'off') a.sfx('motor_start');
@@ -815,6 +933,24 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text('${p.d.nameAr} · ${p.id}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
+            if (p.p['burnt'] == true) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: panelBox(color: const Color(0xFF2A0E14), border: CC.red, radius: 14),
+                child: const Text('هذا المكوّن محترق ولن يعمل. ابحث عن سبب الحريق في التوصيل أو في جهد الملف قبل الاستبدال.',
+                    style: TextStyle(height: 1.6)),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _replace(p);
+                },
+                icon: const Icon(Icons.build_rounded),
+                label: const Text('استبدال بمكوّن جديد'),
+              ),
+              const SizedBox(height: 14),
+            ],
             if (e == 'kc' || e == 'relay') ...[
               const Text('جهد الملف', style: TextStyle(color: CC.text2)),
               const SizedBox(height: 6),
@@ -851,8 +987,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               Text('الطول: ${p.len.round()} ملم', style: const TextStyle(color: CC.text2)),
               Slider(
                   min: 60,
-                  max: p.def == 'duct_v' ? doc.plateH : doc.plateW,
-                  value: p.len.clamp(60.0, p.def == 'duct_v' ? doc.plateH : doc.plateW).toDouble(),
+                  max: doc.plateW,
+                  value: p.len.clamp(60.0, doc.plateW).toDouble(),
                   onChanged: (v) {
                     p.p['len'] = v.roundToDouble();
                     set(() {});
@@ -909,8 +1045,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
               leading: const CcIcon(CcIcons.lab, color: CC.accentSoft),
-              title: const Text('مثال جاهز: تشغيل مباشر DOL'),
-              subtitle: const Text('لوحة كاملة موصّلة تشغّلها وتجرّب عليها', style: TextStyle(color: CC.muted)),
+              title: const Text('مثال محلول: تشغيل مباشر DOL'),
+              subtitle: const Text('لوحة كاملة موصّلة للمقارنة والتجربة', style: TextStyle(color: CC.muted)),
               onTap: () {
                 Navigator.pop(ctx);
                 if (!_editable()) return;
@@ -922,8 +1058,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               }),
           ListTile(
               leading: const CcIcon(CcIcons.reset, color: CC.accentSoft),
-              title: const Text('لوحة جديدة فارغة'),
-              subtitle: const Text('قضبان أوميجا ومجاري أسلاك جاهزة', style: TextStyle(color: CC.muted)),
+              title: const Text('ورقة عمل جديدة فارغة'),
+              subtitle: const Text('لوحة تركيب بقضيبي أوميجا، وكل التوصيل عليك', style: TextStyle(color: CC.muted)),
               onTap: () {
                 Navigator.pop(ctx);
                 if (!_editable()) return;
@@ -1003,8 +1139,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             constrained: false,
             minScale: 0.08,
             maxScale: 6,
-            panEnabled: dragId == null,
-            scaleEnabled: dragId == null,
+            panEnabled: dragId == null && _wireFrom == null,
+            scaleEnabled: dragId == null && _wireFrom == null,
             boundaryMargin: const EdgeInsets.all(2400),
             onInteractionUpdate: (_) => setState(() {}),
             child: SizedBox(
@@ -1017,14 +1153,27 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
-                      painter: WirePainter(doc: doc, selectedWire: selWire, nets: sim?.nets, phase: _phase, pending: pending),
+                      painter: WirePainter(
+                        doc: doc,
+                        selectedWire: selWire,
+                        nets: sim?.nets,
+                        phase: _phase,
+                        pending: pending,
+                        flows: flows,
+                        flash: flash,
+                        drag: (_wireFrom != null && _wireTo != null && doc.termPos(_wireFrom!) != null)
+                            ? (doc.termPos(_wireFrom!)!, _wireTo!, doc.termUp(_wireFrom!))
+                            : null,
+                        dragColor: color == 'auto' && _wireFrom != null ? _autoColor(_wireFrom!, _termAt(_wireTo ?? Offset.zero) ?? _wireFrom!) : (color == 'auto' ? 'rd' : color),
+                      ),
                     ),
                   ),
                 ),
                 Positioned.fill(
                     child: IgnorePointer(
                         child: CustomPaint(
-                            painter: TermPainter(doc, pending, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack)))),
+                            painter: TermPainter(doc, pending ?? _wireFrom, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack)))),
+                if (fx.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: FxPainter(fx, _clock)))),
                 Positioned.fill(
                   child: Listener(
                     behavior: HitTestBehavior.translucent,
@@ -1062,6 +1211,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       children.add(Positioned.fill(child: Image.asset(p.d.info?.asset ?? '', fit: BoxFit.fill, filterQuality: FilterQuality.medium)));
     }
     if (c != null) children.addAll(_liveOverlay(p, c));
+    if (p.p['burnt'] == true) children.addAll(_burntOverlay(p));
     // id label
     children.add(Positioned(
       left: 0,
@@ -1097,8 +1247,38 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     );
   }
 
+  /// scorch marks and a red tag on a burnt part
+  List<Widget> _burntOverlay(Placed p) => [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3 * kPx),
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.35),
+                radius: 0.9,
+                colors: [const Color(0xE6120D0A), const Color(0x99201610), const Color(0x00201610)],
+                stops: const [0, 0.45, 1],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: -11 * kPx,
+          left: -20 * kPx,
+          right: -20 * kPx,
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 2.6 * kPx, vertical: 0.3 * kPx),
+              decoration: BoxDecoration(color: CC.red, borderRadius: BorderRadius.circular(3 * kPx), boxShadow: glow(CC.red, 0.8)),
+              child: Text('محترق', style: TextStyle(fontSize: 5.4 * kPx, fontWeight: FontWeight.w800, color: Colors.white, height: 1.25)),
+            ),
+          ),
+        ),
+      ];
+
   List<Widget> _liveOverlay(Placed p, Comp c) {
     final sz = p.size;
+    if (p.p['burnt'] == true && p.def != 'motor') return const [];
     Widget badge(String t, Color col) => Positioned(
           top: -11 * kPx,
           left: -20 * kPx,
@@ -1249,8 +1429,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                     pending != null
                         ? 'اختر الطرف الثاني للسلك…'
                         : running
-                            ? 'اللوحة تعمل · اضغط على الضواغط والقواطع للتشغيل'
-                            : 'معمل اللوحة · المس طرفين لتوصيل سلك، واسحب المكوّن لتحريكه',
+                            ? (flash.isNotEmpty ? 'قصر كهربائي! افصل التغذية وصحّح التوصيل' : 'اللوحة تعمل · الشرطات المضيئة في الأسلاك هي مسار التيار')
+                            : _wireFrom != null
+                                ? 'اسحب إلى الطرف الآخر ثم اترك…'
+                                : 'ورقة العمل · أضف المكونات من المكتبة، واسحب من طرف إلى طرف لتوصيل سلك',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
@@ -1445,7 +1627,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   Widget _libItem(LabPartDef d) {
     Widget thumb;
     if (kStructural.contains(d.key)) {
-      thumb = Icon(d.key == 'din_rail' ? Icons.horizontal_rule_rounded : (d.key == 'duct_v' ? Icons.view_week_rounded : Icons.view_stream_rounded), color: CC.text2);
+      thumb = const Icon(Icons.horizontal_rule_rounded, color: CC.text2);
     } else {
       thumb = Image.asset(d.info?.asset ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.memory_rounded, color: CC.muted));
     }

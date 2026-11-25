@@ -256,6 +256,7 @@ class Comp {
       case 'pb_nc':
         this.p['col'] ??= 'r';
     }
+    if (this.p['burnt'] == true) s.dead = true;
   }
   CompType get t => kTypes[type]!;
   List<Term> get terms => t.terms(this);
@@ -290,7 +291,9 @@ class ShortInfo {
   final String a, b;
   final String? breaker;
   final double at;
-  const ShortInfo(this.a, this.b, this.breaker, this.at);
+  /// terminals of the net where the two sources met (for the spark effect)
+  final Set<String> terms;
+  const ShortInfo(this.a, this.b, this.breaker, this.at, [this.terms = const {}]);
 }
 
 // ---------------------------------------------------------------- nets
@@ -452,16 +455,23 @@ class Lab {
     return Nets._(uf, src);
   }
 
-  static (String, String)? _findShort(Nets n) {
-    for (final l in n._src.values) {
+  static (String, String, String)? _findShort(Nets n) {
+    for (final e in n._src.entries) {
+      final l = e.value;
       for (var i = 0; i < l.length; i++) {
         for (var j = i + 1; j < l.length; j++) {
-          if (l[i].g == l[j].g && (l[i].ph - l[j].ph).abs > 5) return (l[i].key, l[j].key);
+          if (l[i].g == l[j].g && (l[i].ph - l[j].ph).abs > 5) return (l[i].key, l[j].key, e.key);
         }
       }
     }
     return null;
   }
+
+  Set<String> _termsOfNet(Nets n, String root) => {
+        for (final w in wires) ...[w.a, w.b],
+        for (final c in comps)
+          for (final t in c.terms) '${c.id}.${t.id}',
+      }.where((t) => n.root(t) == root).toSet();
 
   List<double> coilWindow(Comp c) {
     if (c.t.wide) return const [20, 264, 300];
@@ -490,7 +500,7 @@ class Lab {
             break;
           }
         }
-        short = ShortInfo(sh.$1, sh.$2, hit?.id, t);
+        short = ShortInfo(sh.$1, sh.$2, hit?.id, t, _termsOfNet(n, sh.$3));
         if (hit != null) {
           _tripBreaker(hit, 'short');
         } else {
@@ -899,6 +909,100 @@ class Lab {
         c.s.load = !c.s.load;
     }
     solve();
+  }
+
+  // ------------------------------------------------------------ current paths
+  /// Which wires carry current now: wire index → +1 (flows a→b) or -1 (b→a).
+  /// For every load that draws current (energised coil, lit lamp, motor winding,
+  /// supply primaries) the shortest conductor path from each of its terminals back
+  /// to a source terminal is traced: towards the load on the line side, away from it
+  /// on the return side.
+  Map<int, int> flowPaths() {
+    final n = nets;
+    final out = <int, int>{};
+    if (n == null) return out;
+    final adj = <String, List<(String, int, bool)>>{};
+    void edge(String a, String b, int i) {
+      (adj[a] ??= []).add((b, i, true));
+      (adj[b] ??= []).add((a, i, false));
+    }
+
+    for (var i = 0; i < wires.length; i++) {
+      final w = wires[i];
+      if (!brokenWires.contains(w)) edge(w.a, w.b, i);
+    }
+    final src = <String>{};
+    for (final c in comps) {
+      for (final l in linksOf(c)) {
+        edge('${c.id}.${l[0]}', '${c.id}.${l[1]}', -1);
+      }
+      if (c.attach != null && c.type == 'ol') {
+        for (final pr in const [['2', '1'], ['4', '3'], ['6', '5']]) {
+          edge('${c.attach}.${pr[0]}', '${c.id}.${pr[1]}', -1);
+        }
+      }
+      if (c.type == 'sup' && power) {
+        for (final k in kPhase.keys) {
+          if (c.s.fault == 'phase_loss' && k == (c.p['lost'] ?? 'L3')) continue;
+          src.add('${c.id}.$k');
+        }
+      }
+      if (c.type == 'trafo' && c.s.k > 0.05) src.addAll(['${c.id}.S0', '${c.id}.S24', '${c.id}.S48']);
+      if (c.type == 'psu' && c.s.k > 0.05) src.addAll(['${c.id}.P', '${c.id}.M']);
+    }
+    final loads = <(String, String)>[];
+    for (final c in comps) {
+      if (c.s.dead) continue;
+      final coil = c.t.coil;
+      if (coil != null && c.s.v > 15 && c.s.fault != 'coil_open') loads.add(('${c.id}.${coil[0]}', '${c.id}.${coil[1]}'));
+      if (c.type == 'lamp' && c.s.v > 5) loads.add(('${c.id}.X1', '${c.id}.X2'));
+      if (c.type == 'psu' && c.s.k > 0.05) loads.add(('${c.id}.L', '${c.id}.N'));
+      if (c.type == 'trafo' && c.s.k > 0.05) {
+        final hi = n.vAcross('${c.id}.P0', '${c.id}.P380') > 1 ? 'P380' : 'P220';
+        loads.add(('${c.id}.$hi', '${c.id}.P0'));
+      }
+      if (c.type == 'motor') {
+        const w = [['U1', 'U2'], ['V1', 'V2'], ['W1', 'W2']];
+        for (var i = 0; i < 3; i++) {
+          if (c.s.vw[i] > 40) loads.add(('${c.id}.${w[i][0]}', '${c.id}.${w[i][1]}'));
+        }
+      }
+    }
+    const cold = {'N', 'PE', 'S0', '0V'};
+    void trace(String from, bool towardsLoad) {
+      final prev = <String, (String, int, bool)>{from: ('', -1, true)};
+      final q = <String>[from];
+      String? hit;
+      for (var h = 0; h < q.length; h++) {
+        final u = q[h];
+        if (u != from && src.contains(u)) {
+          hit = u;
+          break;
+        }
+        for (final (v, i, fwd) in adj[u] ?? const <(String, int, bool)>[]) {
+          if (prev.containsKey(v)) continue;
+          prev[v] = (u, i, fwd);
+          q.add(v);
+        }
+      }
+      if (hit == null) return;
+      var v = hit;
+      while (v != from) {
+        final (u, i, fwd) = prev[v]!;
+        // traversal u→v went a→b when fwd; current runs opposite to the
+        // traversal on the line side (source → load)
+        if (i >= 0) out.putIfAbsent(i, () => (fwd != towardsLoad) ? 1 : -1);
+        v = u;
+      }
+    }
+
+    for (final (a, b) in loads) {
+      final ka = n.phaseOf(a), kb = n.phaseOf(b);
+      final aHot = !cold.contains(ka) || cold.contains(kb);
+      trace(a, aHot);
+      trace(b, !aHot);
+    }
+    return out;
   }
 
   // ------------------------------------------------------------ wiring check

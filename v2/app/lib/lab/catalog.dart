@@ -100,7 +100,7 @@ const kLabCategories = [
   LabCategory('المرحلات والمؤقتات', 0xFF3D8BFF, ['relay', 'timer', 'tsd', 'phr']),
   LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber']),
   LabCategory('المحركات والحساسات', 0xFFC9A27E, ['motor', 'limit']),
-  LabCategory('التمديدات', 0xFFF5B83D, ['din_rail', 'duct_h', 'duct_v', 'tb']),
+  LabCategory('التمديدات', 0xFFF5B83D, ['tb', 'din_rail']),
 ];
 
 const _contactorTerms = {
@@ -183,8 +183,6 @@ final Map<String, LabPartDef> kLabParts = {
         terms: {'21': '11', '22': '12', '13': '23', '14': '24'}, mount: Mount.free),
     const LabPartDef(key: 'tb', nameAr: 'طرف توصيل', category: 'التمديدات', sprite: 'terminal_block', engine: 'tb', prefix: 'X', terms: {'X1_1': '1', 'X1_2': '2'}),
     const LabPartDef(key: 'din_rail', nameAr: 'قضيب أوميجا 35 ملم', category: 'التمديدات', sprite: 'din_rail', engine: '', prefix: 'R', mount: Mount.free),
-    const LabPartDef(key: 'duct_h', nameAr: 'مجرى أسلاك أفقي', category: 'التمديدات', sprite: 'wire_duct', engine: '', prefix: 'D', mount: Mount.free),
-    const LabPartDef(key: 'duct_v', nameAr: 'مجرى أسلاك رأسي', category: 'التمديدات', sprite: 'wire_duct', engine: '', prefix: 'D', mount: Mount.free),
   ])
     d.key: d
 };
@@ -205,4 +203,4 @@ class MotorPlate {
       };
 }
 
-const kStructural = {'din_rail', 'duct_h', 'duct_v'};
+const kStructural = {'din_rail'};

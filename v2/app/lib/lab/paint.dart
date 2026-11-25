@@ -1,4 +1,5 @@
-// Panel Lab drawing: plate, DIN rails, wire ducts, wires with ferrules, motor terminal plate.
+// Panel Lab drawing: plate, DIN rails, hand-drawn wires with ferrules and live current,
+// spark / smoke effects, motor terminal plate.
 // World unit = millimetre; the canvas is painted at [kPx] logical pixels per mm.
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -15,79 +16,20 @@ const double kPx = 4.0;
 class WireRoute {
   final List<Offset> pts; // mm
   final Offset dirA, dirB; // unit vectors leaving each terminal
-  const WireRoute(this.pts, this.dirA, this.dirB);
+  final int index; // spreads parallel wires a little
+  const WireRoute(this.pts, this.dirA, this.dirB, [this.index = 0]);
 }
 
+/// Free hand wiring: every wire leaves its terminal straight out (up for top
+/// terminals, down for bottom ones) and hangs between its ends in a soft curve.
 class WireRouter {
   final LabDoc doc;
-  late final List<Rect> hDucts, vDucts;
-  WireRouter(this.doc) {
-    hDucts = [for (final p in doc.parts) if (p.def == 'duct_h') p.rect];
-    vDucts = [for (final p in doc.parts) if (p.def == 'duct_v') p.rect];
-  }
-
-  Rect? _hDuct(Offset t, bool up) {
-    Rect? best;
-    var bd = double.infinity;
-    for (final r in hDucts) {
-      final inDir = up ? r.center.dy < t.dy : r.center.dy > t.dy;
-      if (!inDir) continue;
-      final dx = t.dx < r.left ? r.left - t.dx : (t.dx > r.right ? t.dx - r.right : 0.0);
-      final d = (r.center.dy - t.dy).abs() + dx * 3;
-      if (d < bd && (r.center.dy - t.dy).abs() < 260) {
-        bd = d;
-        best = r;
-      }
-    }
-    return best;
-  }
-
-  Rect? _vDuct(double y1, double y2, double nearX) {
-    Rect? best;
-    var bd = double.infinity;
-    final lo = math.min(y1, y2), hi = math.max(y1, y2);
-    for (final r in vDucts) {
-      if (r.top > lo + 30 || r.bottom < hi - 30) continue;
-      final d = (r.center.dx - nearX).abs();
-      if (d < bd) {
-        bd = d;
-        best = r;
-      }
-    }
-    return best;
-  }
+  WireRouter(this.doc);
 
   WireRoute route(LabWire w, int index) {
     final a = doc.termPos(w.a)!, b = doc.termPos(w.b)!;
     final upA = doc.termUp(w.a), upB = doc.termUp(w.b);
-    final dA = Offset(0, upA ? -1 : 1), dB = Offset(0, upB ? -1 : 1);
-    final lane = (((index * 7) % 11) - 5) * 2.4;
-    final ha = _hDuct(a, upA), hb = _hDuct(b, upB);
-    double inRange(Rect r, double x) => x.clamp(r.left + 6, r.right - 6).toDouble();
-    if (ha != null && hb != null) {
-      final ya = ha.center.dy + lane, yb = hb.center.dy + lane;
-      if (ha == hb) {
-        return WireRoute([a, Offset(a.dx, ya), Offset(b.dx, ya), b], dA, dB);
-      }
-      final v = _vDuct(ya, yb, (a.dx + b.dx) / 2);
-      if (v != null) {
-        final x = v.center.dx + lane;
-        return WireRoute([a, Offset(a.dx, ya), Offset(x, ya), Offset(x, yb), Offset(b.dx, yb), b], dA, dB);
-      }
-      final xa = inRange(ha, b.dx);
-      return WireRoute([a, Offset(a.dx, ya), Offset(xa, ya), Offset(xa, yb), Offset(b.dx, yb), b], dA, dB);
-    }
-    if (ha != null) {
-      final ya = ha.center.dy + lane;
-      final out = b + dB * 18;
-      return WireRoute([a, Offset(a.dx, ya), Offset(inRange(ha, b.dx), ya), Offset(out.dx, out.dy), b], dA, dB);
-    }
-    if (hb != null) {
-      final yb = hb.center.dy + lane;
-      final out = a + dA * 18;
-      return WireRoute([a, Offset(out.dx, out.dy), Offset(inRange(hb, a.dx), yb), Offset(b.dx, yb), b], dA, dB);
-    }
-    return WireRoute([a, b], dA, dB); // free wire: drawn as a soft curve
+    return WireRoute([a, b], Offset(0, upA ? -1 : 1), Offset(0, upB ? -1 : 1), index);
   }
 }
 
@@ -98,9 +40,11 @@ Path wirePath(WireRoute r) {
   if (pts.length == 2) {
     final a = pts.first, b = pts.last;
     final d = (b - a).distance;
-    final k = math.max(40.0, math.min(220.0, d * 0.45));
-    final c1 = a + r.dirA * k + Offset(0, d * 0.12);
-    final c2 = b + r.dirB * k + Offset(0, d * 0.12);
+    final spread = 1 + ((r.index * 5) % 7 - 3) * 0.06;
+    final k = math.max(14.0 * kPx, math.min(70.0 * kPx, d * 0.42)) * spread;
+    final sag = Offset(0, d * 0.10);
+    final c1 = a + r.dirA * k + sag;
+    final c2 = b + r.dirB * k + sag;
     p.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, b.dx, b.dy);
     return p;
   }
@@ -169,7 +113,6 @@ class PlatePainter extends CustomPainter {
     }
     for (final p in doc.parts) {
       if (p.def == 'din_rail') _rail(c, p.rect, p.id == selected);
-      if (p.def == 'duct_h' || p.def == 'duct_v') _ductBase(c, p.rect, p.def == 'duct_v');
     }
   }
 
@@ -191,13 +134,6 @@ class PlatePainter extends CustomPainter {
     if (sel) _selBox(c, r);
   }
 
-  static void _ductBase(Canvas c, Rect r0, bool vertical) {
-    final r = Rect.fromLTWH(r0.left * kPx, r0.top * kPx, r0.width * kPx, r0.height * kPx);
-    c.drawRect(r.shift(const Offset(0, 6)), Paint()..color = const Color(0x33000000));
-    c.drawRect(r, Paint()..color = const Color(0xFF6F767D));
-    c.drawRect(r.deflate(2.4 * kPx), Paint()..color = const Color(0xFF555C63));
-  }
-
   static void _selBox(Canvas c, Rect r) {
     c.drawRRect(RRect.fromRectAndRadius(r.inflate(6), const Radius.circular(8)), Paint()
       ..style = PaintingStyle.stroke
@@ -209,44 +145,6 @@ class PlatePainter extends CustomPainter {
   bool shouldRepaint(covariant PlatePainter old) => true;
 }
 
-/// Duct covers with comb fingers — painted over the wires so the bundle disappears inside.
-void paintDuctCovers(Canvas c, LabDoc doc, String? selected) {
-  for (final p in doc.parts) {
-    if (p.def != 'duct_h' && p.def != 'duct_v') continue;
-    final v = p.def == 'duct_v';
-    final r = Rect.fromLTWH(p.x * kPx, p.y * kPx, p.size.width * kPx, p.size.height * kPx);
-    final cover = Paint()
-      ..shader = LinearGradient(
-              begin: v ? Alignment.centerLeft : Alignment.topCenter,
-              end: v ? Alignment.centerRight : Alignment.bottomCenter,
-              colors: const [Color(0xF2A4ABB2), Color(0xF28F969D), Color(0xF2A0A7AE)])
-          .createShader(r);
-    final inner = v ? r.deflate(0).inflate(0) : r;
-    // comb fingers on both long edges
-    final finger = Paint()..color = const Color(0xFF8A9198);
-    final gap = 7.0 * kPx, fw = 4.2 * kPx, depth = 6 * kPx;
-    if (!v) {
-      for (var x = r.left + 2; x < r.right - fw; x += gap) {
-        c.drawRect(Rect.fromLTWH(x, r.top, fw, depth), finger);
-        c.drawRect(Rect.fromLTWH(x, r.bottom - depth, fw, depth), finger);
-      }
-      final cv = Rect.fromLTRB(inner.left, inner.top + depth * 0.65, inner.right, inner.bottom - depth * 0.65);
-      c.drawRRect(RRect.fromRectAndRadius(cv, const Radius.circular(6)), cover);
-      c.drawLine(Offset(cv.left + 8, cv.center.dy), Offset(cv.right - 8, cv.center.dy), Paint()
-        ..color = const Color(0x22FFFFFF)
-        ..strokeWidth = 3);
-    } else {
-      for (var y = r.top + 2; y < r.bottom - fw; y += gap) {
-        c.drawRect(Rect.fromLTWH(r.left, y, depth, fw), finger);
-        c.drawRect(Rect.fromLTWH(r.right - depth, y, depth, fw), finger);
-      }
-      final cv = Rect.fromLTRB(inner.left + depth * 0.65, inner.top, inner.right - depth * 0.65, inner.bottom);
-      c.drawRRect(RRect.fromRectAndRadius(cv, const Radius.circular(6)), cover);
-    }
-    if (p.id == selected) PlatePainter._selBox(c, r);
-  }
-}
-
 // ------------------------------------------------------------------ wires
 class WirePainter extends CustomPainter {
   final LabDoc doc;
@@ -255,8 +153,25 @@ class WirePainter extends CustomPainter {
   final double phase; // animation 0..1 for live glow
   final String? pending;
   final Set<LabWire> faulty;
+  /// wires carrying current: index → +1 a→b / -1 b→a
+  final Map<int, int> flows;
+  /// wires of a shorted net (flash red)
+  final Set<int> flash;
+  /// rubber-band wire being dragged: from (mm) → to (mm)
+  final (Offset, Offset, bool)? drag;
+  final String dragColor;
   late final WireRouter router = WireRouter(doc);
-  WirePainter({required this.doc, this.selectedWire, this.nets, this.phase = 0, this.pending, this.faulty = const {}});
+  WirePainter(
+      {required this.doc,
+      this.selectedWire,
+      this.nets,
+      this.phase = 0,
+      this.pending,
+      this.faulty = const {},
+      this.flows = const {},
+      this.flash = const {},
+      this.drag,
+      this.dragColor = 'rd'});
 
   @override
   void paint(Canvas c, Size size) {
@@ -274,6 +189,7 @@ class WirePainter extends CustomPainter {
       final col = wireColor(w.color);
       final thick = w.color == 'br' || w.color == 'bk' || w.color == 'gy' || w.color == 'ge' ? 2.6 * kPx : 2.0 * kPx;
       final live = nets != null && nets!.live(w.a);
+      final hot = flash.contains(i);
       if (i == selectedWire) {
         c.drawPath(path, Paint()
           ..style = PaintingStyle.stroke
@@ -282,14 +198,22 @@ class WirePainter extends CustomPainter {
           ..strokeJoin = StrokeJoin.round
           ..color = const Color(0xAA3D8BFF));
       }
-      if (live) {
-        final a = 0.25 + 0.25 * math.sin(phase * math.pi * 2);
+      if (hot) {
+        final a = 0.55 + 0.45 * math.sin(phase * math.pi * 12);
         c.drawPath(path, Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = thick + 7
+          ..strokeWidth = thick + 12
           ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
-          ..color = const Color(0xFFFFD54A).withValues(alpha: a));
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7)
+          ..color = const Color(0xFFFF3B30).withValues(alpha: a));
+      } else if (live) {
+        // energised but no current: faint halo
+        c.drawPath(path, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thick + 5
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
+          ..color = const Color(0x40FFD54A));
       }
       // shadow, outline, body, specular
       c.drawPath(path.shift(const Offset(2.5, 4)), Paint()
@@ -324,8 +248,31 @@ class WirePainter extends CustomPainter {
         ..strokeWidth = thick * 0.22
         ..strokeCap = StrokeCap.round
         ..color = Colors.white.withValues(alpha: 0.28));
+      final f = flows[i];
+      if (f != null) _flow(c, path, f, thick);
     }
-    paintDuctCovers(c, doc, null);
+    final dg = drag;
+    if (dg != null) {
+      final a = dg.$1 * kPx, b = dg.$2 * kPx;
+      final rb = Path()..moveTo(a.dx, a.dy);
+      final up = dg.$3 ? -1.0 : 1.0;
+      final d = (b - a).distance;
+      final k = math.min(50.0 * kPx, d * 0.4);
+      rb.cubicTo(a.dx, a.dy + up * k, b.dx, b.dy + d * 0.1, b.dx, b.dy);
+      final col = wireColor(dragColor).color;
+      c.drawPath(rb, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2 * kPx + 1.6
+        ..strokeCap = StrokeCap.round
+        ..color = Color.lerp(col, Colors.black, 0.55)!);
+      c.drawPath(rb, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2 * kPx
+        ..strokeCap = StrokeCap.round
+        ..color = col);
+      c.drawCircle(b, 4.5 * kPx, Paint()..color = const Color(0x553D8BFF));
+      c.drawCircle(b, 1.6 * kPx, Paint()..color = const Color(0xFFDDE7FF));
+    }
     // ferrules on top of everything at each end
     for (var i = 0; i < doc.wires.length; i++) {
       final w = doc.wires[i];
@@ -333,6 +280,33 @@ class WirePainter extends CustomPainter {
         final p = doc.termPos(t);
         if (p == null) continue;
         _ferrule(c, p * kPx, up, numbers[t] ?? 0, w.color);
+      }
+    }
+  }
+
+  /// moving bright dashes along a wire in the direction of the current
+  void _flow(Canvas c, Path path, int dir, double thick) {
+    const seg = 7.0 * kPx, gap = 11.0 * kPx;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thick * 0.55
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFFFFF3B0);
+    final glowP = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thick * 1.6
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
+      ..color = const Color(0xAAFFC93D);
+    for (final m in path.computeMetrics()) {
+      final shift = (phase * 3 % 1) * (seg + gap);
+      for (var t = -seg - gap + shift; t < m.length; t += seg + gap) {
+        final s0 = dir > 0 ? t : m.length - t - seg;
+        final a = s0.clamp(0.0, m.length).toDouble(), b = (s0 + seg).clamp(0.0, m.length).toDouble();
+        if (b - a < 1) continue;
+        final part = m.extractPath(a, b);
+        c.drawPath(part, glowP);
+        c.drawPath(part, paint);
       }
     }
   }
@@ -459,6 +433,72 @@ class MotorPlatePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MotorPlatePainter old) => old.links != links;
+}
+
+// ------------------------------------------------------------------ effects
+class LabFx {
+  final String kind; // spark · smoke
+  final Offset at; // mm
+  final double born; // seconds (page clock)
+  final int seed;
+  final bool loop; // previews: keep repeating
+  const LabFx(this.kind, this.at, this.born, this.seed, {this.loop = false});
+  double get life => loop ? 1e9 : (kind == 'spark' ? 1.4 : 6.0);
+}
+
+/// Sparks (bright particles + flash) at a short, smoke rising from a burnt part.
+class FxPainter extends CustomPainter {
+  final List<LabFx> fx;
+  final double now;
+  FxPainter(this.fx, this.now);
+
+  @override
+  void paint(Canvas c, Size size) {
+    for (final f in fx) {
+      var age = now - f.born;
+      if (age < 0 || age > f.life) continue;
+      if (f.loop) age = f.kind == 'spark' ? age % 1.4 : age % 5.0;
+      final o = f.at * kPx;
+      final rnd = math.Random(f.seed);
+      if (f.kind == 'spark') {
+        final k = 1 - age / 1.4;
+        if (age < 0.25) {
+          c.drawCircle(o, (14 + 90 * age) * kPx * 0.5, Paint()
+            ..color = Colors.white.withValues(alpha: (1 - age / 0.25) * 0.9)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18));
+        }
+        c.drawCircle(o, 10 * kPx * k, Paint()
+          ..color = const Color(0xFFFFB020).withValues(alpha: 0.5 * k)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14));
+        for (var i = 0; i < 26; i++) {
+          final ang = rnd.nextDouble() * math.pi * 2;
+          final sp = (40 + rnd.nextDouble() * 110) * kPx;
+          final t = age * (0.7 + rnd.nextDouble() * 0.6);
+          final p = o + Offset(math.cos(ang), math.sin(ang)) * sp * t + Offset(0, 60 * kPx * t * t);
+          final tail = o + Offset(math.cos(ang), math.sin(ang)) * sp * math.max(0, t - 0.05) + Offset(0, 60 * kPx * math.pow(math.max(0, t - 0.05), 2));
+          c.drawLine(tail, p, Paint()
+            ..strokeWidth = 1.2 * kPx
+            ..strokeCap = StrokeCap.round
+            ..color = Color.lerp(const Color(0xFFFFFFFF), const Color(0xFFFF8A00), rnd.nextDouble())!.withValues(alpha: k));
+        }
+      } else {
+        // smoke puffs drifting up
+        for (var i = 0; i < 14; i++) {
+          final t = (age + i * 0.4) % 2.8;
+          final x = o.dx + (rnd.nextDouble() - 0.5) * 18 * kPx + math.sin(t * 2 + i) * 6 * kPx;
+          final y = o.dy - t * 26 * kPx;
+          final r = (5 + t * 9) * kPx;
+          final a = (1 - t / 2.8) * 0.35 * (f.loop ? 1.0 : (1 - age / 6.0).clamp(0.0, 1.0));
+          c.drawCircle(Offset(x, y), r, Paint()
+            ..color = const Color(0xFF3C3F44).withValues(alpha: a)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant FxPainter old) => true;
 }
 
 ui.Color stateColor(bool on) => on ? const Color(0xFF35E08A) : const Color(0xFF8798BF);

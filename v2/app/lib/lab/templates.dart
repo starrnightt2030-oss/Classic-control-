@@ -1,4 +1,4 @@
-// Ready-made panels for the lab: the DOL starter wired like a real panel.
+// Lab worksheets: the empty default plate and the DOL starter example.
 import 'catalog.dart';
 import 'model.dart';
 
@@ -89,21 +89,46 @@ LabDoc dolTemplate() {
   return d;
 }
 
-/// two DIN rails between horizontal ducts, a vertical duct on the left, a short duct under the door row
+/// two DIN rails; everything else (devices and every wire) is added by the student
 void _structure(LabDoc d) {
-  d.parts.add(Placed('D1', 'duct_h', 60, 16, p: {'len': 480}));
-  d.parts.add(Placed('R1', 'din_rail', 60, 122.5, p: {'len': 480}));
-  d.parts.add(Placed('D2', 'duct_h', 60, 222, p: {'len': 480}));
-  d.parts.add(Placed('R2', 'din_rail', 60, 342.5, p: {'len': 480}));
-  d.parts.add(Placed('D3', 'duct_h', 60, 478, p: {'len': 480}));
-  d.parts.add(Placed('D4', 'duct_v', 12, 16, p: {'len': 650}));
-  d.parts.add(Placed('D5', 'duct_h', 60, 626, p: {'len': 272}));
+  d.parts.add(Placed('R1', 'din_rail', 40, 122.5, p: {'len': 490}));
+  d.parts.add(Placed('R2', 'din_rail', 40, 342.5, p: {'len': 490}));
 }
 
+/// the default worksheet: an empty mounting plate with two DIN rails
 LabDoc emptyPanel() {
   final d = LabDoc()
     ..plateW = 570
     ..plateH = 712;
   _structure(d);
+  return d;
+}
+
+/// a wrong wiring that shorts L1 to L2 behind the breaker (spark + trip)
+LabDoc shortDemo() {
+  final d = emptyPanel();
+  final x = kLabParts['supply']!.info?.hMm ?? 60, q = kLabParts['mcb3']!.info?.hMm ?? 90;
+  d.parts.add(Placed('X0', 'supply', 90, 140 - x / 2));
+  d.parts.add(Placed('Q1', 'mcb3', 260, 140 - q / 2));
+  d.wires
+    ..add(LabWire('X0.L1', 'Q1.1', 'br'))
+    ..add(LabWire('X0.L2', 'Q1.3', 'bk'))
+    ..add(LabWire('X0.L3', 'Q1.5', 'gy'))
+    ..add(LabWire('Q1.2', 'Q1.4', 'rd'));
+  return d;
+}
+
+/// a 230 V pilot lamp connected between two phases (400 V): it burns out
+LabDoc burnDemo() {
+  final d = emptyPanel();
+  final x = kLabParts['supply']!.info?.hMm ?? 60, f = kLabParts['mcb2']!.info?.hMm ?? 90;
+  d.parts.add(Placed('X0', 'supply', 90, 140 - x / 2));
+  d.parts.add(Placed('F1', 'mcb2', 260, 140 - f / 2));
+  d.parts.add(Placed('H1', 'lamp_red', 270, 470, p: {'col': 'r', 'V': 220.0}));
+  d.wires
+    ..add(LabWire('X0.L1', 'F1.1', 'br'))
+    ..add(LabWire('X0.L2', 'F1.3', 'bk'))
+    ..add(LabWire('F1.2', 'H1.X1', 'rd'))
+    ..add(LabWire('F1.4', 'H1.X2', 'rd'));
   return d;
 }

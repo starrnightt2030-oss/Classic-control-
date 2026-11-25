@@ -1,4 +1,4 @@
-// Panel Lab document: placed parts, rails, ducts and wires (all in millimetres on the plate).
+// Panel Lab document: placed parts, DIN rails and hand-drawn wires (all in millimetres on the plate).
 import 'dart:convert';
 import 'dart:ui';
 
@@ -20,10 +20,6 @@ class Placed {
     switch (def) {
       case 'din_rail':
         return Size(len, 35);
-      case 'duct_h':
-        return Size(len, 40);
-      case 'duct_v':
-        return Size(40, len);
       case 'motor':
         return const Size(MotorPlate.w, MotorPlate.h);
     }

@@ -1000,7 +1000,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   Widget _library() {
     return Glass(
       radius: 24,
-      tint: const Color(0xE60A1228),
+      tint: const Color(0xFA0A1228),
       child: ListView(padding: const EdgeInsets.fromLTRB(8, 10, 8, 12), children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(8, 4, 8, 8),

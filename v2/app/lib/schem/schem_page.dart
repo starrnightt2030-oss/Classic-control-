@@ -96,6 +96,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   Offset? plantPos;
   int _frame = 0;
 
+  // running sounds: valves that are energised, machine counters already heard
+  final Set<String> _valvesOn = {};
+  final Map<String, int> _heard = {};
+  Plant? _heardOf;
+  double _sndAt = 0;
+
   // simulation
   SchemSim? sim;
   late final Ticker _ticker;
@@ -122,6 +128,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _ticker.dispose();
+    AudioService.instance.stopLoops();
     _save?.cancel();
     _diagTimer?.cancel();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -1247,9 +1254,11 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     if (running) {
       AudioService.instance.sfx('mcb_trip');
       _ticker.stop();
+      AudioService.instance.stopLoops();
       setState(() {
         sim = null;
         _pio = null;
+        _valvesOn.clear();
         flows = {};
         flash = {};
         _pressBy.clear();
@@ -1318,7 +1327,79 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     }
     _handle(s.lab.drain());
     flows = _flows();
+    _sounds(s);
     setState(() {});
+  }
+
+  /// what the running circuit sounds like: motors, coils, buzzers, horns, air valves,
+  /// and the machine (belt, water, the press landing, the lift arriving)
+  void _sounds(SchemSim s) {
+    final a = AudioService.instance;
+    final pl = plant, io = _pio;
+    // the machine's moments, heard once each
+    if (!identical(_heardOf, pl)) {
+      _heard.clear();
+      _heardOf = pl;
+    }
+    if (pl != null) {
+      for (final e in pl.count.entries) {
+        final was = _heard[e.key] ?? 0;
+        if (e.value > was) {
+          switch (e.key) {
+            case 'قطع اتكبست':
+              a.sfx('press_stamp', volume: 0.8);
+            case 'وقفات':
+              a.sfx('lift_ding', volume: 0.5);
+              a.sfx('door_slide', volume: 0.5);
+            case 'زجاجات مليانة':
+              a.sfx('bottle_clink', volume: 0.6);
+            case 'معدن اتفرز' || 'بلاستيك اتفرز غلط':
+              a.sfx('box_drop', volume: 0.7);
+          }
+        }
+        _heard[e.key] = e.value;
+      }
+    }
+    // valves click in with an air rush and drop out with an exhaust blast
+    final l = s.lab;
+    bool lit(SPlaced p) {
+      final id = s.compOf[p.id];
+      final c = id == null ? null : l.byId(id);
+      return c != null && !c.s.dead && c.s.fault != 'lamp_dead' && c.s.v > c.num_('V') * 0.6;
+    }
+
+    var buzz = false, horn = false;
+    for (final p in doc.syms) {
+      switch (p.sym) {
+        case 'yv':
+          final on = lit(p);
+          if (on && _valvesOn.add(p.id)) a.sfx('air_extend', volume: 0.75);
+          if (!on && _valvesOn.remove(p.id)) a.sfx('air_exhaust', volume: 0.7);
+        case 'bz':
+          buzz = buzz || lit(p);
+        case 'horn':
+          horn = horn || lit(p);
+      }
+    }
+    // loops are updated a few times a second, not every frame
+    if (_clock - _sndAt < 0.12) return;
+    _sndAt = _clock;
+    var spd = 0.0, strain = false, hum = 0;
+    for (final c in l.comps) {
+      if (c.type == 'motor' || c.type == 'motor1') {
+        if (c.s.mode == 'star' || c.s.mode == 'delta' || c.s.mode == 'run') spd = math.max(spd, c.s.spd);
+        if (c.s.mode == 'single' || c.s.mode == 'over') strain = true;
+      }
+      if (c.type == 'kc' && c.s.on) hum++;
+    }
+    final belt = pl != null && io != null && (pl is SortPlant || pl is FillPlant) && io.motor('M1').abs() > 0.05;
+    a.loop('motor_run', spd > 0.04, volume: (belt ? 0.08 : 0.15) + (belt ? 0.25 : 0.55) * spd);
+    a.loop('conveyor_run', belt, volume: 0.45);
+    a.loop('coil_hum', hum > 0 && !strain, volume: math.min(0.35, 0.12 + 0.05 * hum));
+    a.loop('coil_hum_loud', strain, volume: 0.7);
+    a.loop('buzzer', buzz, volume: 0.45);
+    a.loop('horn', horn, volume: 0.4);
+    a.loop('water_flow', pl is FillPlant && io != null && io.on('Y1'), volume: 0.55);
   }
 
   SPlaced? _symOfComp(String compId) {

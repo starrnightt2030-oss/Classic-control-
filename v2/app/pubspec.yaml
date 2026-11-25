@@ -37,7 +37,6 @@ flutter:
     - assets/images/
     - assets/images/thumbs/
     - assets/images/cards/
-    - assets/intro/
     - assets/panel/
     - assets/diagrams/
     - assets/fonts/

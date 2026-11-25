@@ -243,16 +243,16 @@ final Map<String, SymDef> kSyms = {
     // ---- loads
     const SymDef(
         key: 'bz', nameAr: 'جرس (بازر)', category: 'الأحمال', prefix: 'P', w: 2, h: 4, pins: [SymPin('X1', 1, 0, 'X1'), SymPin('X2', 1, 4, 'X2')], role: SymRole.device, engine: 'lamp',
-        params: {'V': 220.0}),
+        params: {'V': 220.0, 'W': 5.0, 'pf': 0.8}),
     const SymDef(
         key: 'horn', nameAr: 'سارينة إنذار', category: 'الأحمال', prefix: 'P', w: 2, h: 4, pins: [SymPin('X1', 1, 0, 'X1'), SymPin('X2', 1, 4, 'X2')], role: SymRole.device, engine: 'lamp',
-        params: {'V': 220.0}),
+        params: {'V': 220.0, 'W': 15.0, 'pf': 0.8}),
     const SymDef(
         key: 'yv', nameAr: 'ملف صمام هوائي (سولونويد)', category: 'الأحمال', prefix: 'Y', w: 4, h: 4, pins: [SymPin('X1', 2, 0, 'A1'), SymPin('X2', 2, 4, 'A2')], role: SymRole.device, engine: 'lamp',
-        params: {'V': 24.0}),
+        params: {'V': 24.0, 'W': 6.0, 'pf': 0.7}),
     const SymDef(
         key: 'heat', nameAr: 'سخان كهربائي', category: 'الأحمال', prefix: 'E', w: 2, h: 4, pins: [SymPin('X1', 1, 0, '1'), SymPin('X2', 1, 4, '2')], role: SymRole.device, engine: 'lamp',
-        params: {'V': 220.0}),
+        params: {'V': 220.0, 'W': 1000.0}),
     const SymDef(
         key: 'motor1', nameAr: 'محرك وجه واحد بمكثف', category: 'الأحمال', prefix: 'M', w: 8, h: 6,
         pins: [SymPin('U1', 1, 0, 'U1'), SymPin('U2', 3, 0, 'U2'), SymPin('Z1', 5, 0, 'Z1'), SymPin('Z2', 7, 0, 'Z2')], role: SymRole.device, engine: 'motor1', params: {'In': 4.0}),

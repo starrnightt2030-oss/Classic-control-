@@ -12,9 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../lab/projects.dart';
 import '../services/audio_service.dart';
 import '../sim/engine.dart';
+import '../sim/measure.dart';
 import '../ui/theme.dart';
 import 'export.dart';
 import 'ladder.dart';
+import 'meters_ui.dart';
 import 'model.dart';
 import 'sheet_paint.dart';
 import 'symbols.dart';
@@ -62,6 +64,15 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
 
   /// colour new wires get (null: default black)
   String? pen;
+
+  // instruments
+  MeterKind? meter;
+  String meterMode = 'vac';
+  String? probeRed, probeBlack; // pin keys
+  int? clampWire; // document wire index
+  int nextProbe = 0;
+  Offset meterPos = const Offset(12, 120);
+  bool _beeping = false;
 
   // simulation
   SchemSim? sim;
@@ -216,8 +227,48 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   }
 
   // ------------------------------------------------------------ pointer
+  bool get _needsProbes => meter == MeterKind.dmm || meter == MeterKind.watt || (meter == MeterKind.clamp && meterMode == 'vac');
+  bool get _needsClamp => meter == MeterKind.watt || (meter == MeterKind.clamp && meterMode == 'aac');
+
+  /// a tap while an instrument is out places its probes or its clamp; true when used
+  bool _meterTap(Offset g) {
+    if (meter == null) return false;
+    if (_needsProbes) {
+      final pn = _pinAt(g);
+      if (pn != null) {
+        setState(() {
+          if (nextProbe == 0) {
+            probeRed = pn;
+          } else {
+            probeBlack = pn;
+          }
+          if (probeRed == null) {
+            nextProbe = 0;
+          } else if (probeBlack == null) {
+            nextProbe = 1;
+          } else {
+            nextProbe = 1 - nextProbe;
+          }
+        });
+        AudioService.instance.sfx('ui_tap');
+        _beepCheck();
+        return true;
+      }
+    }
+    if (_needsClamp) {
+      final w = _wireAt(g);
+      if (w != null) {
+        setState(() => clampWire = w);
+        AudioService.instance.sfx('relay_click', volume: 0.5);
+        return true;
+      }
+    }
+    return false;
+  }
+
   void _down(PointerDownEvent e) {
     final g = e.localPosition / kG;
+    if (_meterTap(g)) return;
     if (running) {
       final s = _symAt(g);
       if (s != null) _actuate(s, e.pointer, true);
@@ -475,6 +526,176 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     }
     AudioService.instance.sfx('assemble_snap');
     _changed();
+  }
+
+  void _pickMeter() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Align(alignment: AlignmentDirectional.centerStart, child: Text('أجهزة القياس', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+          ),
+          for (final (k, icon, sub) in [
+            (MeterKind.dmm, Icons.electric_meter_outlined, 'جهد متردد ومستمر، مقاومة، واستمرارية بصوت. حط المجس الأحمر والأسود على أي طرفين.'),
+            (MeterKind.clamp, Icons.radio_button_unchecked_rounded, 'اقفل الفك على أي سلك واقرا التيار وإنت شغّال، من غير ما تفك حاجة.'),
+            (MeterKind.watt, Icons.speed_rounded, 'ملف التيار على السلك وملف الجهد على طرفين: بيقرا القدرة الفعالة ومعامل القدرة.'),
+          ])
+            ListTile(
+              leading: Icon(icon, color: meter == k ? CC.amber : CC.accentSoft),
+              title: Text(kMeterNames[k]!),
+              subtitle: Text(sub, style: const TextStyle(color: CC.muted, height: 1.4)),
+              selected: meter == k,
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() {
+                  meter = k;
+                  meterMode = kMeterModes[k]!.first.$1;
+                  probeRed = probeBlack = null;
+                  clampWire = null;
+                  nextProbe = 0;
+                  pending = null;
+                });
+                AudioService.instance.sfx('part_select');
+              },
+            ),
+          if (meter != null)
+            ListTile(
+              leading: const Icon(Icons.close_rounded, color: CC.muted),
+              title: const Text('رجّع الجهاز'),
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => meter = null);
+              },
+            ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _meterPanel(BuildContext context) {
+    final sz = MediaQuery.of(context).size;
+    final pos = Offset(meterPos.dx.clamp(0.0, math.max(0.0, sz.width - 270)).toDouble(), meterPos.dy.clamp(0.0, math.max(0.0, sz.height - 200)).toDouble());
+    String where(String? pin) {
+      if (pin == null) return '';
+      final i = pin.indexOf('.');
+      final s = doc.byId(pin.substring(0, i));
+      final pn = s?.pin(pin.substring(i + 1));
+      if (s == null || pn == null) return '';
+      return '${s.tag} : ${pn.label.isEmpty ? pn.id : pn.label}';
+    }
+
+    final cw = clampWire;
+    final clampTxt = cw != null && cw < doc.wires.length ? 'سلك رقم ${doc.wireNumbers()[cw]}' : '';
+    return Positioned(
+      left: pos.dx,
+      top: pos.dy,
+      child: GestureDetector(
+        onPanUpdate: (d) => setState(() => meterPos = pos + d.delta),
+        child: MeterPanel(
+          kind: meter!,
+          mode: meterMode,
+          reading: _reading(),
+          red: where(probeRed),
+          black: where(probeBlack),
+          clamp: clampTxt,
+          needsProbes: _needsProbes,
+          needsClamp: _needsClamp,
+          nextProbe: nextProbe,
+          onMode: (m) {
+            setState(() => meterMode = m);
+            AudioService.instance.sfx('selector_detent', volume: 0.6);
+            _beepCheck();
+          },
+          onPickProbe: (i) => setState(() => nextProbe = i),
+          onClose: () => setState(() => meter = null),
+          onClear: () => setState(() {
+            probeRed = probeBlack = null;
+            clampWire = null;
+            nextProbe = 0;
+          }),
+        ),
+      ),
+    );
+  }
+
+  /// continuity mode: beep while the probes touch a closed path
+  void _beepCheck() {
+    if (meter != MeterKind.dmm || meterMode != 'beep') {
+      _beeping = false;
+      return;
+    }
+    final r = _reading();
+    final on = r.value != 'OL' && r.value != '----' && !r.warn && (double.tryParse(r.value) ?? 1e9) < 30 && r.unit == 'Ω';
+    if (on && !_beeping) AudioService.instance.sfx('meter_beep');
+    _beeping = on;
+  }
+
+  MeterReading _reading() {
+    final kind = meter;
+    if (kind == null) return MeterReading.idle;
+    final s = sim ?? doc.toSim(); // switched off: the drawing as it stands, no supply
+    final l = s.lab;
+    final ta = probeRed == null ? null : s.pinToTerm[probeRed!];
+    final tb = probeBlack == null ? null : s.pinToTerm[probeBlack!];
+    Cx? amps() {
+      final cw = clampWire;
+      if (cw == null || cw >= doc.wires.length) return null;
+      int? eng;
+      for (final e in s.wireIndex.entries) {
+        if (e.value == cw) eng = e.key;
+      }
+      if (eng == null) return Cx.zero;
+      return l.wireCurrents()[eng] ?? Cx.zero;
+    }
+
+    final pa = ta == null ? null : l.potential(ta), pb = tb == null ? null : l.potential(tb);
+    final mode = meterMode;
+    if (kind == MeterKind.watt) {
+      final i = amps();
+      if (i == null || ta == null || tb == null) return const MeterReading('----', 'W', note: 'اقفل ملف التيار على سلك، وحط مجسات الجهد على طرفين', needle: 0, scale: '');
+      final v = (pa != null && pb != null && pa.$2 == pb.$2) ? pa.$1 - pb.$1 : Cx.zero;
+      final p = v.dotRe(i);
+      final sVA = v.abs * i.abs;
+      var fs = 10.0;
+      for (final f in [10.0, 50, 100, 500, 1000, 2000, 5000, 10000, 20000]) {
+        fs = f.toDouble();
+        if (p.abs() * 1.1 <= fs) break;
+      }
+      return MeterReading(p.abs() >= 1000 ? (p.abs() / 1000).toStringAsFixed(2) : p.abs().toStringAsFixed(1), p.abs() >= 1000 ? 'kW' : 'W',
+          needle: p.abs() / fs,
+          scale: '100 = ${fs >= 1000 ? '${(fs / 1000).toStringAsFixed(0)} kW' : '${fs.toStringAsFixed(0)} W'}',
+          note: p < -0.5 ? 'القراءة بالسالب: اعكس اتجاه ملف التيار أو المجسات' : (sVA < 0.01 ? 'مفيش قدرة: يا إما مفيش جهد يا إما مفيش تيار' : ''),
+          warn: p < -0.5,
+          extra: [('V', v.abs.toStringAsFixed(1)), ('A', i.abs.toStringAsFixed(2)), ('cosφ', sVA < 0.01 ? '-' : (p.abs() / sVA).clamp(0.0, 1.0).toStringAsFixed(2))]);
+    }
+    if (kind == MeterKind.clamp && mode == 'aac') {
+      final i = amps();
+      if (i == null) return const MeterReading('----', 'A', note: 'المس أي سلك عشان تقفل الفك عليه');
+      return MeterReading(meterDigits(i.abs), 'A', note: sim == null ? 'التغذية مفصولة' : '');
+    }
+    if (ta == null || tb == null) return MeterReading('----', mode == 'ohm' || mode == 'beep' ? 'Ω' : 'V', note: 'حط المجس الأحمر والأسود على طرفين');
+    if (mode == 'ohm' || mode == 'beep') {
+      if (pa != null || pb != null) {
+        return const MeterReading('----', 'Ω', note: 'افصل التغذية الأول! قياس المقاومة على دائرة فيها جهد بيبوّظ الجهاز', warn: true);
+      }
+      final r = l.ohms(ta, tb);
+      final (v, u) = ohmText(r);
+      final cont = r != null && r < 30;
+      return MeterReading(v, u, note: mode == 'beep' ? (cont ? 'تيت… فيه استمرارية' : 'مفيش استمرارية') : (r == null ? 'OL: الدائرة مفتوحة بين النقطتين' : ''));
+    }
+    // voltage
+    if (pa == null || pb == null || pa.$2 != pb.$2) {
+      return MeterReading(mode == 'vdc' ? '0.00' : '0.0', 'V', note: pa == null && pb == null ? 'مفيش جهد على النقطتين' : (pa == null || pb == null ? 'نقطة من الاتنين مش واصلها جهد' : 'النقطتين من مصدرين مختلفين'));
+    }
+    final dc = pa.$2.startsWith('D:');
+    if (mode == 'vac') {
+      if (dc) return const MeterReading('0.0', 'V', note: 'الجهد هنا مستمر: حوّل المفتاح على V=', warn: true);
+      return MeterReading(meterDigits((pa.$1 - pb.$1).abs), 'V');
+    }
+    if (!dc) return MeterReading('0.00', 'V', note: (pa.$1 - pb.$1).abs > 1 ? 'الجهد هنا متردد: حوّل المفتاح على V~' : '', warn: (pa.$1 - pb.$1).abs > 1);
+    return MeterReading(meterDigits(pa.$1.re - pb.$1.re), 'V');
   }
 
   void _wireSheet() {
@@ -1117,6 +1338,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                         selWire: selWire,
                         pending: pending ?? _wireFrom,
                         drag: pf != null && _wireTo != null ? (pf, _wireTo!, doc.pinUp(_wireFrom!)) : null,
+                        probes: meter == null ? null : (_needsProbes ? probeRed : null, _needsProbes ? probeBlack : null, _needsClamp ? clampWire : null),
                         date: todayText()),
                   ),
                 ),
@@ -1134,6 +1356,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
           ),
         ),
         if (showUi) ..._overlays(context) else _restore(),
+        if (meter != null) _meterPanel(context),
       ]),
     );
   }
@@ -1211,6 +1434,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 _tool(Icons.add_rounded, 'مكتبة الرموز', () => setState(() => libOpen = !libOpen), active: libOpen),
                 _SimButton(on: running, onTap: _simulate),
+                _tool(Icons.speed_rounded, 'أجهزة القياس', _pickMeter, active: meter != null),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),

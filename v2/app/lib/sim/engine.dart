@@ -428,6 +428,9 @@ class Lab {
       c.s.on = was;
       return l;
     }
+    // schematic contacts: stuck open (burnt tips) or stuck closed (welded)
+    if (f == 'stuck_open') return const [];
+    if (f == 'stuck_closed' && c.type == 'contact') return const [['1', '2']];
     var l = ty.links!(c);
     if (f == 'nc_open') {
       const nc = {'95-96', '11-12', '21-22', '61-62', '71-72', '15-16'};

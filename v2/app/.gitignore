@@ -2,6 +2,7 @@
 /assets/models/
 /assets/content/
 /assets/audio/
+/assets/pack/
 
 # Flutter / Dart
 .dart_tool/

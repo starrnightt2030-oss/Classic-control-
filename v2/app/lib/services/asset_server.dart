@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import 'packs.dart';
+
 /// Tiny loopback HTTP server between the app and its WebViews.
 ///  * GET  /assets/...       → the Flutter asset bundle (ES modules and GLB need http URLs)
 ///  * POST /upload/<name>    → binary results from the WebView (snapshots, recorded video)
@@ -65,11 +67,17 @@ class AssetServer {
         _uploads.putIfAbsent(name, () => Completer<File>()).complete(file);
         res.statusCode = HttpStatus.ok;
       } else if (path.startsWith('assets/')) {
-        final data = await rootBundle.load(path);
         final ext = path.split('.').last.toLowerCase();
         res.headers.set(HttpHeaders.contentTypeHeader, _mime[ext] ?? 'application/octet-stream');
         res.headers.set(HttpHeaders.cacheControlHeader, 'no-cache');
-        res.add(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+        // a newer copy from a content pack wins over the bundled one
+        final f = PackStore.instance.file(path);
+        if (f != null) {
+          await res.addStream(f.openRead());
+        } else {
+          final data = await rootBundle.load(path);
+          res.add(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+        }
       } else {
         res.statusCode = HttpStatus.forbidden;
       }

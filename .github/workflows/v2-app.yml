@@ -31,7 +31,9 @@ jobs:
           channel: stable
           cache: true
       - name: Sync shared assets
-        run: python3 tool/sync_assets.py
+        run: |
+          python3 tool/sync_assets.py
+          python3 tool/pack_manifest.py app
       - name: Generate platform folder
         run: flutter create --platforms=android --org com.eldawly --project-name classic_control .
       - name: Patch platform folder
@@ -58,7 +60,7 @@ jobs:
           set -o pipefail
           # retries with back-off: Maven Central / the plugin portal answer 429 now and then
           for i in 1 2 3 4; do
-            if flutter build apk --release 2>&1 | tee build.txt; then exit 0; fi
+            if flutter build apk --release --build-number ${{ github.run_number }} --dart-define=APP_BUILD=${{ github.run_number }} 2>&1 | tee build.txt; then exit 0; fi
             grep -q "429\|Could not resolve\|Could not GET" build.txt || break
             sleep $((i * 45))
           done
@@ -81,7 +83,9 @@ jobs:
           channel: stable
           cache: true
       - name: Sync shared assets
-        run: python tool/sync_assets.py
+        run: |
+          python tool/sync_assets.py
+          python tool/pack_manifest.py app
       - name: Generate platform folder
         run: flutter create --platforms=windows --org com.eldawly --project-name classic_control .
       - name: Patch platform folder
@@ -91,7 +95,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          flutter build windows --release 2>&1 | tee build.txt || { python tool/ci_report.py build.txt --tail; exit 1; }
+          flutter build windows --release --build-number ${{ github.run_number }} --dart-define=APP_BUILD=${{ github.run_number }} 2>&1 | tee build.txt || { python tool/ci_report.py build.txt --tail; exit 1; }
       - name: Bundle the Visual C++ runtime
         # app-local copies so the app starts on PCs without the VC++ Redistributable
         shell: pwsh
@@ -105,10 +109,18 @@ jobs:
       - name: Zip
         shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath ClassicControl-Windows.zip
+      - name: Patch with only the changed files (for the in-app updater)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tool/win_patch.py build/windows/x64/runner/Release --repo ${{ github.repository }} --out .
       - uses: actions/upload-artifact@v5
         with:
           name: classic-control-windows
-          path: v2/app/ClassicControl-Windows.zip
+          path: |
+            v2/app/ClassicControl-Windows.zip
+            v2/app/ClassicControl-Windows-patch.zip
+            v2/app/windows-files.json
+            v2/app/windows-patch.json
           retention-days: 30
 
   release:
@@ -117,13 +129,22 @@ jobs:
     permissions:
       contents: write
     steps:
+      # the content files are hashed from the same commit for update.json
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v5
         with:
           path: dist
       - name: Rename
         run: |
           mv dist/classic-control-android/app-release.apk dist/ClassicControl-Android.apk
-          mv dist/classic-control-windows/ClassicControl-Windows.zip dist/ClassicControl-Windows.zip
+          mv dist/classic-control-windows/* dist/
+      - name: update.json (what the app checks for new builds)
+        env:
+          NOTES: ${{ github.event.head_commit.message }}
+        run: >
+          python3 v2/app/tool/pack_manifest.py release --build ${{ github.run_number }} --sha ${{ github.sha }}
+          --repo ${{ github.repository }} --version "$(sed -n 's/^version: \([0-9.]*\).*/\1/p' v2/app/pubspec.yaml)"
+          --dist dist --out dist/update.json
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v2-app-build-${{ github.run_number }}
@@ -134,6 +155,10 @@ jobs:
             نسخة تجريبية من فرع v2-rebuild.
             - Android: نزّل ClassicControl-Android.apk وثبّته (اسمح بالتثبيت من مصادر غير معروفة).
             - Windows: فك ضغط ClassicControl-Windows.zip كله في فولدر (مش من جوه ملف الضغط) وشغّل classic_control.exe. مكتبات Visual C++ مضافة جوه الفولدر، ومحتاج Microsoft Edge WebView2 (موجود في ويندوز 10/11).
+            - التطبيق نفسه بيلاقي النسخ الجديدة لوحده: على ويندوز بينزّل الملفات اللي اتغيرت بس ويفتح تاني، وعلى أندرويد بينزّل النسخة ويفتح شاشة التثبيت. والدروس والتسجيلات الجديدة بتنزل لوحدها من غير تثبيت.
           files: |
             dist/ClassicControl-Android.apk
             dist/ClassicControl-Windows.zip
+            dist/ClassicControl-Windows-patch.zip
+            dist/windows-files.json
+            dist/update.json

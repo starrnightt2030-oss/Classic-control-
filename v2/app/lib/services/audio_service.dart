@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/repository.dart';
+import 'packs.dart';
 
 /// Narration (one at a time) + short sound effects.
 class AudioService {
@@ -31,13 +32,19 @@ class AudioService {
 
   bool sfxOn = true;
 
+  /// an asset key, played from a content pack when a newer copy arrived
+  static Source source(String key) {
+    final f = PackStore.instance.file(key);
+    return f != null ? DeviceFileSource(f.path) : AssetSource(key.substring('assets/'.length));
+  }
+
   /// Plays a narration clip. Returns false when the recording isn't in the app yet.
   Future<bool> playVoice(String? ref) async {
     final key = Repository.instance.audioAsset(ref);
     if (key == null) return false;
     try {
       await _voice.stop();
-      await _voice.play(AssetSource(key.substring('assets/'.length)));
+      await _voice.play(source(key));
       playing.value = ref;
       return true;
     } catch (_) {
@@ -53,7 +60,7 @@ class AudioService {
 
   Future<void> playIntro() async {
     try {
-      await _intro.play(AssetSource('audio/sfx/intro_theme.mp3'), volume: 1.0);
+      await _intro.play(source('assets/audio/sfx/intro_theme.mp3'), volume: 1.0);
     } catch (_) {}
   }
 
@@ -70,7 +77,7 @@ class AudioService {
     final p = _pool[_next];
     _next = (_next + 1) % _pool.length;
     try {
-      await p.play(AssetSource('audio/sfx/$name.mp3'), volume: volume);
+      await p.play(source('assets/audio/sfx/$name.mp3'), volume: volume);
     } catch (_) {}
   }
 
@@ -97,7 +104,7 @@ class AudioService {
     _loops[name] = p;
     try {
       await p.setReleaseMode(ReleaseMode.loop);
-      await p.play(AssetSource('audio/sfx/$name.mp3'), volume: volume);
+      await p.play(source('assets/audio/sfx/$name.mp3'), volume: volume);
     } catch (_) {}
   }
 

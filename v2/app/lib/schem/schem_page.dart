@@ -1,9 +1,11 @@
 // «محاكي الدوائر الخطية» — draw an IEC schematic from the symbol library, wire it
 // pin to pin, and simulate it with the same engine as the panel lab.
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +19,7 @@ import '../sim/plant.dart';
 import '../ui/theme.dart';
 import 'diagnose.dart';
 import 'export.dart';
+import 'machine3d.dart';
 import 'ladder.dart';
 import 'meters_ui.dart';
 import 'model.dart';
@@ -95,6 +98,9 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   SchemPlantIo? _pio;
   Offset? plantPos;
   int _frame = 0;
+
+  /// the machine in 3D (WebView) or the drawn 2D scene; 3D where the WebView runs
+  bool _plant3d = !kIsWeb && (Platform.isAndroid || Platform.isWindows);
 
   // running sounds: valves that are energised, machine counters already heard
   final Set<String> _valvesOn = {};
@@ -929,6 +935,11 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
               const Icon(Icons.drag_indicator_rounded, size: 18, color: CC.muted),
               const SizedBox(width: 4),
               Expanded(child: Text(d.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700))),
+              IconButton(
+                  tooltip: _plant3d ? 'رسم مبسط' : 'مجسم ثلاثي الأبعاد',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => setState(() => _plant3d = !_plant3d),
+                  icon: Icon(_plant3d ? Icons.grid_view_rounded : Icons.view_in_ar_rounded, size: 20)),
               IconButton(tooltip: 'المطلوب', visualDensity: VisualDensity.compact, onPressed: () => _plantTask(d), icon: const Icon(Icons.info_outline_rounded, size: 20)),
               IconButton(
                   tooltip: 'رجّع الماكينة لأولها', visualDensity: VisualDensity.compact, onPressed: () => setState(() => plant = d.make()), icon: const Icon(Icons.restart_alt_rounded, size: 20)),
@@ -945,7 +956,9 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
           ),
           SizedBox(
             height: h,
-            child: GestureDetector(
+            child: _plant3d
+                ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Machine3D(plant: pl, io: _pio, frame: _frame))
+                : GestureDetector(
               onTapUp: (e) => setState(() => pl.tap(e.localPosition.dx / w, e.localPosition.dy / h)),
               child: CustomPaint(painter: PlantPainter(pl, _pio, _frame), size: Size(w - 20, h)),
             ),

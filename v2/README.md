@@ -63,6 +63,8 @@ cd v2/models
 ../../bvenv/bin/python addons.py timer           # تايمر الهوا
 ../../bvenv/bin/python mcb.py single             # قاطع 1 بول (مجمّع + مفكوك)
 ../../bvenv/bin/python mcb.py multi              # 2 و3 و4 بول
+../../bvenv/bin/python machines.py               # ماكينات المحاكي: عربية، ونش، أسانسير، فرز، مكبس، تعبئة
+../../bvenv/bin/python publish.py machine_       # ينقلها لـ v2/assets/models
 # الأسهم والأسماء على صورة التفكيك:
 ../../bvenv/bin/python -c "import callouts, overload; callouts.auto('overload', overload.PARTS, 'تفكيك أجزاء الأوفرلود', 'Overload — Exploded')"
 ```

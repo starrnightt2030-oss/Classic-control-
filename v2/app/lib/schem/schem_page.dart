@@ -14,6 +14,7 @@ import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../sim/measure.dart';
 import '../ui/theme.dart';
+import 'diagnose.dart';
 import 'export.dart';
 import 'ladder.dart';
 import 'meters_ui.dart';
@@ -74,6 +75,14 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   Offset meterPos = const Offset(12, 120);
   bool _beeping = false;
 
+  // fault diagnosis
+  List<SFault>? faults;
+  int _diagCount = 1, _wrong = 0, _hints = 0;
+  final Stopwatch _diagClock = Stopwatch();
+  Timer? _diagTimer;
+  bool _diagBusy = false;
+  bool get diagnosing => faults != null;
+
   // simulation
   SchemSim? sim;
   late final Ticker _ticker;
@@ -99,6 +108,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   void dispose() {
     _ticker.dispose();
     _save?.cancel();
+    _diagTimer?.cancel();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -163,6 +173,10 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   }
 
   bool _editable() {
+    if (diagnosing) {
+      _toast('إنت في تشخيص الأعطال: الرسم مقفول. دوّر على العطل واستخدم زرار الإصلاح، أو أنهي التشخيص من زرار الأعطال.');
+      return false;
+    }
     if (!running) return true;
     _toast('أوقف المحاكاة أولًا لتعديل الرسم.');
     return false;
@@ -278,6 +292,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     _pointer = e.pointer;
     _downG = g;
     _moved = false;
+    if (diagnosing) return; // selection only (on release)
     final pn = _pinAt(g);
     if (pn != null) {
       setState(() => _wireFrom = pn);
@@ -403,7 +418,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   }
 
   void _tap(Offset g) {
-    final pn = _pinAt(g);
+    final pn = diagnosing ? null : _pinAt(g);
     if (pn != null) {
       if (pending == null) {
         setState(() {
@@ -440,6 +455,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   }
 
   void _connect(String a, String b) {
+    if (diagnosing) return;
     if (doc.wires.any((w) => (w.a == a && w.b == b) || (w.a == b && w.b == a))) return;
     _snapshot();
     doc.wires.add(SWire(a, b, c: pen));
@@ -526,6 +542,230 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     }
     AudioService.instance.sfx('assemble_snap');
     _changed();
+  }
+
+  // ------------------------------------------------------------ fault diagnosis
+  void _diagMenu() {
+    if (diagnosing) {
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const ListTile(
+              title: Text('تشخيص الأعطال شغال', style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text('شغّل المحاكاة ولاحظ إيه اللي مش طبيعي، وقيس بالأفوميتر والكلامب. بعدين أوقف المحاكاة، واختار المكوّن أو السلك العطلان، ودوس إصلاح.',
+                  style: TextStyle(color: CC.muted, height: 1.5)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined, color: CC.red),
+              title: const Text('استسلام وعرض الأعطال'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _finishDiag(gaveUp: true);
+              },
+            ),
+          ]),
+        ),
+      );
+      return;
+    }
+    var count = _diagCount;
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text('تشخيص الأعطال', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              const Text('التطبيق هيحط أعطال مخفية في الدائرة اللي رسمتها: سلك مقطوع، ملف مفتوح، تلامس محروق أو ملحوم، ضاغط بايظ، فاز ناقص… مهمتك تكتشفها بالملاحظة والقياس وتصلّحها.',
+                  style: TextStyle(color: CC.muted, height: 1.6)),
+              const SizedBox(height: 14),
+              const Text('المستوى', style: TextStyle(color: CC.text2)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, children: [
+                for (final (n, t) in [(1, 'سهل: عطل واحد'), (2, 'متوسط: عطلين'), (3, 'صعب: 3 أعطال')])
+                  ChoiceChip(label: Text(t), selected: count == n, onSelected: (_) => set(() => count = n)),
+              ]),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _startDiag(count);
+                },
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('ابدأ'),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startDiag(int count) async {
+    if (_diagBusy) return;
+    if (running) _simulate();
+    final why = readyForFaults(doc);
+    if (why != null) {
+      _toast('خلّص الدائرة وجرّبها الأول: $why');
+      return;
+    }
+    _diagBusy = true;
+    _toast('بجهّز الأعطال…');
+    List<SFault> fs;
+    try {
+      fs = await pickFaultsAsync(doc, count);
+    } catch (_) {
+      fs = pickFaults(doc, count);
+    }
+    _diagBusy = false;
+    if (!mounted) return;
+    if (fs.isEmpty) {
+      _toast('الدائرة صغيرة قوي ومفيهاش مكان لعطل يبان. كبّرها شوية وجرّب تاني.');
+      return;
+    }
+    _diagCount = count;
+    setState(() {
+      faults = fs;
+      _wrong = 0;
+      _hints = 0;
+      sel = null;
+      selWire = null;
+      pending = null;
+    });
+    _diagClock
+      ..reset()
+      ..start();
+    _diagTimer?.cancel();
+    _diagTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+    AudioService.instance.sfx('stage_sting');
+    _toast(fs.length == 1 ? 'اتحط عطل واحد مخفي. شغّل المحاكاة وابدأ التشخيص.' : 'اتحط ${fs.length} أعطال مخفية. شغّل المحاكاة وابدأ التشخيص.');
+  }
+
+  void _repair() {
+    final fs = faults;
+    if (fs == null) return;
+    if (running) {
+      _toast('أمان الأول: أوقف المحاكاة (افصل التغذية) قبل ما تصلّح.');
+      AudioService.instance.sfx('warning_alert');
+      return;
+    }
+    final s = sel == null ? null : doc.byId(sel!);
+    final w = selWire;
+    SFault? found;
+    for (final f in fs) {
+      if (!f.fixed && f.hit(doc, s: s, wire: w)) {
+        found = f;
+        break;
+      }
+    }
+    if (found == null) {
+      setState(() => _wrong++);
+      AudioService.instance.sfx('error_buzz');
+      _toast(w != null ? 'السلك ده سليم. قيس قبل ما تغيّر حاجة.' : 'المكوّن ده سليم. قيس قبل ما تغيّر حاجة.');
+      return;
+    }
+    final f = found;
+    setState(() => f.fixed = true);
+    AudioService.instance.sfx('success_chime');
+    final k = sFaultKind(f.kind);
+    final left = fs.where((x) => !x.fixed).length;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.check_circle_rounded, color: CC.green, size: 40),
+        title: Text('صح! ${k.nameAr}'),
+        content: Text('في ${f.where(doc)}.\n\n${k.lesson}', style: const TextStyle(height: 1.6)),
+        actions: [
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              if (left == 0) _finishDiag();
+            },
+            child: Text(left == 0 ? 'النتيجة' : 'كمّل (فاضل $left)'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _hint() {
+    final f = faults?.firstWhere((f) => !f.fixed, orElse: () => faults!.first);
+    if (f == null) return;
+    setState(() => _hints++);
+    final k = sFaultKind(f.kind);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.lightbulb_rounded, color: CC.amber, size: 36),
+        title: const Text('تلميح'),
+        content: Text(k.hint, style: const TextStyle(height: 1.6)),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))],
+      ),
+    );
+  }
+
+  Future<void> _finishDiag({bool gaveUp = false}) async {
+    final fs = faults;
+    if (fs == null) return;
+    _diagClock.stop();
+    _diagTimer?.cancel();
+    if (running) _simulate();
+    final secs = _diagClock.elapsed.inSeconds.toDouble();
+    final (score, stars) = faultScore(faults: fs.length, wrong: _wrong, hints: _hints, seconds: secs, gaveUp: gaveUp);
+    AudioService.instance.sfx(gaveUp ? 'soft_fail' : (stars == 3 ? 'success_fanfare' : 'success_chime'));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final h = prefs.getStringList('schem_fault_history_v1') ?? [];
+      h.add('${DateTime.now().toIso8601String()}|${doc.title}|${fs.length}|$score|${secs.round()}');
+      await prefs.setStringList('schem_fault_history_v1', h.length > 50 ? h.sublist(h.length - 50) : h);
+    } catch (_) {}
+    if (!mounted) return;
+    final wrong = _wrong, hints = _hints;
+    setState(() => faults = null);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(gaveUp ? 'الأعطال كانت هنا' : 'خلّصت التشخيص!'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              for (var i = 0; i < 3; i++) Icon(i < stars ? Icons.star_rounded : Icons.star_outline_rounded, color: CC.amber, size: 38),
+            ]),
+            Text('$score / 100', textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text('الوقت ${(secs ~/ 60)}:${(secs.round() % 60).toString().padLeft(2, '0')} · محاولات غلط $wrong · تلميحات $hints',
+                textAlign: TextAlign.center, style: const TextStyle(color: CC.muted)),
+            const SizedBox(height: 12),
+            for (final f in fs)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(f.fixed ? Icons.check_circle_rounded : Icons.cancel_rounded, color: f.fixed ? CC.green : CC.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('${sFaultKind(f.kind).nameAr}: ${f.where(doc)}\n${sFaultKind(f.kind).lesson}', style: const TextStyle(height: 1.5, fontSize: 13)),
+                  ),
+                ]),
+              ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('خلاص')),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _startDiag(_diagCount);
+            },
+            child: const Text('أعطال جديدة'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _pickMeter() {
@@ -635,7 +875,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   MeterReading _reading() {
     final kind = meter;
     if (kind == null) return MeterReading.idle;
-    final s = sim ?? doc.toSim(); // switched off: the drawing as it stands, no supply
+    // switched off: the drawing as it stands (with its hidden faults), no supply
+    final s = sim ?? (diagnosing ? buildFaulted(doc, faults!) : doc.toSim());
     final l = s.lab;
     final ta = probeRed == null ? null : s.pinToTerm[probeRed!];
     final tb = probeBlack == null ? null : s.pinToTerm[probeBlack!];
@@ -825,7 +1066,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       _toast('لا توجد تغذية في الرسم. أضف مصدر تغذية (ثلاثي أو وجه واحد) أو خط الطور L1 وخط التعادل N من مجموعة التغذية.');
       return;
     }
-    final s = doc.toSim();
+    final s = diagnosing ? buildFaulted(doc, faults!) : doc.toSim();
     AudioService.instance.sfx('mcb_on');
     s.lab.setPower(true);
     setState(() {
@@ -1229,6 +1470,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 Navigator.pop(ctx);
                 showProjectsSheet(context, kind: 'schem', suggestedName: doc.title, current: doc.toJsonString, onOpen: (j, n) {
                   if (running) _simulate();
+                  faults = null;
+                  _diagTimer?.cancel();
                   _snapshot();
                   doc = SchemDoc.fromJsonString(j);
                   _changed();
@@ -1370,7 +1613,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   List<Widget> _overlays(BuildContext context) {
     final top = MediaQuery.of(context).padding.top, bottom = MediaQuery.of(context).padding.bottom;
     final selS = sel == null ? null : doc.byId(sel!);
-    final status = pending != null
+    final diagLeft = faults?.where((f) => !f.fixed).length ?? 0;
+    final el = _diagClock.elapsed;
+    final diagText = 'تشخيص الأعطال · ${el.inMinutes.toString().padLeft(2, '0')}:${(el.inSeconds % 60).toString().padLeft(2, '0')} · فاضل $diagLeft${_wrong > 0 ? ' · غلط $_wrong' : ''}';
+    final status = diagnosing && pending == null && _wireFrom == null
+        ? diagText
+        : pending != null
         ? 'اختر الطرف الثاني للسلك…'
         : _wireFrom != null
             ? 'اسحب إلى الطرف الآخر ثم اترك…'
@@ -1435,14 +1683,17 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 _tool(Icons.add_rounded, 'مكتبة الرموز', () => setState(() => libOpen = !libOpen), active: libOpen),
                 _SimButton(on: running, onTap: _simulate),
                 _tool(Icons.speed_rounded, 'أجهزة القياس', _pickMeter, active: meter != null),
+                _tool(Icons.troubleshoot_rounded, 'تشخيص الأعطال', _diagMenu, active: diagnosing),
+                if (diagnosing) _tool(Icons.build_rounded, 'إصلاح المختار', sel != null || selWire != null ? _repair : null),
+                if (diagnosing) _tool(Icons.lightbulb_outline_rounded, 'تلميح', _hint),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),
-                if (selS != null) _tool(Icons.tune_rounded, 'الخصائص', () => _props(selS)),
-                if (selS != null) _tool(Icons.rotate_90_degrees_cw_rounded, 'لف 90° (R)', _turn),
-                if (selS != null) _tool(Icons.flip_rounded, 'قلب (F)', () => _turn(mirror: true)),
-                _penTool(),
-                if (selS != null || selWire != null) _tool(Icons.delete_outline_rounded, 'حذف', _delete, danger: true),
+                if (!diagnosing && (selS != null)) _tool(Icons.tune_rounded, 'الخصائص', () => _props(selS)),
+                if (!diagnosing && (selS != null)) _tool(Icons.rotate_90_degrees_cw_rounded, 'لف 90° (R)', _turn),
+                if (!diagnosing && (selS != null)) _tool(Icons.flip_rounded, 'قلب (F)', () => _turn(mirror: true)),
+                if (!diagnosing) _penTool(),
+                if (!diagnosing && (selS != null || selWire != null)) _tool(Icons.delete_outline_rounded, 'حذف', _delete, danger: true),
                 _tool(Icons.picture_as_pdf_outlined, 'PDF', _exportPdf),
                 _tool(Icons.more_horiz_rounded, 'المزيد', _more),
               ]),

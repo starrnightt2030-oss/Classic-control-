@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
   List<_Section> get _sections => [
         _Section('assets/images/cards/library.webp', 'مكتبة المكونات 3D', 'كل مكوّن بمجسم حقيقي: لفّه، فكّه بالشريط، والمس أي جزء يشرحه',
             CcIcons.library, CC.amber, (_) => const SectionScaffold(title: 'مكتبة المكونات', child: LibraryPage(embedded: true))),
-        _Section('assets/images/cards/video.webp', 'فيديو لكل مكوّن', 'عرض متحرك للفك والتركيب بأسماء الأجزاء، تحفظه وتبعته',
+        _Section('assets/images/cards/video.webp', 'فيديو لكل مكوّن', 'فيديو بالشرح الصوتي: المكوّن يتفك وكل جزء يتشرح، ثم يتركب، تحفظه وتبعته',
             CcIcons.film, CC.amber, (_) => const ActionListPage(action: AutoAction.video)),
         _Section('assets/images/cards/sheet.webp', 'ورقة الدرس', 'صورة أو PDF منسّق: الشكل، والأجزاء بأرقامها، والشرح',
             CcIcons.sheet, CC.amber, (_) => const ActionListPage(action: AutoAction.sheet)),

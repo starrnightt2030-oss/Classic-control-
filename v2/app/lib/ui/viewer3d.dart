@@ -71,6 +71,19 @@ class Viewer3DController {
     return files;
   }
 
+  /// Records the narrated lesson video (see recordLesson in viewer.js); null when unsupported/failed.
+  Future<File?> recordLesson(Map<String, Object?> plan) async {
+    final token = _token('lesson');
+    final c = Completer<String?>();
+    _pending[token] = c;
+    progress.value = 0;
+    _run('cc.recordLesson(${jsonEncode(token)}, ${jsonEncode(plan)})');
+    final name = await c.future.timeout(const Duration(minutes: 20), onTimeout: () => null);
+    progress.value = null;
+    if (name == null || name == 'unsupported') return null;
+    return AssetServer.instance.waitUpload(name, timeout: const Duration(seconds: 120));
+  }
+
   /// Records the presentation video; returns the file, or null when unsupported/failed.
   Future<File?> recordVideo() async {
     final token = _token('video');

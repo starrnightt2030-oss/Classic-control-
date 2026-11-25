@@ -106,14 +106,25 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
   Future<void> _makeVideo() async {
     if (_working) return;
     setState(() => _working = true);
-    final file = await _viewer.recordVideo();
+    // narrated lesson: opening, introduction, every part explained while the model is apart, closing
+    final plan = <String, Object?>{
+      'title': c.nameAr,
+      'en': c.nameEn,
+      'steps': [
+        if (c.opening != null) {'kind': 'open', 'audio': c.opening!.audio, 'title': c.nameAr, 'text': c.opening!.text},
+        if (c.intro != null) {'kind': 'intro', 'audio': c.intro!.audio, 'title': 'ما هو ${c.nameAr}؟', 'text': c.intro!.text},
+        for (final p in c.parts) {'kind': 'part', 'part': p.id, 'audio': p.audio, 'title': p.nameAr, 'text': p.text},
+        if (c.closing != null) {'kind': 'close', 'audio': c.closing!.audio, 'title': c.nameAr, 'text': c.closing!.text},
+      ],
+    };
+    final file = await _viewer.recordLesson(plan);
     if (!mounted) return;
     setState(() {
       _working = false;
       _explode = 0;
     });
     if (file == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الجهاز ده مش بيدعم تسجيل الفيديو من العارض.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('هذا الجهاز لا يدعم تسجيل الفيديو من العارض.')));
       return;
     }
     final ext = file.path.split('.').last;
@@ -123,7 +134,7 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: CC.surface,
-        title: const Text('فيديو الشرح جاهز', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('فيديو الدرس بالشرح الصوتي جاهز', style: TextStyle(fontWeight: FontWeight.w700)),
         content: Text('${c.nameAr} · فيديو ${ext.toUpperCase()} · ${mb.toStringAsFixed(1)} ميجا\nتقدر تحفظه أو تبعته.',
             style: const TextStyle(height: 1.7, color: CC.text2)),
         actions: [
@@ -260,7 +271,7 @@ class _ComponentPageState extends State<ComponentPage> with SingleTickerProvider
                           child: Row(mainAxisSize: MainAxisSize.min, children: [
                             const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: CC.amber)),
                             const SizedBox(width: 10),
-                            Text(p == null ? 'جاري تجهيز الصور…' : 'بيتسجّل الفيديو… $p%',
+                            Text(p == null ? 'جارٍ التجهيز…' : 'يُسجَّل فيديو الدرس بالشرح الصوتي… $p%',
                                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
                           ]),
                         ),

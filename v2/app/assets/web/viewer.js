@@ -375,7 +375,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
-function drawLabels(ctx, W, H, k) {
+function drawLabels(ctx, W, H, k, only) {
   const fN = `700 ${Math.round(15 * k)}px Cairo, sans-serif`;
   const fE = `400 ${Math.round(11 * k)}px Cairo, sans-serif`;
   const pad = 9 * k, badge = 20 * k;
@@ -384,7 +384,7 @@ function drawLabels(ctx, W, H, k) {
     ctx.font = fE; const we = p.en ? ctx.measureText(p.en).width : 0;
     return { w: Math.max(wn, we) + badge + pad * 3, h: (p.en ? 40 : 26) * k };
   };
-  const vis = layout(W, H, () => true, size);
+  const vis = layout(W, H, only ? (p) => p.id === only : () => true, size);
   for (const v of vis) {
     const sel = v.p.id === selected;
     const ax = v.side < 0 ? v.lx + v.w : v.lx, ay = v.ly + v.h / 2;
@@ -568,6 +568,171 @@ async function recordVideo(token) {
   bridge('recorded', token, ok ? name : false);
 }
 
+/**
+ * Narrated lesson video: opening and introduction while the model turns, the model
+ * comes apart, every part is highlighted and explained in turn (its own recorded
+ * narration, with subtitles), then it is assembled again and the lesson closes.
+ * Video (canvas) and narration (Web Audio) go into one MediaRecorder stream.
+ * plan: {title, en, steps: [{kind: 'open'|'part'|'close', part?, audio, title, text}]}
+ */
+async function recordLesson(token, plan) {
+  if (!root || busy) { bridge('recorded', token, false); return; }
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { bridge('recorded', token, 'unsupported'); return; }
+  busy = true;
+  const W = 1280, H = 720, FPS = 30;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC();
+  try { await ac.resume(); } catch (_) {}
+  const dest = ac.createMediaStreamDestination();
+  // load every narration clip first
+  const bufs = await Promise.all(plan.steps.map(async (st) => {
+    if (!st.audio) return null;
+    try {
+      const r = await fetch('/assets/audio/' + st.audio);
+      if (!r.ok) return null;
+      return await ac.decodeAudioData(await r.arrayBuffer());
+    } catch (_) { return null; }
+  }));
+  const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const mime = types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const vs = canvas.captureStream(FPS);
+  const stream = new MediaStream([...vs.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 6000000 } : { videoBitsPerSecond: 6000000 });
+  const chunks = [];
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  const done = new Promise((r) => { rec.onstop = r; });
+  await document.fonts.ready;
+  const keepSel = selected;
+  select(null);
+  const hasParts = parts.length > 0;
+  const baseAz = Math.atan2(VIEW_DIR.x, VIEW_DIR.z);
+  // timeline: [kind, seconds, step index | -1]
+  const segs = [];
+  plan.steps.forEach((st, i) => {
+    const d = bufs[i] ? bufs[i].duration + 0.7 : 3.2;
+    if (st.kind === 'part' && segs.length && segs[segs.length - 1][0] !== 'part' && segs[segs.length - 1][0] !== 'explode') segs.push(['explode', 2.4, -1]);
+    if (st.kind === 'close' && hasParts) segs.push(['assemble', 2.6, -1]);
+    if (st.kind !== 'part' || hasParts) segs.push([st.kind, d, i]);
+  });
+  const total = segs.reduce((a, s) => a + s[1], 0);
+  composeFrame(ctx, W, H, false);
+  rec.start(250);
+  const t0 = performance.now();
+  let elapsedBefore = 0, lastPct = -1, az = 0;
+  const k = W / 900;
+  const wrap = (text, maxW) => {
+    const words = text.split(/\s+/), lines = [];
+    let cur = '';
+    for (const w of words) {
+      const t = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  for (const [kind, dur, idx] of segs) {
+    const st = idx >= 0 ? plan.steps[idx] : null;
+    if (idx >= 0 && bufs[idx]) {
+      const src = ac.createBufferSource();
+      src.buffer = bufs[idx];
+      src.connect(dest);
+      src.start();
+    }
+    if (st && st.kind === 'part') select(st.part); else select(null);
+    // subtitles: sentences shown in proportion to their length
+    const sentences = st && st.text ? st.text.split(/(?<=[.!؟?،:])\s+/).filter((x) => x.trim()) : [];
+    const lens = sentences.map((x) => x.length), sum = lens.reduce((a, b) => a + b, 0) || 1;
+    const segStart = performance.now();
+    while (true) {
+      const s = (performance.now() - segStart) / 1000;
+      if (s > dur) break;
+      const u = s / dur;
+      let e = 0;
+      if (kind === 'explode') e = smooth(u);
+      else if (kind === 'part') e = 1;
+      else if (kind === 'assemble') e = 1 - smooth(u);
+      if (!hasParts) e = 0;
+      explode = explodeTarget = Math.min(1, Math.max(0, e)); applyExplode();
+      camera.aspect = W / H;
+      const g = goalFor(explode);
+      let target = g.target.clone(), dist = g.dist * (1 + 0.1 * smooth(explode));
+      if (kind === 'part') {
+        const p = parts.find((x) => x.id === st.part);
+        if (p) {
+          const c = p.obj.localToWorld(p.localCenter.clone());
+          const z = smooth(Math.min(1, s / 1.2));
+          target = target.lerp(c, 0.45 * z);
+          dist *= 1 - 0.22 * z;
+        }
+      }
+      setNearFar(dist);
+      az += 0.0022;
+      const a = baseAz + Math.sin(az * 2.2) * 0.5;
+      const dir = new THREE.Vector3(Math.sin(a) * 0.9, VIEW_DIR.y, Math.cos(a) * 0.9).normalize();
+      controls.target.copy(target);
+      camera.position.copy(target).addScaledVector(dir, dist);
+      camera.lookAt(target);
+      composeFrame(ctx, W, H, false);
+      if (kind === 'part' && st) drawLabels(ctx, W, H, k * 1.15, st.part);
+      // title card for opening / closing
+      if (kind === 'open' || kind === 'close') {
+        const a2 = Math.min(1, s / 0.6, (dur - s) / 0.6);
+        ctx.globalAlpha = Math.max(0, a2);
+        ctx.fillStyle = 'rgba(7,12,26,.55)';
+        ctx.fillRect(0, H * 0.08, W, 92 * k);
+        ctx.direction = 'rtl'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF'; ctx.font = `800 ${Math.round(34 * k)}px Cairo, sans-serif`;
+        ctx.fillText(plan.title, W / 2, H * 0.08 + 36 * k);
+        ctx.fillStyle = '#9FB4D8'; ctx.font = `600 ${Math.round(14 * k)}px Cairo, sans-serif`;
+        ctx.direction = 'ltr';
+        ctx.fillText(plan.en + ' · Control Academy', W / 2, H * 0.08 + 72 * k);
+        ctx.globalAlpha = 1;
+      }
+      // bottom bar: step title + subtitle line
+      const barH = 92 * k;
+      ctx.fillStyle = 'rgba(7,12,26,.82)';
+      ctx.fillRect(0, H - barH, W, barH);
+      ctx.fillStyle = AMBER;
+      ctx.fillRect(0, H - barH, W * ((elapsedBefore + s) / total), 3 * k);
+      ctx.textBaseline = 'middle';
+      ctx.direction = 'rtl'; ctx.textAlign = 'right';
+      ctx.fillStyle = CYAN; ctx.font = `700 ${Math.round(15 * k)}px Cairo, sans-serif`;
+      const head = st ? (st.kind === 'part' ? `${(parts.find((x) => x.id === st.part) || {}).n || ''}. ${st.title}` : st.title) : (kind === 'explode' ? 'فك المكوّن' : 'إعادة التركيب');
+      ctx.fillText(head, W - 22 * k, H - barH + 20 * k);
+      if (sentences.length) {
+        let acc = 0, cur = sentences[sentences.length - 1];
+        for (let j = 0; j < sentences.length; j++) {
+          acc += lens[j] / sum;
+          if (u * 1.03 <= acc) { cur = sentences[j]; break; }
+        }
+        ctx.fillStyle = '#E8EEF2'; ctx.font = `500 ${Math.round(14.5 * k)}px Cairo, sans-serif`;
+        const lines = wrap(cur, W - 44 * k).slice(0, 2);
+        lines.forEach((ln, j) => ctx.fillText(ln, W - 22 * k, H - barH + (46 + j * 24) * k));
+      }
+      const pct = Math.round(((elapsedBefore + s) / total) * 100);
+      if (pct !== lastPct) { lastPct = pct; bridge('progress', token, pct); }
+      await nextFrame();
+    }
+    elapsedBefore += dur;
+  }
+  rec.stop();
+  await done;
+  try { ac.close(); } catch (_) {}
+  select(keepSel);
+  explode = explodeTarget = 0; applyExplode();
+  restoreView();
+  refit(true, 0);
+  busy = false;
+  const blob = new Blob(chunks, { type: mime || 'video/webm' });
+  const name = `${token}.${ext}`;
+  const ok = await upload(name, blob).catch(() => false);
+  bridge('recorded', token, ok ? name : false);
+}
+
 // ---------- loop ----------
 function resize() {
   const W = window.innerWidth, H = window.innerHeight;
@@ -618,6 +783,7 @@ window.cc = {
   reset() { refit(true); },
   captureSheet,
   recordVideo,
+  recordLesson,
 };
 
 let announced = false;

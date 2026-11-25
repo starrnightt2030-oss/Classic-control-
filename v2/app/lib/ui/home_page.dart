@@ -4,6 +4,7 @@ import '../app_info.dart';
 import 'cards.dart';
 import 'component_page.dart';
 import '../schem/ready_page.dart';
+import '../quiz/quiz_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
 import 'section_pages.dart';
@@ -40,15 +41,14 @@ class _HomePageState extends State<HomePage> {
             CcIcons.sheet, CC.amber, (_) => const ActionListPage(action: AutoAction.sheet)),
         _Section('assets/images/cards/diagrams.webp', 'المخططات الجاهزة', '20 دائرة كلاسيك كنترول بمخطط القوى والتحكم الصحيح، تُشغَّل بالمحاكاة وتُطبع',
             CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات الجاهزة', child: ReadyDiagramsPage())),
-        _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر', '17 دائرة كلاسيكية تعمل حيًّا: الضواغط والكونتاكتورات والمؤقتات والمحرك، ومهام بالترتيب',
+        _Section('assets/images/cards/diagrams.webp', 'تمارين الدوائر', '17 دائرة على لوحة حقيقية: المكونات مركّبة والمخطط بجانبك، توصّل وتفحص وتشغّل وتنفّذ المهام',
             CcIcons.bolt, CC.green, (_) => const CircuitListPage()),
         _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'ورقة عمل فارغة: أدخل المكونات الحقيقية من المكتبة، ووصّل كل سلك بيدك، وشغّل. الخطأ يعطي شرارة أو يحرق المكوّن',
             CcIcons.lab, CC.cyan, (_) => const LabPage()),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر الخطية', 'ارسم الدائرة برموز IEC من المكتبة ووصّلها وحاكِها، ثم اطبعها PDF مع قائمة المكونات',
             CcIcons.diagram, CC.green, (_) => SchemPage(deliver: (b, n, m) => ExportService.deliverBytes(b, n, mime: m))),
-        _Section('assets/images/cards/quiz.webp', 'اختبر نفسك', 'أسئلة وأعطال عملية على كل مكوّن ودايرة', CcIcons.quiz, CC.red,
-            (_) => const SoonPage(title: 'الاختبارات', image: 'assets/images/cards/quiz.webp'),
-            soon: true),
+        _Section('assets/images/cards/quiz.webp', 'اختبر نفسك', 'اختبار سريع وامتحان شامل بوقت، والرموز والمخططات، مع شرح لكل إجابة',
+            CcIcons.quiz, CC.red, (_) => const QuizHomePage()),
       ];
 
   @override

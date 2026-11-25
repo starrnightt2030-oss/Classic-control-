@@ -15,6 +15,7 @@ import 'catalog.dart';
 import 'faults.dart';
 import 'model.dart';
 import 'paint.dart';
+import 'projects.dart';
 import 'templates.dart';
 
 const _prefKey = 'lab_doc_v3';
@@ -1043,6 +1044,21 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+              leading: const Icon(Icons.save_outlined, color: CC.accentSoft),
+              title: const Text('حفظ وفتح المشاريع'),
+              subtitle: const Text('احفظ ورقة العمل باسم وارجع لها في أي وقت', style: TextStyle(color: CC.muted)),
+              onTap: () {
+                Navigator.pop(ctx);
+                showProjectsSheet(context, kind: 'panel', suggestedName: 'لوحة ${DateTime.now().day}/${DateTime.now().month}', current: doc.toJsonString, onOpen: (j, n) {
+                  if (running) _power();
+                  _snapshot();
+                  doc = LabDoc.fromJsonString(j);
+                  fault = null;
+                  _changed();
+                  _fit();
+                });
+              }),
           ListTile(
               leading: const CcIcon(CcIcons.lab, color: CC.accentSoft),
               title: const Text('مثال محلول: تشغيل مباشر DOL'),

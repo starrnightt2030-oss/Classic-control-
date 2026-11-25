@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'perf.dart';
+
 /// «Glass Navy» — deep navy, electric blue, frosted glass (v2.3). See v2/design/README.md.
 ///
 /// `amber*` keeps its old name for the primary accent (now electric blue) so every screen
@@ -141,6 +143,20 @@ class Glass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // a panel that is nearly opaque shows no blur anyway; on big desktop touch screens
+    // (Perf.lite) the blur over a live, repainting sheet is the costliest thing on screen
+    final opaque = tint.a >= 0.85;
+    if (Perf.lite || opaque) {
+      return Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: opaque ? tint : Color.alphaBlend(tint, const Color(0xF20A1124)),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: CC.glassBorder),
+        ),
+        child: child,
+      );
+    }
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(

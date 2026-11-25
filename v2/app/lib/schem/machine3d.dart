@@ -11,6 +11,8 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../services/asset_server.dart';
 import '../sim/plant.dart';
+import '../ui/perf.dart';
+import 'plant_paint.dart';
 
 /// what the 3D page needs to draw this machine now (see machine.js)
 Map<String, Object?> machineState(Plant p, PlantIo? io) {
@@ -92,6 +94,18 @@ class _Machine3DState extends State<Machine3D> {
   String _sent = '';
   final _since = Stopwatch()..start();
 
+  /// the web view is made a moment after the panel opens, so opening a machine never
+  /// stalls the screen; the drawn machine shows until the 3D one has loaded
+  bool _mount = false, _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) setState(() => _mount = true);
+    });
+  }
+
   void _load() {
     final k = widget.plant.key;
     if (!_ready || _kind == k) return;
@@ -129,8 +143,17 @@ class _Machine3DState extends State<Machine3D> {
 
   @override
   Widget build(BuildContext context) {
+    final flat = IgnorePointer(child: CustomPaint(painter: PlantPainter(widget.plant, widget.io, widget.frame), size: Size.infinite));
+    if (!_mount) return flat;
+    return Stack(fit: StackFit.expand, children: [
+      _web3d(),
+      if (!_shown) flat, // covers the page while it loads
+    ]);
+  }
+
+  Widget _web3d() {
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri('${AssetServer.instance.origin}/assets/web/machine.html')),
+      initialUrlRequest: URLRequest(url: WebUri('${AssetServer.instance.origin}/assets/web/machine.html${Perf.lite ? '?q=lite' : ''}')),
       initialSettings: InAppWebViewSettings(
         transparentBackground: true,
         supportZoom: false,
@@ -155,6 +178,7 @@ class _Machine3DState extends State<Machine3D> {
             handlerName: 'loaded',
             callback: (_) {
               _push(force: true);
+              if (mounted && !_shown) setState(() => _shown = true);
               return null;
             });
       },

@@ -13,8 +13,17 @@ const bridge = (name, ...args) => {
 };
 const msg = document.getElementById('msg');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+// quality: machine.html?q=lite (big Windows touch screens, weak GPUs) draws without
+// antialiasing, with a smaller shadow map and fewer pixels. Either way the page only
+// draws while something moves, at most [FPS] times a second, and steps its quality
+// down by itself when frames take too long.
+const params = new URLSearchParams(location.search);
+const LITE = params.get('q') === 'lite';
+const FPS = LITE ? 30 : 40;
+let ratio = Math.min(window.devicePixelRatio || 1, LITE ? 1 : 1.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias: !LITE, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(ratio);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.95;
@@ -28,7 +37,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
 scene.environmentIntensity = 0.6;
 const sun = new THREE.DirectionalLight(0xfff2e0, 2.2);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(LITE ? 512 : 1024, LITE ? 512 : 1024);
 sun.shadow.bias = -0.0005;
 sun.shadow.normalBias = 0.01;
 scene.add(sun, sun.target);
@@ -42,6 +51,13 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.screenSpacePanning = true;
+controls.addEventListener('start', () => { dragging = true; wake(); });
+controls.addEventListener('end', () => { dragging = false; wake(800); });
+controls.addEventListener('change', () => wake(400));
+
+// ---- draw on demand
+let awakeUntil = 0, dragging = false;
+function wake(ms = 600) { awakeUntil = Math.max(awakeUntil, performance.now() + ms); }
 
 const loader = new GLTFLoader();
 let root = null, kind = '', N = {}, lamps = {}, protos = {}, items = new Map(), ghosts = [], cleats = [];
@@ -62,6 +78,7 @@ function resize() {
   renderer.domElement.style.height = h + 'px';
   camera.aspect = w / Math.max(1, h);
   camera.updateProjectionMatrix();
+  wake();
 }
 window.addEventListener('resize', resize);
 resize();
@@ -135,6 +152,8 @@ function load(url, k) {
     scene.add(root);
     fit();
     msg.style.display = 'none';
+    renderer.shadowMap.needsUpdate = true;
+    wake(1500);
     apply(0.016, true);
     bridge('loaded', kind);
   }, undefined, () => { msg.textContent = 'تعذّر تحميل المجسم'; });
@@ -224,7 +243,11 @@ function apply(dt, snap = false) {
         return k >= 1 ? (g.t > 2.5) : false;
       }
       g.o.position.y += dt * 0.6;
-      g.o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.transparent = true; m.material.opacity = Math.max(0, 1 - g.t * 3); } });
+      g.o.traverse((m) => {
+        if (!m.isMesh) return;
+        if (!m.userData.own) { m.material = m.material.clone(); m.material.transparent = true; m.userData.own = true; }
+        m.material.opacity = Math.max(0, 1 - g.t * 3);
+      });
       return g.t > 0.35;
     });
   } else if (kind === 'press') {
@@ -262,26 +285,59 @@ function ghostsTick(dt, step) {
   ghosts = ghosts.filter((g) => {
     g.t += dt;
     const done = step(g);
-    if (done) root.remove(g.o);
+    if (done) {
+      root.remove(g.o);
+      g.o.traverse((m) => { if (m.isMesh && m.userData.own) m.material.dispose(); });
+    }
     return !done;
   });
 }
 
-let last = performance.now();
+// something still moving on its own: an eased value not yet at its target, a box
+// falling into the bin, the running lamp blinking, water pouring
+function busy() {
+  if (ghosts.length || dragging) return true;
+  if (kind === 'cart' && Math.abs(state.run || 0) > 0.05) return true;
+  if (kind === 'fill' && state.y1) return true;
+  for (const [k, v] of Object.entries(cur)) {
+    const t = state[k];
+    if (typeof t === 'number' && Math.abs(t - v) > 1e-3) return true;
+  }
+  for (const o of items.values()) {
+    const it = o.userData.last;
+    if (it && Math.abs(it[1] - o.userData.sx) > 1e-4) return true;
+  }
+  return false;
+}
+
+let last = performance.now(), drawn = 0, slow = 0, frames = 0;
 function frame(now) {
   requestAnimationFrame(frame);
+  if (now > awakeUntil && !busy()) { last = now; return; }
+  if (now - drawn < 1000 / FPS - 2) return;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
+  // a draw that keeps taking more than ~2 frames: fewer pixels, then no shadows
+  const took = now - drawn;
+  drawn = now;
+  if (took < 200) slow = took > 2.2 * (1000 / FPS) ? slow + 1 : Math.max(0, slow - 1);
+  if (slow > 45) {
+    slow = 0;
+    if (ratio > 0.75) { ratio = Math.max(0.75, ratio - 0.25); renderer.setPixelRatio(ratio); resize(); }
+    else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); }
+  }
   apply(dt);
   controls.update();
   renderer.render(scene, camera);
+  frames++;
 }
 requestAnimationFrame(frame);
 
 window.mc = {
   load,
-  update(s) { state = s || {}; },
-  reset() { if (root) fit(); },
+  update(s) { state = s || {}; wake(300); },
+  reset() { if (root) fit(); wake(); },
+  stats() { return { frames, ratio, shadows: renderer.shadowMap.enabled, lite: LITE }; },
 };
 
 let announced = false;

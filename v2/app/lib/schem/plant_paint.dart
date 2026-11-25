@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../sim/plant.dart';
+import '../ui/perf.dart';
 
 class PlantPainter extends CustomPainter {
   final Plant p;
@@ -372,10 +373,7 @@ class _Iso {
   }
 
   void label(double x, double y, double z, String t) {
-    final tp = TextPainter(
-      text: TextSpan(text: t, style: const TextStyle(color: Color(0xFFEAF1FF), fontSize: 10.5, fontWeight: FontWeight.w700, shadows: [Shadow(blurRadius: 3)])),
-      textDirection: TextDirection.rtl,
-    )..layout();
+    final tp = TextCache.get(t, const TextStyle(color: Color(0xFFEAF1FF), fontSize: 10.5, fontWeight: FontWeight.w700, shadows: [Shadow(blurRadius: 3)]), dir: TextDirection.rtl);
     final q = p(x, y, z);
     tp.paint(c, q - Offset(tp.width / 2, tp.height / 2));
   }

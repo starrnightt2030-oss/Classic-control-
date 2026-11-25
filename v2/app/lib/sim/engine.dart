@@ -8,6 +8,8 @@
 // motor speed/current, overload heating, the cart on the track.
 import 'dart:math' as math;
 
+import 'plant.dart';
+
 // ---------------------------------------------------------------- phasors
 class Ph {
   final double re, im;
@@ -149,8 +151,10 @@ final Map<String, CompType> kTypes = {
   'motor1': CompType(
       key: 'motor1', nameAr: 'محرك أحادي الطور بمكثف', w: 180, h: 160,
       terms: (_) => _t(const [Term('U1', 0, 0, 't'), Term('U2', 0, 0, 't'), Term('Z1', 0, 0, 't'), Term('Z2', 0, 0, 't'), Term('PE', 0, 0, 't')])),
-  // a machine driven by a motor (p['motor']): cart on a track, hoist, lift, tank + pump.
-  // Each of its position / level switches has an NC pair Sn1-Sn2 and an NO pair Sn3-Sn4.
+  // a machine driven by a motor (p['motor']): cart on a track, hoist, lift, tank + pump,
+  // and the machines of lib/sim/plant.dart: sorting belt, pneumatic press, filling line.
+  // Each of its position / level switches has an NC pair Sn1-Sn2 and an NO pair Sn3-Sn4;
+  // the air / water valve of the last three has its coil on A1-A2 (230 V).
   'mach': CompType(
       key: 'mach', nameAr: 'آلة', w: 300, h: 200,
       terms: (c) => _t([
@@ -159,7 +163,8 @@ final Map<String, CompType> kTypes = {
               Term('S${i}2', 0, 0, 'b'),
               Term('S${i}3', 0, 0, 'b'),
               Term('S${i}4', 0, 0, 'b'),
-            ]
+            ],
+            if (machValve(c.p['kind'] as String?)) ...const [Term('A1', 0, 0, 'b'), Term('A2', 0, 0, 'b')],
           ]),
       links: (c) => [
             for (var i = 1; i <= machSwitches(c.p['kind'] as String?); i++) c.s.ms[i - 1] ? ['S${i}3', 'S${i}4'] : ['S${i}1', 'S${i}2'],
@@ -256,7 +261,7 @@ class CompState {
   double k = 0;
   // machine: position / level 0…1 and its switches
   double mx = 0;
-  List<bool> ms = [false, false, false];
+  List<bool> ms = [false, false, false, false];
   bool valve = true; // tank outlet open
   // injected fault (free lab): coil_open · weld · nc_open · no_close · lamp_dead · phase_loss
   String? fault;
@@ -323,7 +328,52 @@ class Wire {
 /// a supply with its own main switch (isolator) feeds only when switched on
 bool supLive(Comp c) => c.p['sw'] != true || c.s.on;
 
-int machSwitches(String? kind) => kind == 'lift' ? 3 : 2;
+int machSwitches(String? kind) => switch (kind) {
+      'lift' || 'press' => 3,
+      'sort' => 4,
+      _ => 2,
+    };
+
+/// machines of lib/sim/plant.dart that run in the panel lab (the others are drawn by the lab itself)
+const kLabPlants = {'sort', 'press', 'fill'};
+
+/// has a valve coil on A1-A2
+bool machValve(String? kind) => kLabPlants.contains(kind);
+
+/// The machine of lib/sim/plant.dart inside a panel lab: its motor is the one the
+/// machine is set to (or the first in the panel), its valve the coil on A1-A2, and
+/// its sensors Bn are the machine's switches Sn.
+class _MachIo implements PlantIo {
+  final Lab l;
+  final Comp c;
+  bool changed = false;
+  _MachIo(this.l, this.c);
+
+  @override
+  double motor(String tag) {
+    Comp? m = c.p['motor'] == null ? null : l.byId(c.p['motor'] as String);
+    m ??= l.comps.where((o) => o.type == 'motor' || o.type == 'motor1').firstOrNull;
+    if (m == null) return 0;
+    final run = m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run';
+    return run ? m.s.spd * (m.s.dir == 0 ? 1 : m.s.dir) : 0;
+  }
+
+  @override
+  bool on(String tag) => !c.s.dead && c.s.v > 230 * 0.6;
+
+  @override
+  void sense(String tag, bool active) {
+    final i = int.tryParse(tag.substring(1));
+    if (i == null || i < 1 || i > c.s.ms.length) return;
+    if (c.s.ms[i - 1] == active) return;
+    c.s.ms[i - 1] = active;
+    changed = true;
+    l.emit(SimEvent('ls', c.id, {'act': active, 'sw': i}));
+  }
+
+  @override
+  bool has(String tag) => true;
+}
 
 /// where each machine switch sits (cart / hoist: ends · lift: floors · tank: float levels)
 List<double> machPoints(String? kind) => switch (kind) {
@@ -722,6 +772,15 @@ class Lab {
       }
       if (c.type == 'motor') _motor(n, c);
       if (c.type == 'motor1') _motor1(n, c);
+      if (c.type == 'mach' && machValve(c.p['kind'] as String?)) {
+        final v = n.vAcross('${c.id}.A1', '${c.id}.A2');
+        c.s.v = c.s.dead ? 0 : v;
+        if (!c.s.dead && v > 230 * 1.4) {
+          c.s.dead = true; // a 230 V coil on 400 V
+          c.s.v = 0;
+          emit(SimEvent('burn', c.id));
+        }
+      }
     }
   }
 
@@ -896,8 +955,22 @@ class Lab {
     return dirty;
   }
 
+  /// the running machines of lib/sim/plant.dart, by part id
+  final Map<String, Plant> plants = {};
+  final Map<String, _MachIo> _machIo = {};
+
+  /// what a machine reads from this circuit (for drawing it)
+  PlantIo? machIo(String id) => _machIo[id];
+
   bool _machTick(Comp c, double dt) {
     final kind = c.p['kind'] as String?;
+    if (kLabPlants.contains(kind)) {
+      final pl = plants[c.id] ??= plantByKey(kind)!.make();
+      final io = _machIo[c.id] ??= _MachIo(this, c);
+      io.changed = false;
+      pl.tick(dt, io);
+      return io.changed;
+    }
     Comp? m = c.p['motor'] == null ? null : byId(c.p['motor'] as String);
     m ??= comps.where((o) => o.type == 'motor' || o.type == 'motor1').firstOrNull;
     final running = m != null && (m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run');
@@ -1071,6 +1144,18 @@ class Lab {
   /// on the return side.
   Map<int, int> flowPaths() {
     final n = nets;
+    // the paths only change when the circuit is solved again (a new nets object):
+    // between those moments the screen asks every frame for the same answer
+    final memo = _flowMemo;
+    if (memo != null && identical(memo.$1, n) && memo.$2 == wires.length && memo.$3 == brokenWires.length) return memo.$4;
+    final out = _flowPaths(n);
+    _flowMemo = (n, wires.length, brokenWires.length, out);
+    return out;
+  }
+
+  (Nets?, int, int, Map<int, int>)? _flowMemo;
+
+  Map<int, int> _flowPaths(Nets? n) {
     final out = <int, int>{};
     if (n == null) return out;
     final adj = <String, List<(String, int, bool)>>{};
@@ -1108,6 +1193,7 @@ class Lab {
       final coil = c.t.coil;
       if (coil != null && c.s.v > 15 && c.s.fault != 'coil_open') loads.add(('${c.id}.${coil[0]}', '${c.id}.${coil[1]}'));
       if (c.type == 'lamp' && c.s.v > 5) loads.add(('${c.id}.X1', '${c.id}.X2'));
+      if (c.type == 'mach' && c.s.v > 15 && machValve(c.p['kind'] as String?)) loads.add(('${c.id}.A1', '${c.id}.A2'));
       if (c.type == 'psu' && c.s.k > 0.05) loads.add(('${c.id}.L', '${c.id}.N'));
       if (c.type == 'trafo' && c.s.k > 0.05) {
         final hi = n.vAcross('${c.id}.P0', '${c.id}.P380') > 1 ? 'P380' : 'P220';
@@ -1199,7 +1285,7 @@ class WiringDiff {
 
 // ---------------------------------------------------------------- helpers for tasks
 /// cart position: the circuit track or the first machine in a panel lab
-double? cartX(Lab l) => l.track?.x ?? l.comps.where((c) => c.type == 'mach').firstOrNull?.s.mx;
+double? cartX(Lab l) => l.track?.x ?? l.comps.where((c) => c.type == 'mach' && !kLabPlants.contains(c.p['kind'])).firstOrNull?.s.mx;
 
 bool motorRunning(Lab l, String m) {
   final x = l.byId(m);

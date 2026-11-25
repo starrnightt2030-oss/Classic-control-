@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../ui/perf.dart';
 
 const double kG = 20; // px per grid unit
 
@@ -318,10 +319,7 @@ void paintSymbol(Canvas c, SymDef d,
   }
 
   void text(String s, Offset at, {double size = 10, Color? col, bool bold = false, TextAlign align = TextAlign.left}) {
-    final tp = TextPainter(
-        text: TextSpan(text: s, style: TextStyle(fontSize: size, color: col ?? ink, fontWeight: bold ? FontWeight.w800 : FontWeight.w500, fontFamily: 'JetBrainsMono', height: 1)),
-        textDirection: TextDirection.ltr)
-      ..layout();
+    final tp = TextCache.get(s, TextStyle(fontSize: size, color: col ?? ink, fontWeight: bold ? FontWeight.w800 : FontWeight.w500, fontFamily: 'JetBrainsMono', height: 1));
     if (rot % 4 == 0 && !flip) {
       final dx = align == TextAlign.right ? -tp.width : (align == TextAlign.center ? -tp.width / 2 : 0.0);
       tp.paint(c, at + Offset(dx, -tp.height / 2));

@@ -1,7 +1,9 @@
 // «معمل اللوحة» — full-screen panel builder + live simulation.
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -9,9 +11,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/audio_service.dart';
 import '../sim/engine.dart';
+import '../sim/plant.dart';
 import '../ui/icons.dart';
+import '../ui/perf.dart';
 import '../ui/theme.dart';
 import '../schem/ladder.dart';
+import '../schem/machine3d.dart';
+import '../schem/plant_paint.dart';
 import '../schem/sheet_paint.dart';
 import '../schem/symbols.dart' show kG;
 import '../sim/circuits.dart';
@@ -82,6 +88,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // hand wiring by dragging from a terminal
   String? _wireFrom;
   Offset? _wireTo;
+
+  /// how the sorting belt / press / filling line look before the power is on
+  final Map<String, Plant> _idlePlants = {};
 
   // effects: sparks at shorts, smoke from burnt parts, flashing shorted wires
   final List<LabFx> fx = [];
@@ -996,7 +1005,6 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     if (l != null) {
       l.step(dt);
       _handle(l.drain());
-      flows = l.flowPaths();
       _sounds(l);
       fault?.tick(dt);
       _checkTasks();
@@ -1004,8 +1012,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _ticker.stop();
       _last = Duration.zero;
     }
+    // physics every frame, the screen at Perf.simFps (see lib/ui/perf.dart)
+    if (_ticker.isActive && _clock - _drawnAt < Perf.simFrame * 0.9) return;
+    _drawnAt = _clock;
+    if (l != null) flows = l.flowPaths();
     setState(() {});
   }
+
+  double _drawnAt = -1;
 
   /// continuous sounds: running motors, humming coils / stalled motors, sirens
   void _sounds(Lab l) {
@@ -1162,6 +1176,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           l.actuate(p.id, 'load');
           _toast(l[p.id].s.load ? 'تم تحميل المحرك بحمل زائد.' : 'رُفع الحمل الزائد عن المحرك.');
         case 'mach':
+          final pl = l.plants[p.id];
+          if (pl != null) pl.tap(0.25, 0.5); // put a part / box on the machine
           if (p.p['kind'] == 'tank') {
             l.actuate(p.id, 'valve');
             _toast(l[p.id].s.valve ? 'فُتح محبس التصريف: الخزان يفرغ.' : 'أُغلق محبس التصريف.');
@@ -1306,7 +1322,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               Text('ضبط التيار: ${((p.p['set'] ?? 8.5) as num).toStringAsFixed(1)} أمبير', style: const TextStyle(color: CC.text2)),
               Slider(min: 4, max: 14, divisions: 40, value: ((p.p['set'] ?? 8.5) as num).toDouble(), onChanged: (v) => upd('set', v)),
             ],
-            if (e == 'mach') ...[
+            if (e == 'mach' && p.p['kind'] != 'press') ...[
               const Text('المحرك الذي يقود الآلة', style: TextStyle(color: CC.text2)),
               const SizedBox(height: 6),
               Wrap(spacing: 8, runSpacing: 8, children: [
@@ -1315,15 +1331,34 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               ]),
               if (!doc.parts.any((q) => q.d.engine == 'motor' || q.d.engine == 'motor1'))
                 const Text('أضف محركًا من المكتبة أولًا.', style: TextStyle(color: CC.muted)),
+            ],
+            if (e == 'mach') ...[
               const SizedBox(height: 10),
               Text(
                   switch (p.p['kind']) {
+                    'sort' =>
+                      'المحرك بيدوّر السير وعليه كراتين معدن وبلاستيك. B1 فوتوسل آخر السير، B2 حساس حثي بيشوف المعدن قدام البستم، B3 البستم راجع، B4 البستم طالع. ملف صمام البستم Y1 على A1-A2 (230 فولت). اضغط على الماكينة وهي شغالة عشان تحط كرتونة.',
+                    'press' =>
+                      'ملف الصمام Y1 على A1-A2 (230 فولت) بينزّل الذراع، ولما يتفصل الياي بيرجّعها. B1 الذراع فوق، B2 الذراع تحت، B3 فوتوسل القطعة موجودة. اضغط على المكبس وهو شغال عشان تحط قطعة.',
+                    'fill' =>
+                      'المحرك بيدوّر السير وعليه زجاجات فاضية. B1 فوتوسل الزجاجة تحت البزبوز، B2 حساس إن الزجاجة اتملت، وصمام التعبئة Y1 على A1-A2 (230 فولت).',
                     'tank' => 'الطلمبة تملأ الخزان والمحبس يفرّغه. العوامة S1 تعمل عند 20% والعوامة S2 عند 85%. اضغط على الخزان أثناء التشغيل لفتح المحبس أو غلقه.',
                     'lift' => 'المصعد يتحرك بين ثلاثة أدوار، وفي كل دور مفتاح يعمل عند وصول الكابينة. اتجاه دوران المحرك يحدد الصعود أو النزول.',
                     'hoist' => 'الونش يرفع وينزل الحمل. S1 مفتاح الحد الأسفل وS2 مفتاح الحد الأعلى.',
                     _ => 'العربة تتحرك يمينًا ويسارًا حسب اتجاه دوران المحرك. S1 عند النهاية اليسرى وS2 عند النهاية اليمنى.',
                   },
                   style: const TextStyle(color: CC.muted, height: 1.6)),
+              if (p.p['kind'] == 'sort' || p.p['kind'] == 'press' || p.p['kind'] == 'fill') ...[
+                const SizedBox(height: 10),
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() => _view3d = p.id);
+                  },
+                  icon: const Icon(Icons.view_in_ar_rounded),
+                  label: const Text('شوف الماكينة مجسمة 3D وهي شغالة'),
+                ),
+              ],
             ],
             if (e == 'motor1') ...[
               Text('التيار الاسمي: ${((p.p['In'] ?? 4.0) as num).toStringAsFixed(1)} أمبير', style: const TextStyle(color: CC.text2)),
@@ -1499,7 +1534,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         Positioned.fill(
           child: DecoratedBox(
             decoration: const BoxDecoration(color: Color(0xFF070C1A)),
-            child: CustomPaint(painter: _DotGrid(tc.value)),
+            child: RepaintBoundary(child: CustomPaint(painter: _DotGrid(tc.value))),
           ),
         ),
         Positioned.fill(
@@ -1516,7 +1551,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               width: doc.totalW * kPx,
               height: doc.plateH * kPx,
               child: Stack(clipBehavior: Clip.none, children: [
-                Positioned.fill(child: CustomPaint(painter: PlatePainter(doc, selPart))),
+                Positioned.fill(child: RepaintBoundary(child: CustomPaint(isComplex: true, painter: PlatePainter(doc, selPart)))),
                 for (final p in _drawOrder())
                   if (!p.structural) _partWidget(p),
                 if (doc.mech.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: InterlockPainter(doc)))),
@@ -1558,9 +1593,81 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           ),
         ),
         if (showUi) ..._overlays(context) else _restoreButton(),
+        if (_view3d != null) _machine3d(context),
       ]),
     );
   }
+
+  /// a floating window with the machine in 3D, moving with the panel's circuit
+  Widget _machine3d(BuildContext context) {
+    final id = _view3d!;
+    final p = doc.byId(id);
+    final kind = p?.d.machine;
+    if (p == null || kind == null || !kLabPlants.contains(kind)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _view3d = null);
+      });
+      return const SizedBox.shrink();
+    }
+    final pl = sim?.plants[id] ?? (_idlePlants[id] ??= plantByKey(kind)!.make());
+    final mq = MediaQuery.of(context);
+    final sz = mq.size;
+    final w = math.min(420.0, sz.width - 24), h = w * 0.62;
+    final p0 = _view3dPos ?? Offset(sz.width - w - 12, mq.padding.top + 70);
+    final pos = Offset(p0.dx.clamp(0.0, math.max(0.0, sz.width - w)).toDouble(), p0.dy.clamp(0.0, math.max(0.0, sz.height - h - 60)).toDouble());
+    return Positioned(
+      left: pos.dx,
+      top: pos.dy,
+      width: w,
+      child: Glass(
+        radius: 20,
+        tint: const Color(0xEE0A1228),
+        padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (e) => setState(() => _view3dPos = pos + e.delta),
+            child: Row(children: [
+              const Icon(Icons.drag_indicator_rounded, size: 18, color: CC.muted),
+              const SizedBox(width: 4),
+              Expanded(child: Text('${p.id} · ${plantByKey(kind)!.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700))),
+              IconButton(
+                  tooltip: 'اقفل', visualDensity: VisualDensity.compact, onPressed: () => setState(() => _view3d = null), icon: const Icon(Icons.close_rounded, size: 20)),
+            ]),
+          ),
+          SizedBox(
+            height: h,
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _web3d
+                    ? Machine3D(plant: pl, io: sim?.machIo(id), frame: _frame3d)
+                    : CustomPaint(painter: PlantPainter(pl, sim?.machIo(id), _frame3d), size: Size(w - 20, h))),
+          ),
+          const SizedBox(height: 6),
+          Text(running ? 'الماكينة شغالة مع دايرة اللوحة' : 'شغّل التغذية عشان الماكينة تتحرك مع دايرتك',
+              style: TextStyle(color: running ? CC.green : CC.muted, fontSize: 12.5)),
+          if (pl.count.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Wrap(spacing: 6, runSpacing: 4, children: [
+                for (final e in pl.count.entries)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: const Color(0x223D8BFF), borderRadius: BorderRadius.circular(10)),
+                    child: Text('${e.key}: ${e.value}', style: const TextStyle(fontSize: 12)),
+                  ),
+              ]),
+            ),
+        ]),
+      ),
+    );
+  }
+
+  /// the 3D page runs on the platforms with a web view (Android, Windows)
+  static final bool _web3d = !kIsWeb && (Platform.isAndroid || Platform.isWindows);
+  String? _view3d;
+  Offset? _view3dPos;
+  int get _frame3d => (_clock * Perf.simFps).round();
 
   Widget _partWidget(Placed p) {
     final sel = p.id == selPart || p.id == dragId;
@@ -1573,7 +1680,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           child: CustomPaint(
               painter: MachinePainter(mk,
                   x: c?.s.mx ?? (mk == 'cart' ? 0.5 : (mk == 'tank' ? 0.1 : 0.0)),
-                  sw: c?.s.ms ?? const [false, false, false],
+                  sw: c?.s.ms ?? const [false, false, false, false],
+                  plant: kLabPlants.contains(mk) ? (sim?.plants[p.id] ?? (_idlePlants[p.id] ??= plantByKey(mk)!.make())) : null,
+                  io: sim?.machIo(p.id),
+                  coil: c != null && c.s.v > 230 * 0.6,
                   run: () {
                     final m = c == null ? null : sim?.byId((p.p['motor'] as String?) ?? '');
                     return m != null && m.s.spd > 0.05 && (m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run');
@@ -2197,7 +2307,8 @@ class _ColorDot extends StatelessWidget {
 
 class _DotGrid extends CustomPainter {
   final Matrix4 m;
-  _DotGrid(this.m);
+  _DotGrid(this.m) : _key = Object.hashAll(m.storage);
+  final int _key; // the view's pan and zoom when this was made
   @override
   void paint(Canvas c, Size size) {
     final s = m.getMaxScaleOnAxis();
@@ -2212,5 +2323,5 @@ class _DotGrid extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DotGrid old) => true;
+  bool shouldRepaint(covariant _DotGrid old) => old._key != _key;
 }

@@ -7,7 +7,7 @@ import 'dart:ui' show Size;
 
 import 'package:flutter/services.dart';
 
-import '../sim/engine.dart' show machSwitches;
+import '../sim/engine.dart' show machSwitches, machValve;
 
 class SpriteInfo {
   final String name;
@@ -127,7 +127,7 @@ const kLabCategories = [
   LabCategory('المرحلات والمؤقتات', 0xFF3D8BFF, ['relay', 'timer', 'tsd', 'phr']),
   LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'pb_black', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber', 'siren']),
   LabCategory('المحركات', 0xFFC9A27E, ['motor', 'motor_d', 'motor_s', 'motor1']),
-  LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'limit']),
+  LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'mach_sort', 'mach_press', 'mach_fill', 'limit']),
   LabCategory('التمديدات', 0xFFF5B83D, ['tb', 'din_rail']),
 ];
 
@@ -248,6 +248,15 @@ final Map<String, LabPartDef> kLabParts = {
         key: 'mach_tank', nameAr: 'خزان بطلمبة وعوّامتين', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
         params: {'kind': 'tank'}, mount: Mount.free),
     const LabPartDef(
+        key: 'mach_sort', nameAr: 'سير فرز المعادن (4 حساسات وصمام بستم)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'sort'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_press', nameAr: 'مكبس نيوماتيك (3 حساسات وصمام)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'press'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_fill', nameAr: 'خط تعبئة زجاجات (حساسين وصمام تعبئة)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'fill'}, mount: Mount.free),
+    const LabPartDef(
         key: 'limit', nameAr: 'مفتاح نهاية الشوط', category: 'المحركات والحساسات', sprite: 'limit_roller', engine: 'ls', prefix: 'B',
         terms: {'21': '11', '22': '12', '13': '23', '14': '24'}, mount: Mount.free),
     const LabPartDef(key: 'tb', nameAr: 'طرف توصيل', category: 'التمديدات', sprite: 'terminal_block', engine: 'tb', prefix: 'X', terms: {'X1_1': '1', 'X1_2': '2'}),
@@ -292,14 +301,18 @@ class MachineGeo {
         'hoist' => const Size(220, 330),
         'lift' => const Size(240, 390),
         'tank' => const Size(240, 320),
+        'sort' => const Size(420, 250),
+        'press' => const Size(300, 280),
+        'fill' => const Size(380, 240),
         _ => const Size(300, 200),
       };
 
   static Map<String, (double, double)> terms(String kind) {
     final n = machSwitches(kind);
+    final valve = machValve(kind);
     final sz = size(kind);
     const pitch = 9.0, gap = 13.0;
-    final total = n * 4 * pitch + (n - 1) * gap;
+    final total = n * 4 * pitch + (n - 1) * gap + (valve ? gap + 2 * pitch : 0);
     var x0 = (sz.width - total) / 2 + pitch / 2;
     final out = <String, (double, double)>{};
     for (var i = 1; i <= n; i++) {
@@ -307,6 +320,10 @@ class MachineGeo {
         out['S$i$j'] = (x0 + (j - 1) * pitch, sz.height - 9);
       }
       x0 += 4 * pitch + gap;
+    }
+    if (valve) {
+      out['A1'] = (x0, sz.height - 9);
+      out['A2'] = (x0 + pitch, sz.height - 9);
     }
     return out;
   }

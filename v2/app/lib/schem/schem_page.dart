@@ -57,6 +57,11 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   bool _moved = false;
   String? _wireFrom;
   Offset? _wireTo;
+  // dragging one leg of a wire sideways: wire index, leg, route when grabbed
+  (int, int, List<Offset>)? _leg;
+
+  /// colour new wires get (null: default black)
+  String? pen;
 
   // simulation
   SchemSim? sim;
@@ -231,6 +236,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     if (s != null) {
       setState(() => _dragId = s.id);
       _dragStart = Offset(s.x, s.y);
+      return;
+    }
+    final wi = _wireAt(g);
+    if (wi != null) {
+      final r = doc.route(doc.wires[wi]);
+      if (r != null && r.length >= 2) setState(() => _leg = (wi, nearestLeg(r, g).$1, r));
     }
   }
 
@@ -241,6 +252,21 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       if (_wireTo != null || (g - _downG!).distance > 0.4) setState(() => _wireTo = g);
       return;
     }
+    final lg = _leg;
+    if (lg != null) {
+      final d = g - _downG!;
+      if (!_moved && d.distance < 0.3) return;
+      if (!_moved) {
+        _snapshot();
+        _moved = true;
+      }
+      final (wi, k, r) = lg;
+      final vertical = (r[k].dx - r[k + 1].dx).abs() < 0.01;
+      final delta = ((vertical ? d.dx : d.dy) * 2).roundToDouble() / 2; // half-grid steps
+      doc.wires[wi].pts = dragLeg(r, k, delta);
+      setState(() {});
+      return;
+    }
     if (_dragId == null) return;
     final d = g - _downG!;
     if (!_moved && d.distance < 0.3) return;
@@ -249,8 +275,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       _moved = true;
     }
     final s = doc.byId(_dragId!)!;
-    s.x = (_dragStart!.dx + d.dx).roundToDouble().clamp(0.0, doc.sheetW - s.d.w).toDouble();
-    s.y = (_dragStart!.dy + d.dy).roundToDouble().clamp(0.0, doc.sheetH - s.d.h).toDouble();
+    s.x = (_dragStart!.dx + d.dx).roundToDouble().clamp(0.0, doc.sheetW - s.size.width).toDouble();
+    s.y = (_dragStart!.dy + d.dy).roundToDouble().clamp(0.0, doc.sheetH - s.size.height).toDouble();
     setState(() {});
   }
 
@@ -273,6 +299,18 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       return;
     }
     _wireFrom = null;
+    if (_leg != null) {
+      final moved = _moved, wi = _leg!.$1;
+      setState(() => _leg = null);
+      if (moved) {
+        setState(() {
+          selWire = wi;
+          sel = null;
+        });
+        _changed();
+        return;
+      }
+    }
     if (_dragId != null && _moved) {
       final s = doc.byId(_dragId!)!;
       if (_collides(s)) {
@@ -300,6 +338,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     _pointer = null;
     _wireFrom = null;
     _wireTo = null;
+    if (_leg != null && _moved) _changed();
+    _leg = null;
     if (_dragId != null && _moved) {
       final s = doc.byId(_dragId!)!;
       if (_collides(s)) {
@@ -351,7 +391,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   void _connect(String a, String b) {
     if (doc.wires.any((w) => (w.a == a && w.b == b) || (w.a == b && w.b == a))) return;
     _snapshot();
-    doc.wires.add(SWire(a, b));
+    doc.wires.add(SWire(a, b, c: pen));
     AudioService.instance.sfx('screw_tighten');
     _changed();
   }
@@ -408,6 +448,110 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     _changed();
   }
 
+  /// turn the selected symbol a quarter turn clockwise (or mirror it) about its centre
+  void _turn({bool mirror = false}) {
+    if (!_editable() || sel == null) return;
+    final s = doc.byId(sel!);
+    if (s == null) return;
+    _snapshot();
+    final c0 = s.rect.center;
+    final r0 = s.rot, f0 = s.flip, x0 = s.x, y0 = s.y;
+    if (mirror) {
+      s.flip = !s.flip;
+    } else {
+      s.rot = (s.rot + 1) % 4;
+    }
+    s.x = (c0.dx - s.size.width / 2).roundToDouble().clamp(0.0, doc.sheetW - s.size.width).toDouble();
+    s.y = (c0.dy - s.size.height / 2).roundToDouble().clamp(0.0, doc.sheetH - s.size.height).toDouble();
+    if (_collides(s)) {
+      s
+        ..rot = r0
+        ..flip = f0
+        ..x = x0
+        ..y = y0;
+      _undo.removeLast();
+      _toast('مفيش مكان كفاية للف الرمز هنا. حرّكه لمكان فاضي الأول.');
+      return;
+    }
+    AudioService.instance.sfx('assemble_snap');
+    _changed();
+  }
+
+  void _wireSheet() {
+    final wi = selWire;
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
+        final w = wi != null && wi < doc.wires.length ? doc.wires[wi] : null;
+        final cur = w?.c ?? pen;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(w != null ? 'لون السلك' : 'لون الأسلاك الجديدة', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              const Text('اللون بيتطبق على السلك المختار، وكمان على أي سلك جديد ترسمه بعد كده.', style: TextStyle(color: CC.muted, height: 1.5)),
+              const SizedBox(height: 12),
+              Wrap(spacing: 10, runSpacing: 10, children: [
+                for (final (k, v, name) in [(null, 0xFF1B2330, 'افتراضي'), ...kWireColors])
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      if (w != null) {
+                        _snapshot();
+                        w.c = k;
+                      }
+                      pen = k;
+                      set(() {});
+                      _changed();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: cur == k ? CC.amber : CC.line2, width: cur == k ? 2 : 1),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(v),
+                            gradient: k == 'gnye' ? const LinearGradient(colors: [Color(0xFF2EAA4A), Color(0xFFFFD60A), Color(0xFF2EAA4A)]) : null,
+                            border: Border.all(color: Colors.white24),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(name, style: const TextStyle(fontSize: 13)),
+                      ]),
+                    ),
+                  ),
+              ]),
+              if (w != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: w.pts == null
+                      ? null
+                      : () {
+                          _snapshot();
+                          w.pts = null;
+                          set(() {});
+                          _changed();
+                        },
+                  icon: const Icon(Icons.auto_fix_high_rounded),
+                  label: const Text('رجّع السلك لمساره التلقائي'),
+                ),
+                const SizedBox(height: 6),
+                const Text('عشان تنسّق السلك: اسحب أي جزء منه يمين وشمال أو فوق وتحت.', style: TextStyle(color: CC.muted, fontSize: 12.5, height: 1.5)),
+              ],
+            ]),
+          ),
+        );
+      }),
+    );
+  }
+
   void _delete() {
     if (!_editable()) return;
     _snapshot();
@@ -457,7 +601,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
       return;
     }
     if (!doc.syms.any((s) => s.d.role == SymRole.source)) {
-      _toast('لا توجد تغذية في الرسم. أضف خط الطور L1 وخط التعادل N من مجموعة التغذية.');
+      _toast('لا توجد تغذية في الرسم. أضف مصدر تغذية (ثلاثي أو وجه واحد) أو خط الطور L1 وخط التعادل N من مجموعة التغذية.');
       return;
     }
     final s = doc.toSim();
@@ -575,9 +719,16 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
         AudioService.instance.sfx('pushbutton_click');
         l.actuate(id, 'press', true);
       case 'ls':
-        _pressBy[pointer] = id;
+      case 'prox':
         AudioService.instance.sfx('relay_click');
-        l.actuate(id, 'ls', true);
+        if (s.d.params['latch'] == true) {
+          // floats, pressure switches, thermostats: a tap changes their state and it stays
+          l.actuate(id, 'ls', !(c?.s.act ?? false));
+          _toast(c != null && c.s.act ? '${s.tag}: اتفعّل (${_senseText(s.sym)})' : '${s.tag}: رجع لوضعه الطبيعي');
+        } else {
+          _pressBy[pointer] = id;
+          l.actuate(id, 'ls', true);
+        }
       case 'estop':
         AudioService.instance.sfx('estop_latch');
         l.actuate(id, 'estop');
@@ -585,7 +736,12 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
         AudioService.instance.sfx('selector_detent');
         l.actuate(id, 'sel');
       case 'mcb1':
+      case 'mcb2':
       case 'mcb3':
+      case 'mcb4':
+      case 'rccb':
+      case 'mpcb':
+      case 'isol3':
       case 'fuse':
         AudioService.instance.sfx(c != null && c.s.on ? 'mcb_trip' : 'mcb_on');
         l.actuate(id, 'mcb');
@@ -602,11 +758,19 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
     setState(() {});
   }
 
+  String _senseText(String sym) => switch (sym) {
+        'float_no' || 'float_nc' => 'المية وصلت للعوامة',
+        'press_no' => 'الضغط وصل للضبط',
+        'thermo_nc' => 'الحرارة عدّت الضبط',
+        _ => 'فيه حاجة قدام الحساس',
+      };
+
   void _release(int pointer) {
     final id = _pressBy.remove(pointer);
     final l = sim?.lab;
     if (id != null && l != null) {
-      l.actuate(id, l.byId(id)?.type == 'ls' ? 'ls' : 'press', false);
+      final t = l.byId(id)?.type;
+      l.actuate(id, t == 'ls' || t == 'prox' ? 'ls' : 'press', false);
       _handle(l.drain());
       setState(() {});
     }
@@ -734,14 +898,38 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 Slider(min: 1, max: 30, divisions: 29, value: ((s.p['T'] ?? 5) as num).toDouble(), onChanged: (v) => upd('T', v)),
               ],
               if (e == 'lamp') ...[
-                const Text('اللون', style: TextStyle(color: CC.text2)),
-                const SizedBox(height: 6),
-                chips('col', [('g', 'أخضر'), ('r', 'أحمر'), ('y', 'أصفر'), ('b', 'أزرق'), ('w', 'أبيض')]),
-                const SizedBox(height: 10),
-                const Text('جهد اللمبة', style: TextStyle(color: CC.text2)),
+                if (s.sym == 'lamp') ...[
+                  const Text('اللون', style: TextStyle(color: CC.text2)),
+                  const SizedBox(height: 6),
+                  chips('col', [('g', 'أخضر'), ('r', 'أحمر'), ('y', 'أصفر'), ('b', 'أزرق'), ('w', 'أبيض')]),
+                  const SizedBox(height: 10),
+                ],
+                const Text('جهد التشغيل', style: TextStyle(color: CC.text2)),
                 const SizedBox(height: 6),
                 chips('V', [(24.0, '24 فولت'), (220.0, '220 فولت')]),
               ],
+              const SizedBox(height: 12),
+              const Text('الاتجاه', style: TextStyle(color: CC.text2)),
+              const SizedBox(height: 6),
+              Row(children: [
+                Expanded(
+                    child: OutlinedButton.icon(
+                        onPressed: () {
+                          _turn();
+                          set(() {});
+                        },
+                        icon: const Icon(Icons.rotate_90_degrees_cw_rounded),
+                        label: const Text('لف 90°'))),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: OutlinedButton.icon(
+                        onPressed: () {
+                          _turn(mirror: true);
+                          set(() {});
+                        },
+                        icon: const Icon(Icons.flip_rounded),
+                        label: const Text('قلب (مراية)'))),
+              ]),
               if (e == 'ol') ...[
                 Text('ضبط التيار: ${((s.p['set'] ?? 8.5) as num).toStringAsFixed(1)} أمبير', style: const TextStyle(color: CC.text2)),
                 Slider(min: 4, max: 14, divisions: 40, value: ((s.p['set'] ?? 8.5) as num).toDouble(), onChanged: (v) => upd('set', v)),
@@ -835,6 +1023,19 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 _exportPdf();
               }),
           ListTile(
+              leading: const Icon(Icons.auto_fix_high_rounded, color: CC.accentSoft),
+              title: const Text('ترتيب كل الأسلاك تلقائيًا'),
+              subtitle: const Text('يلغي أي تنسيق يدوي للأسلاك', style: TextStyle(color: CC.muted)),
+              onTap: () {
+                Navigator.pop(ctx);
+                if (!_editable()) return;
+                _snapshot();
+                for (final w in doc.wires) {
+                  w.pts = null;
+                }
+                _changed();
+              }),
+          ListTile(
               leading: const Icon(Icons.edit_outlined, color: CC.accentSoft),
               title: const Text('تغيير اسم الدائرة'),
               onTap: () {
@@ -873,6 +1074,21 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     if (!ready) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final pf = _wireFrom == null ? null : doc.pinPos(_wireFrom!);
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyR): _turn,
+        const SingleActivator(LogicalKeyboardKey.keyF): () => _turn(mirror: true),
+        const SingleActivator(LogicalKeyboardKey.delete): () {
+          if (sel != null || selWire != null) _delete();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undoAct,
+        const SingleActivator(LogicalKeyboardKey.keyY, control: true): _redoAct,
+      },
+      child: Focus(autofocus: true, child: _scaffold(context, pf)),
+    );
+  }
+
+  Widget _scaffold(BuildContext context, Offset? pf) {
     return Scaffold(
       body: Stack(children: [
         const Positioned.fill(child: ColoredBox(color: Color(0xFF070C1A))),
@@ -882,8 +1098,8 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
             constrained: false,
             minScale: 0.15,
             maxScale: 6,
-            panEnabled: _dragId == null && _wireFrom == null,
-            scaleEnabled: _dragId == null && _wireFrom == null,
+            panEnabled: _dragId == null && _wireFrom == null && _leg == null,
+            scaleEnabled: _dragId == null && _wireFrom == null && _leg == null,
             boundaryMargin: const EdgeInsets.all(1600),
             onInteractionUpdate: (_) => setState(() {}),
             child: SizedBox(
@@ -937,7 +1153,9 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
             ? 'اسحب إلى الطرف الآخر ثم اترك…'
             : running
                 ? (flash.isNotEmpty ? 'قصر كهربائي! أوقف المحاكاة وصحّح التوصيل' : 'المحاكاة تعمل · اضغط على الضواغط والقواطع في الرسم')
-                : '${doc.title} · اسحب من طرف رمز إلى طرف آخر لرسم سلك';
+                : _leg != null
+                    ? 'حرّك السلك لمكانه ثم اترك…'
+                    : '${doc.title} · اسحب من طرف رمز إلى طرف آخر لرسم سلك، واسحب السلك نفسه لتنسيقه';
     return [
       Positioned(
         top: top + 10,
@@ -997,6 +1215,9 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),
                 if (selS != null) _tool(Icons.tune_rounded, 'الخصائص', () => _props(selS)),
+                if (selS != null) _tool(Icons.rotate_90_degrees_cw_rounded, 'لف 90° (R)', _turn),
+                if (selS != null) _tool(Icons.flip_rounded, 'قلب (F)', () => _turn(mirror: true)),
+                _penTool(),
                 if (selS != null || selWire != null) _tool(Icons.delete_outline_rounded, 'حذف', _delete, danger: true),
                 _tool(Icons.picture_as_pdf_outlined, 'PDF', _exportPdf),
                 _tool(Icons.more_horiz_rounded, 'المزيد', _more),
@@ -1006,6 +1227,20 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
         ),
       ),
     ];
+  }
+
+  Widget _penTool() {
+    final w = selWire != null && selWire! < doc.wires.length ? doc.wires[selWire!] : null;
+    final col = wireColor(w?.c ?? pen) ?? CC.text;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: IconButton(
+        tooltip: w != null ? 'لون السلك وتنسيقه' : 'لون الأسلاك',
+        onPressed: running ? null : _wireSheet,
+        style: IconButton.styleFrom(backgroundColor: w != null ? const Color(0x333D8BFF) : null),
+        icon: Icon(Icons.palette_outlined, color: running ? CC.line2 : col, size: 26),
+      ),
+    );
   }
 
   Widget _tool(IconData i, String tip, VoidCallback? onTap, {bool active = false, bool danger = false}) => Padding(

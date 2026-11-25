@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../sim/engine.dart';
 import 'model.dart';
 import 'symbols.dart';
 
@@ -41,9 +40,22 @@ SymLook? lookOf(SPlaced s, SchemSim? sim) {
         case 'sel':
           return SymLook(closed: c.s.pos != 0);
         case 'ls':
-          return SymLook(closed: s.sym == 'ls_no' ? c.s.act : !c.s.act);
+          return SymLook(closed: s.d.kind == 'NC' ? !c.s.act : c.s.act);
+        case 'prox':
+          return SymLook(closed: c.s.act);
+        case 'tb':
+          return const SymLook(closed: true);
+        case 'trafo':
+        case 'psu':
+          return SymLook(energised: c.s.k > 0.05);
+        case 'phr':
+          return SymLook(closed: c.s.on);
         case 'lamp':
           return SymLook(energised: !c.s.dead && c.s.v > c.num_('V') * 0.6, fault: c.s.dead);
+        case 'motor1':
+          final bad = c.s.mode == 'single' || c.s.mode == 'over' || c.s.mode == 'dead';
+          final mode = {'run': c.s.dir < 0 ? 'RUN ◄' : 'RUN ►', 'single': 'HUM', 'over': 'OVERVOLT', 'dead': 'BURNT'}[c.s.mode];
+          return SymLook(energised: c.s.mode == 'run' && c.s.spd > 0.02, fault: bad, angle: c.s.ang, note: mode == null ? null : '$mode · ${c.s.current.toStringAsFixed(1)} A');
         case 'motor':
           final run = c.s.mode == 'star' || c.s.mode == 'delta';
           final bad = c.s.mode == 'single' || c.s.mode == 'over' || c.s.mode == 'dead';
@@ -95,11 +107,14 @@ class SheetPainter extends CustomPainter {
     for (final s in doc.syms) {
       c.save();
       c.translate(s.x * g, s.y * g);
-      paintSymbol(c, s.d, look: lookOf(s, sim), tag: s.tag, p: s.p, contactNo: nums[s.id] ?? '');
+      c.save();
+      symTransform(c, s.d.w, s.d.h, s.rot, s.flip);
+      paintSymbol(c, s.d, look: lookOf(s, sim), tag: s.tag, p: s.p, contactNo: nums[s.id] ?? '', rot: s.rot, flip: s.flip);
+      c.restore();
       if (s.p['burnt'] == true) _burnt(c, s);
       c.restore();
       if (s.id == selected) {
-        c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(s.x * g, s.y * g, s.d.w * g, s.d.h * g).inflate(8), const Radius.circular(6)), Paint()
+        c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(s.x * g, s.y * g, s.size.width * g, s.size.height * g).inflate(8), const Radius.circular(6)), Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..color = const Color(0xFF3D8BFF));
@@ -122,7 +137,7 @@ class SheetPainter extends CustomPainter {
   }
 
   void _burnt(Canvas c, SPlaced s) {
-    final r = Rect.fromLTWH(0, 0, s.d.w * kG, s.d.h * kG);
+    final r = Rect.fromLTWH(0, 0, s.size.width * kG, s.size.height * kG);
     c.drawRect(r.deflate(2), Paint()..color = const Color(0x332A0A0A));
     final tp = TextPainter(
         text: const TextSpan(text: 'محترق', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w800)), textDirection: TextDirection.rtl)
@@ -188,9 +203,8 @@ class SheetPainter extends CustomPainter {
     final ends = <Offset, int>{};
     for (var i = 0; i < doc.wires.length; i++) {
       final w = doc.wires[i];
-      final a = doc.pinPos(w.a), b = doc.pinPos(w.b);
-      if (a == null || b == null) continue;
-      final pts = schemRoute(a, doc.pinUp(w.a), b, doc.pinUp(w.b), w.y);
+      final pts = doc.route(w);
+      if (pts == null) continue;
       final path = Path()..moveTo(pts.first.dx * g, pts.first.dy * g);
       for (final p in pts.skip(1)) {
         path.lineTo(p.dx * g, p.dy * g);
@@ -215,16 +229,39 @@ class SheetPainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
           ..color = kBad.withValues(alpha: 0.5 + 0.5 * math.sin(phase * math.pi * 12)));
       }
-      Color col = kInk;
+      final own = wireColor(w.c);
+      Color col = own ?? kInk;
       if (live) {
-        final ph = n!.phaseOf(term!);
-        col = switch (ph) { 'N' => const Color(0xFF2F7FE0), 'PE' => const Color(0xFF2EAA4A), _ => const Color(0xFFC62828) };
+        final ph = n.phaseOf(term);
+        final liveCol = switch (ph) { 'N' => const Color(0xFF2F7FE0), 'PE' => const Color(0xFF2EAA4A), _ => const Color(0xFFC62828) };
+        if (own == null) {
+          col = liveCol;
+        } else {
+          // a coloured wire keeps its colour; a soft halo shows it is live
+          c.drawPath(path, Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 7
+            ..strokeJoin = StrokeJoin.round
+            ..color = liveCol.withValues(alpha: 0.22));
+        }
       }
       c.drawPath(path, Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = live ? 2.4 : 1.8
+        ..strokeWidth = live || own != null ? 2.4 : 1.8
         ..strokeJoin = StrokeJoin.round
         ..color = col);
+      if (w.c == 'gnye') {
+        // green-yellow: yellow stripes over the green
+        final stripe = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.4
+          ..color = const Color(0xFFFFD60A);
+        for (final m in path.computeMetrics()) {
+          for (var t = 0.0; t < m.length; t += 10) {
+            c.drawPath(m.extractPath(t, math.min(t + 5, m.length)), stripe);
+          }
+        }
+      }
       final f = flows[i];
       if (f != null) {
         final dash = Paint()
@@ -274,18 +311,9 @@ class SheetPainter extends CustomPainter {
 
 /// distance (grid units) from a point to a wire's route
 double wireDistance(SchemDoc d, SWire w, Offset p) {
-  final a = d.pinPos(w.a), b = d.pinPos(w.b);
-  if (a == null || b == null) return double.infinity;
-  final pts = schemRoute(a, d.pinUp(w.a), b, d.pinUp(w.b), w.y);
-  var best = double.infinity;
-  for (var i = 0; i < pts.length - 1; i++) {
-    final s = pts[i], e = pts[i + 1];
-    final v = e - s;
-    final l2 = v.dx * v.dx + v.dy * v.dy;
-    final t = l2 == 0 ? 0.0 : (((p - s).dx * v.dx + (p - s).dy * v.dy) / l2).clamp(0.0, 1.0).toDouble();
-    best = math.min(best, (p - (s + v * t)).distance);
-  }
-  return best;
+  final pts = d.route(w);
+  if (pts == null || pts.length < 2) return double.infinity;
+  return nearestLeg(pts, p).$2;
 }
 
 /// the bill of materials page (A4 portrait, 1 px = 1 pt × [k])

@@ -213,6 +213,16 @@ final Map<String, CompType> kTypes = {
       key: 'contact', nameAr: 'تلامس', w: 40, h: 80,
       terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
       links: (c) => c.s.on ? [['1', '2']] : []),
+  // schematic: a three-pole disconnector (no trip unit)
+  'isol3': CompType(
+      key: 'isol3', nameAr: 'مفتاح فاصل ثلاثي', w: 120, h: 124,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('3', 0, 0, 't'), Term('5', 0, 0, 't'), Term('2', 0, 0, 'b'), Term('4', 0, 0, 'b'), Term('6', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2'], ['3', '4'], ['5', '6']] : []),
+  // schematic: 3-wire PNP sensor. BN +24 V, BU 0 V, BK switched output (BN → BK while it detects)
+  'prox': CompType(
+      key: 'prox', nameAr: 'حساس PNP ثلاثي الأسلاك', w: 60, h: 80,
+      terms: (_) => _t(const [Term('BN', 0, 0, 't'), Term('BU', 0, 0, 'b'), Term('BK', 0, 0, 'b')]),
+      links: (c) => c.s.act ? [['BN', 'BK']] : []),
   'tb': CompType(
       key: 'tb', nameAr: 'طرف توصيل', w: 20, h: 60,
       terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
@@ -266,6 +276,7 @@ class Comp {
       case 'mcb4':
       case 'fuse':
       case 'rccb':
+      case 'isol3':
         s.on = true;
       case 'mpcb':
         s.on = true;

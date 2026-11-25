@@ -253,8 +253,8 @@ SchemDoc _make(String title, double Function(_Lay) power, List<Object> control, 
   d.mech.addAll(mech);
   var mx = 0.0, my = 0.0;
   for (final s in d.syms) {
-    if (s.x + s.d.w > mx) mx = s.x + s.d.w;
-    if (s.y + s.d.h > my) my = s.y + s.d.h;
+    if (s.x + s.size.width > mx) mx = s.x + s.size.width;
+    if (s.y + s.size.height > my) my = s.y + s.size.height;
   }
   d.sheetW = (mx + 4 < 40 ? 40 : mx + 4).ceilToDouble();
   d.sheetH = (my + 6 < 30 ? 30 : my + 6).ceilToDouble();

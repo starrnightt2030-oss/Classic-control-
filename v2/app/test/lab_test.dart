@@ -1,4 +1,6 @@
+import 'package:classic_control/lab/exercise.dart';
 import 'package:classic_control/lab/faults.dart';
+import 'package:classic_control/sim/circuits.dart';
 import 'package:classic_control/lab/model.dart';
 import 'package:classic_control/lab/templates.dart';
 import 'package:classic_control/sim/engine.dart';
@@ -232,5 +234,47 @@ void main() {
     final f = mk(true, false), r = mk(true, true);
     expect(f['M1'].s.mode, 'run');
     expect(f['M1'].s.dir, -r['M1'].s.dir);
+  });
+
+  group('circuit exercises', () {
+    for (final c in kCircuits) {
+      test('${c.id}: devices mounted, reference wiring runs the tasks', () {
+        final e = buildExercise(c);
+        // every reference terminal exists on a mounted device
+        final terms = e.doc.toLab().allTerms();
+        for (final w in e.reference) {
+          expect(terms.contains(w.a), isTrue, reason: '${c.id}: ${w.a}');
+          expect(terms.contains(w.b), isTrue, reason: '${c.id}: ${w.b}');
+        }
+        // wired with the solution, the check passes and power-on is clean
+        final d = e.doc;
+        for (final w in e.reference) {
+          d.wires.add(LabWire(w.a, w.b, 'rd'));
+        }
+        final l = d.toLab();
+        expect(l.wiringDiff(e.reference).ok, isTrue);
+        l.setPower(true);
+        l.run(0.5);
+        expect(l.short, isNull, reason: c.id);
+      });
+    }
+
+    test('c_rev_auto in the lab: the cart shuttles between the limit switches', () {
+      final e = buildExercise(circuitById('c_rev_auto')!);
+      for (final w in e.reference) {
+        e.doc.wires.add(LabWire(w.a, w.b, 'rd'));
+      }
+      final l = e.doc.toLab()..setPower(true);
+      l.actuate('S1', 'press', true);
+      l.run(0.3);
+      l.actuate('S1', 'press', false);
+      var sawK2 = false;
+      for (var i = 0; i < 400 && !sawK2; i++) {
+        l.run(0.05);
+        sawK2 = l['K2'].s.on;
+      }
+      expect(sawK2, isTrue, reason: 'reversed at LS2');
+      expect(l.short, isNull);
+    });
   });
 }

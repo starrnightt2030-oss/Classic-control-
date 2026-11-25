@@ -11,7 +11,12 @@ import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../ui/icons.dart';
 import '../ui/theme.dart';
+import '../schem/ladder.dart';
+import '../schem/sheet_paint.dart';
+import '../schem/symbols.dart' show kG;
+import '../sim/circuits.dart';
 import 'catalog.dart';
+import 'exercise.dart';
 import 'faults.dart';
 import 'model.dart';
 import 'paint.dart';
@@ -24,7 +29,10 @@ const showUiBottom = 100.0;
 class LabPage extends StatefulWidget {
   /// 0 normal · 1 DOL demo running · 2 library open · 3 short circuit · 4 burnt lamp (CI screenshots)
   final int demo;
-  const LabPage({super.key, this.demo = 0});
+
+  /// open one of the classic circuits as a wiring exercise (devices mounted, schematic beside)
+  final String? exercise;
+  const LabPage({super.key, this.demo = 0, this.exercise});
   @override
   State<LabPage> createState() => _LabPageState();
 }
@@ -34,6 +42,11 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   bool ready = false;
   final tc = TransformationController();
   final List<String> _undo = [], _redo = [];
+
+  // exercise mode
+  LabExercise? ex;
+  bool schemOpen = false;
+  final Set<int> tasksDone = {};
 
   String? selPart;
   int? selWire;
@@ -100,10 +113,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   Future<void> _load() async {
     await Sprites.load();
     final prefs = await SharedPreferences.getInstance();
-    final s = widget.demo > 0 ? null : prefs.getString(_prefKey);
+    final exId = widget.exercise;
+    final c = exId == null ? null : circuitById(exId);
+    if (c != null) ex = buildExercise(c);
+    final s = widget.demo > 0 ? null : prefs.getString(_storeKey);
     LabDoc d;
     try {
-      d = switch (widget.demo) {
+      d = ex != null ? (s == null ? ex!.doc : LabDoc.fromJsonString(s)) : switch (widget.demo) {
         1 => dolTemplate(),
         3 => shortDemo(),
         4 => burnDemo(),
@@ -127,16 +143,194 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         });
       }
       if (widget.demo == 2) setState(() => libOpen = true);
+      if (ex != null) setState(() => schemOpen = true);
+      if (widget.demo == 6) {
+        // preview: the exercise wired with its reference solution and started
+        for (final w in ex!.reference) {
+          doc.wires.add(LabWire(w.a, w.b, w.power ? (const {'br': 'br', 'bk': 'bk', 'gr': 'gy', 'gy': 'ge', 'bu': 'bu'}[w.col] ?? 'rd') : (w.col == 'bu' ? 'bu' : 'rd')));
+        }
+        Future<void>.delayed(const Duration(milliseconds: 600), () {
+          _power();
+          sim?.actuate('S1', 'press', true);
+          Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.actuate('S1', 'press', false));
+        });
+      }
       if (widget.demo == 3 || widget.demo == 4 || widget.demo == 5) Future<void>.delayed(const Duration(milliseconds: 600), _power);
     });
   }
 
+  String get _storeKey => widget.exercise == null ? _prefKey : 'lab_ex_${widget.exercise}';
+
   void _persist() {
+    if (widget.demo > 0) return;
     _save?.cancel();
     _save = Timer(const Duration(milliseconds: 600), () async {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefKey, doc.toJsonString());
+      await prefs.setString(_storeKey, doc.toJsonString());
     });
+  }
+
+  // ------------------------------------------------------------ exercise
+  void _checkTasks() {
+    final e = ex, l = sim;
+    if (e == null || l == null) return;
+    final tasks = e.circuit.tasks;
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasksDone.contains(i)) continue;
+      // tasks are done in order
+      if (i > 0 && !tasksDone.contains(i - 1)) break;
+      if (tasks[i].done(l)) {
+        tasksDone.add(i);
+        AudioService.instance.sfx(i == tasks.length - 1 ? 'success_fanfare' : 'success_chime');
+        _toast(i == tasks.length - 1 ? 'ممتاز! أنهيت كل مهام التمرين.' : 'أحسنت: ${tasks[i].text}');
+      }
+    }
+  }
+
+  void _checkWiring() {
+    final e = ex;
+    if (e == null) return;
+    final diff = doc.toLab().wiringDiff(e.reference);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.7),
+          child: ListView(shrinkWrap: true, children: [
+            Row(children: [
+              Icon(diff.ok ? Icons.verified_rounded : Icons.rule_rounded, color: diff.ok ? CC.green : CC.gold),
+              const SizedBox(width: 8),
+              Text(diff.ok ? 'التوصيل مطابق للمخطط' : 'نتيجة فحص التوصيل', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ]),
+            const SizedBox(height: 10),
+            if (diff.ok)
+              const Text('كل الأسلاك في مكانها الصحيح. شغّل التغذية ونفّذ مهام التمرين.', style: TextStyle(height: 1.6))
+            else ...[
+              Text('ناقص ${diff.missing.length} توصيلة، وزائد ${diff.extra.length}.', style: const TextStyle(color: CC.text2)),
+              const SizedBox(height: 10),
+              if (diff.missing.isNotEmpty) const Text('توصيلات ناقصة', style: TextStyle(fontWeight: FontWeight.w700, color: CC.gold)),
+              for (final w in diff.missing.take(30))
+                ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.add_link_rounded, color: CC.gold),
+                    title: Text('${prettyTerm(w.a)}   ←→   ${prettyTerm(w.b)}', textDirection: TextDirection.ltr, textAlign: TextAlign.right)),
+              if (diff.extra.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Text('أسلاك ليست في المخطط', style: TextStyle(fontWeight: FontWeight.w700, color: CC.red)),
+                for (final w in diff.extra.take(30))
+                  ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.link_off_rounded, color: CC.red),
+                      title: Text('${prettyTerm(w.a)}   ←→   ${prettyTerm(w.b)}', textDirection: TextDirection.ltr, textAlign: TextAlign.right)),
+              ],
+            ],
+          ]),
+        ),
+      ),
+    );
+  }
+
+  void _showSolution() {
+    final e = ex;
+    if (e == null || !_editable()) return;
+    _snapshot();
+    doc.wires.clear();
+    for (final w in e.reference) {
+      final col = w.power ? (const {'br': 'br', 'bk': 'bk', 'gr': 'gy', 'gy': 'ge', 'bu': 'bu'}[w.col] ?? 'rd') : (w.col == 'bu' ? 'bu' : 'rd');
+      doc.wires.add(LabWire(w.a, w.b, col));
+    }
+    _toast('هذا هو التوصيل الصحيح. جرّب أن تمسحه وتوصّله بنفسك.');
+    _changed();
+  }
+
+  void _resetExercise() {
+    final e = ex;
+    if (e == null || !_editable()) return;
+    _snapshot();
+    doc = buildExercise(e.circuit).doc;
+    tasksDone.clear();
+    _changed();
+    _fit();
+  }
+
+  Widget _schemPanel(double top, double bottom) {
+    final e = ex!;
+    final ready = readyById(e.circuit.id);
+    final sheet = ready?.build();
+    final w = MediaQuery.of(context).size.width;
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      top: top + 70,
+      bottom: bottom + 96,
+      left: schemOpen ? 12 : -(math.min(560.0, w * 0.92) + 20),
+      width: math.min(560.0, w * 0.92),
+      child: Glass(
+        radius: 24,
+        tint: const Color(0xF20A1228),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 6, 4),
+            child: Row(children: [
+              Expanded(child: Text(e.circuit.title, maxLines: 2, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15))),
+              IconButton(onPressed: () => setState(() => schemOpen = false), icon: const Icon(Icons.close_rounded, color: CC.text2)),
+            ]),
+          ),
+          if (sheet != null)
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: ColoredBox(
+                    color: Colors.white,
+                    child: LayoutBuilder(builder: (ctx, c) {
+                      final sw = sheet.sheetW * kG, sh = sheet.sheetH * kG;
+                      final k = math.min(c.maxWidth / sw, c.maxHeight / sh);
+                      return InteractiveViewer(
+                        minScale: 1,
+                        maxScale: 8,
+                        child: Center(child: SizedBox(width: sw * k, height: sh * k, child: FittedBox(child: SizedBox(width: sw, height: sh, child: CustomPaint(painter: SheetPainter(sheet, print: true)))))),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            flex: 4,
+            child: ListView(padding: const EdgeInsets.fromLTRB(14, 10, 14, 10), children: [
+              Text(e.circuit.desc, style: const TextStyle(color: CC.text2, height: 1.6, fontSize: 13)),
+              const SizedBox(height: 6),
+              Text('نصيحة: ${e.circuit.tip}', style: const TextStyle(color: CC.gold, height: 1.6, fontSize: 12.5)),
+              const SizedBox(height: 10),
+              const Text('المهام', style: TextStyle(fontWeight: FontWeight.w700)),
+              for (var i = 0; i < e.circuit.tasks.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(children: [
+                    Icon(tasksDone.contains(i) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                        size: 20, color: tasksDone.contains(i) ? CC.green : CC.muted),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(e.circuit.tasks[i].text, style: TextStyle(fontSize: 13, color: tasksDone.contains(i) ? CC.green : CC.text))),
+                  ]),
+                ),
+              const SizedBox(height: 10),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                FilledButton.icon(onPressed: _checkWiring, icon: const Icon(Icons.fact_check_outlined), label: const Text('فحص التوصيل')),
+                OutlinedButton.icon(onPressed: _showSolution, icon: const Icon(Icons.lightbulb_outline_rounded), label: const Text('عرض الحل')),
+                OutlinedButton.icon(onPressed: _resetExercise, icon: const Icon(Icons.restart_alt_rounded), label: const Text('بدء من جديد')),
+              ]),
+            ]),
+          ),
+        ]),
+      ),
+    );
   }
 
   void _snapshot() {
@@ -714,6 +908,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _handle(l.drain());
       flows = l.flowPaths();
       fault?.tick(dt);
+      _checkTasks();
     } else if (fx.isEmpty) {
       _ticker.stop();
       _last = Duration.zero;
@@ -1275,7 +1470,20 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       final lw = kLug * kPx;
       children
         ..add(Positioned.fill(child: CustomPaint(painter: SideLugPainter([p.d.printed(p.d.side[0]), p.d.printed(p.d.side[1])]))))
-        ..add(Positioned(left: lw, right: lw, top: 0, bottom: 0, child: Image.asset(p.d.info?.asset ?? '', fit: BoxFit.contain, filterQuality: FilterQuality.medium)));
+        ..add(Positioned(
+            left: lw,
+            right: lw,
+            top: 0,
+            bottom: 0,
+            child: () {
+              final img = Image.asset(p.d.info?.asset ?? '', fit: BoxFit.contain, filterQuality: FilterQuality.medium);
+              // a blue pilot lamp: the green lens with green and blue swapped
+              if (p.d.engine == 'lamp' && p.p['col'] == 'b') {
+                return ColorFiltered(
+                    colorFilter: const ColorFilter.matrix([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0]), child: img);
+              }
+              return img;
+            }()));
     } else if (p.d.engine == 'motor' || p.d.engine == 'motor1') {
       children
         ..add(Positioned.fill(child: CustomPaint(painter: MotorPlatePainter((p.p['links'] ?? 'none') as String, single: p.d.engine == 'motor1'))))
@@ -1374,7 +1582,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       case 'lamp':
         final lit = c.s.v > (c.num_('V') * 0.6) && !c.s.dead && c.s.fault != 'lamp_dead';
         if (!lit) return const [];
-        final col = switch (p.p['col'] ?? p.d.params['col']) { 'r' => const Color(0xFFFF3B30), 'y' => const Color(0xFFFFC21A), _ => const Color(0xFF2FE07A) };
+        final col = switch (p.p['col'] ?? p.d.params['col']) {
+          'r' => const Color(0xFFFF3B30),
+          'y' => const Color(0xFFFFC21A),
+          'b' => const Color(0xFF3D8BFF),
+          _ => const Color(0xFF2FE07A)
+        };
         // face-on lens in the middle between the two lugs
         final lens = (sz.width - 2 * kLug) * 0.62 * kPx;
         return [
@@ -1525,7 +1738,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                             ? (flash.isNotEmpty ? 'قصر كهربائي! افصل التغذية وصحّح التوصيل' : 'اللوحة تعمل · الشرطات المضيئة في الأسلاك هي مسار التيار')
                             : _wireFrom != null
                                 ? 'اسحب إلى الطرف الآخر ثم اترك…'
-                                : 'ورقة العمل · أضف المكونات من المكتبة، واسحب من طرف إلى طرف لتوصيل سلك',
+                                : ex != null
+                                    ? 'تمرين: وصّل حسب المخطط، ثم افحص التوصيل وشغّل'
+                                    : 'ورقة العمل · أضف المكونات من المكتبة، واسحب من طرف إلى طرف لتوصيل سلك',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
@@ -1564,6 +1779,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         child: _library(),
       ),
       if (meter) _meterPanel(bottom),
+      if (ex != null) _schemPanel(top, bottom),
       // bottom toolbar
       Positioned(
         left: 12,
@@ -1576,6 +1792,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (ex != null) _tool(Icons.schema_outlined, 'المخطط والمهام', () => setState(() => schemOpen = !schemOpen), active: schemOpen),
+                if (ex != null) _tool(Icons.fact_check_outlined, 'فحص التوصيل', _checkWiring),
                 _tool(Icons.add_rounded, 'المكونات', () => setState(() => libOpen = !libOpen), active: libOpen),
                 _colorTool(),
                 _PowerButton(on: running, onTap: _power),

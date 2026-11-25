@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../lab/lab_page.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../services/audio_service.dart';
@@ -51,7 +53,7 @@ class CircuitListPage extends StatelessWidget {
                   _CircuitTile(
                     number: ++n,
                     circuit: c,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CircuitSimPage(circuit: c))),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LabPage(exercise: c.id))),
                   ),
               ],
             ),

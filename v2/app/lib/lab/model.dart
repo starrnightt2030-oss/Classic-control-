@@ -73,6 +73,8 @@ class LabDoc {
   double plateW = 900, plateH = 700;
   /// work bench to the right of the plate for motors, machines and door devices (0 = none)
   double benchW = 0;
+  /// mechanical interlocks (reversing / star-delta contactor pairs)
+  final List<List<String>> mech = [];
   static const benchGap = 30.0;
   double get totalW => plateW + (benchW > 0 ? benchGap + benchW : 0);
   Rect get plateRect => Rect.fromLTWH(0, 0, plateW, plateH);
@@ -161,6 +163,9 @@ class LabDoc {
     for (final w in wires) {
       l.wires.add(Wire(w.a, w.b, col: w.color));
     }
+    for (final m in mech) {
+      if (l.byId(m[0]) != null && l.byId(m[1]) != null) l.mech.add(m);
+    }
     l.solve();
     return l;
   }
@@ -169,6 +174,7 @@ class LabDoc {
         'v': 1,
         'plate': [plateW, plateH],
         'bench': benchW,
+        if (mech.isNotEmpty) 'mech': mech,
         'parts': [for (final p in parts) p.toJson()],
         'wires': [for (final w in wires) w.toJson()],
       });
@@ -181,6 +187,9 @@ class LabDoc {
       d.plateW = (pl[0] as num).toDouble();
       d.plateH = (pl[1] as num).toDouble();
       d.benchW = (j['bench'] as num?)?.toDouble() ?? 0;
+      for (final m in (j['mech'] as List? ?? const [])) {
+        d.mech.add((m as List).cast<String>());
+      }
     }
     for (final p in (j['parts'] as List)) {
       final q = Placed.fromJson(p as Map<String, dynamic>);

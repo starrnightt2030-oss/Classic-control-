@@ -287,7 +287,7 @@ class Comp {
         this.p['col'] ??= 'r';
     }
     if (type == 'mach') {
-      s.mx = switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
+      s.mx = (this.p['x0'] as num?)?.toDouble() ?? switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
     }
     if (type == 'motor1') this.p['In'] ??= 4.0;
     if (this.p['burnt'] == true) s.dead = true;
@@ -1175,6 +1175,9 @@ class WiringDiff {
 }
 
 // ---------------------------------------------------------------- helpers for tasks
+/// cart position: the circuit track or the first machine in a panel lab
+double? cartX(Lab l) => l.track?.x ?? l.comps.where((c) => c.type == 'mach').firstOrNull?.s.mx;
+
 bool motorRunning(Lab l, String m) {
   final x = l.byId(m);
   return x != null && (x.s.mode == 'delta' || x.s.mode == 'star' || x.s.mode == 'run') && x.s.spd > 0.3;

@@ -262,7 +262,7 @@ final List<Circuit> kCircuits = [
       ...W('F1.2 F2.95|F2.96 S0.11|S0.12 S1.13|S1.13 K1.13|S1.14 K1.14|K1.14 LS2.11|LS2.12 K2.21|K2.22 K1.A1|K1.A1 H1.X1|K1.13 K2.13|K2.13 LS2.23|LS2.24 K2.14|K2.14 LS1.11|LS1.12 K1.21|K1.22 K2.A1|K2.A1 H2.X1'),
       ..._n(['K1.A2', 'K2.A2', 'H1.X2', 'H2.X2'])],
     tasks: [_tPower, _run('اضغط S1 لتتحرك العربة', 'M1'), SimTask('تصل العربة إلى النهاية وترجع وحدها', (l) => isOn(l, 'K2')),
-      SimTask('تتوقف عند البداية', (l) => !isOn(l, 'K2') && l.track != null && l.track!.x < 0.1 && motorStopped(l, 'M1'))],
+      SimTask('تتوقف عند البداية', (l) => !isOn(l, 'K2') && (cartX(l) ?? 1) < 0.1 && motorStopped(l, 'M1'))],
   ),
   // 14
   Circuit(
@@ -275,7 +275,7 @@ final List<Circuit> kCircuits = [
       ...W('F1.2 F2.95|F2.96 S0.11|S0.12 S1.13|S1.13 K1.13|K1.13 LS1.23|LS1.23 S2.13|S2.13 K2.13|K2.13 LS2.23|S1.14 K1.14|K1.14 LS1.24|LS1.24 LS2.11|LS2.12 K2.21|K2.22 K1.A1|K1.A1 H1.X1|S2.14 K2.14|K2.14 LS2.24|LS2.24 LS1.11|LS1.12 K1.21|K1.22 K2.A1|K2.A1 H2.X1'),
       ..._n(['K1.A2', 'K2.A2', 'H1.X2', 'H2.X2'])],
     tasks: [_tPower, _run('ابدأ بالضاغط S1', 'M1'), SimTask('ترجع العربة من عند LS2', (l) => isOn(l, 'K2')),
-      SimTask('وتنعكس مرة أخرى عند LS1', (l) => isOn(l, 'K1') && l.track != null && l.track!.x < 0.3), _stop('أوقف بالضاغط S0', 'M1')],
+      SimTask('وتنعكس مرة أخرى عند LS1', (l) => isOn(l, 'K1') && (cartX(l) ?? 1) < 0.3), _stop('أوقف بالضاغط S0', 'M1')],
   ),
   // 15
   Circuit(

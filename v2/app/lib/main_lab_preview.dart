@@ -18,6 +18,8 @@ void main() {
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
-    home: q['page'] == 'schem' ? SchemPage(demo: int.tryParse(q['demo'] ?? '') ?? 0) : LabPage(demo: int.tryParse(q['demo'] ?? '') ?? 0),
+    home: q['page'] == 'schem'
+        ? SchemPage(demo: int.tryParse(q['demo'] ?? '') ?? 0)
+        : LabPage(demo: int.tryParse(q['demo'] ?? '') ?? 0, exercise: q['ex']),
   ));
 }

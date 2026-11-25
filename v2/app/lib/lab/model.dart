@@ -80,6 +80,21 @@ class LabDoc {
   Rect get plateRect => Rect.fromLTWH(0, 0, plateW, plateH);
   Rect? get benchRect => benchW > 0 ? Rect.fromLTWH(plateW + benchGap, 0, benchW, plateH) : null;
 
+  /// control-panel door on the bench: holes for pushbuttons, lamps and the siren (0 = none)
+  double doorH = 0;
+  Rect? get doorRect => benchW > 0 && doorH > 0 ? Rect.fromLTWH(plateW + benchGap + 10, 10, benchW - 20, doorH) : null;
+  static const doorPitchX = 66.0, doorPitchY = 58.0, doorTop = 26.0, doorLeft = 34.0;
+
+  /// hole centres on the door
+  List<Offset> doorHoles() {
+    final d = doorRect;
+    if (d == null) return const [];
+    return [
+      for (var y = d.top + doorTop + 18; y < d.bottom - 14; y += doorPitchY)
+        for (var x = d.left + doorLeft; x < d.right - 24; x += doorPitchX) Offset(x, y)
+    ];
+  }
+
   Placed? byId(String id) {
     for (final p in parts) {
       if (p.id == id) return p;
@@ -121,6 +136,7 @@ class LabDoc {
   void removePart(Placed p) {
     final ids = {p.id, for (final q in parts) if (q.attach == p.id) q.id};
     parts.removeWhere((q) => ids.contains(q.id));
+    mech.removeWhere((m) => ids.contains(m[0]) || ids.contains(m[1]));
     wires.removeWhere((w) => ids.contains(w.a.split('.').first) || ids.contains(w.b.split('.').first));
   }
 
@@ -174,6 +190,7 @@ class LabDoc {
         'v': 1,
         'plate': [plateW, plateH],
         'bench': benchW,
+        if (doorH > 0) 'door': doorH,
         if (mech.isNotEmpty) 'mech': mech,
         'parts': [for (final p in parts) p.toJson()],
         'wires': [for (final w in wires) w.toJson()],
@@ -187,6 +204,7 @@ class LabDoc {
       d.plateW = (pl[0] as num).toDouble();
       d.plateH = (pl[1] as num).toDouble();
       d.benchW = (j['bench'] as num?)?.toDouble() ?? 0;
+      d.doorH = (j['door'] as num?)?.toDouble() ?? 0;
       for (final m in (j['mech'] as List? ?? const [])) {
         d.mech.add((m as List).cast<String>());
       }

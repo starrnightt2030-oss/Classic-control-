@@ -101,7 +101,8 @@ LabDoc emptyPanel() {
   final d = LabDoc()
     ..plateW = 430
     ..plateH = 520
-    ..benchW = 420;
+    ..benchW = 420
+    ..doorH = 150;
   d.parts.add(Placed('R1', 'din_rail', 25, 95, p: {'len': 380}));
   d.parts.add(Placed('R2', 'din_rail', 25, 285, p: {'len': 380}));
   return d;
@@ -138,17 +139,33 @@ LabDoc burnDemo() {
 
 /// bench preview: a motor fed straight from a breaker drives the cart; lift, tank
 /// and door devices stand beside it
+/// put a door device centred on door hole [i]
+void placeOnDoor(LabDoc d, Placed p, int i) {
+  final h = d.doorHoles();
+  if (h.isEmpty) return;
+  final c = h[i.clamp(0, h.length - 1)];
+  p.x = c.dx - p.size.width / 2;
+  p.y = c.dy - p.size.height / 2;
+}
+
 LabDoc benchDemo() {
-  final d = emptyPanel();
+  final d = emptyPanel()..plateH = 640;
   final bx = d.plateW + LabDoc.benchGap;
-  d.parts.add(Placed('X0', 'supply', 40, 95 + 17.5 - (kLabParts['supply']!.info?.hMm ?? 60) / 2));
+  d.parts.add(Placed('X0', 'supply_iso', 40, 30, p: {'sw': true, 'on0': true}));
   d.parts.add(Placed('Q1', 'mcb3', 160, 95 + 17.5 - (kLabParts['mcb3']!.info?.hMm ?? 90) / 2));
-  d.parts.add(Placed('M1', 'motor_d', bx + 10, 20));
-  d.parts.add(Placed('W1', 'mach_cart', bx + 10, 215, p: {'kind': 'cart', 'motor': 'M1'}));
-  d.parts.add(Placed('S1', 'pb_green', 40, 400));
-  d.parts.add(Placed('S2', 'pb_red', 110, 400));
-  d.parts.add(Placed('H1', 'lamp_green', 180, 400, p: {'col': 'g', 'V': 220.0}));
-  d.parts.add(Placed('M2', 'motor1', 240, 330));
+  d.parts.add(Placed('M1', 'motor_d', bx + 10, 175));
+  d.parts.add(Placed('W1', 'mach_cart', bx + 10, 365, p: {'kind': 'cart', 'motor': 'M1'}));
+  var i = 0;
+  for (final (def, id, p) in [
+    ('pb_green', 'S1', <String, Object?>{}),
+    ('pb_red', 'S2', <String, Object?>{}),
+    ('lamp_green', 'H1', <String, Object?>{'col': 'g', 'V': 220.0}),
+    ('siren', 'H2', <String, Object?>{'V': 220.0, 'snd': 'siren', 'col': 'r'}),
+  ]) {
+    final q = Placed(id, def, 0, 0, p: p);
+    d.parts.add(q);
+    placeOnDoor(d, q, i++);
+  }
   d.wires
     ..add(LabWire('X0.L1', 'Q1.1', 'br'))
     ..add(LabWire('X0.L2', 'Q1.3', 'bk'))
@@ -157,6 +174,8 @@ LabDoc benchDemo() {
     ..add(LabWire('Q1.4', 'M1.V1', 'bk'))
     ..add(LabWire('Q1.6', 'M1.W1', 'gy'))
     ..add(LabWire('Q1.2', 'H1.X1', 'rd'))
-    ..add(LabWire('X0.N', 'H1.X2', 'bu'));
+    ..add(LabWire('X0.N', 'H1.X2', 'bu'))
+    ..add(LabWire('Q1.2', 'H2.X1', 'rd'))
+    ..add(LabWire('H1.X2', 'H2.X2', 'bu'));
   return d;
 }

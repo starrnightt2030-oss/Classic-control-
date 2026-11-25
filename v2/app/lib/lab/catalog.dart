@@ -121,11 +121,11 @@ class LabCategory {
 }
 
 const kLabCategories = [
-  LabCategory('التغذية', 0xFF35E08A, ['supply', 'trafo', 'psu']),
+  LabCategory('التغذية', 0xFF35E08A, ['supply', 'supply_iso', 'supply1', 'trafo', 'psu']),
   LabCategory('الحماية', 0xFFFF5A64, ['mcb1', 'mcb2', 'mcb3', 'mcb4', 'mpcb', 'rccb', 'fuse']),
-  LabCategory('الكونتاكتورات', 0xFF4FD8FF, ['kc', 'aux', 'ol']),
+  LabCategory('الكونتاكتورات', 0xFF4FD8FF, ['kc', 'kc_rev', 'aux', 'ol', 'ol_free']),
   LabCategory('المرحلات والمؤقتات', 0xFF3D8BFF, ['relay', 'timer', 'tsd', 'phr']),
-  LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'pb_black', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber']),
+  LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'pb_black', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber', 'siren']),
   LabCategory('المحركات', 0xFFC9A27E, ['motor', 'motor_d', 'motor_s', 'motor1']),
   LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'limit']),
   LabCategory('التمديدات', 0xFFF5B83D, ['tb', 'din_rail']),
@@ -140,6 +140,13 @@ final Map<String, LabPartDef> kLabParts = {
     const LabPartDef(
         key: 'supply', nameAr: 'تغذية الشبكة 400/230 فولت', category: 'التغذية', sprite: 'terminal_strip', engine: 'sup', prefix: 'X0',
         terms: {'L1_2': 'L1', 'L2_2': 'L2', 'L3_2': 'L3', 'N_2': 'N', 'PE_2': 'PE'}),
+    const LabPartDef(
+        key: 'supply_iso', nameAr: 'تغذية بمفتاح عزل رئيسي (يُدار باليد)', category: 'التغذية', sprite: 'main_isolator', engine: 'sup', prefix: 'X0',
+        params: {'sw': true}, mount: Mount.free,
+        extraTerms: {'L1': (8.0, 63.0), 'L2': (21.0, 63.0), 'L3': (34.0, 63.0), 'N': (48.0, 63.0), 'PE': (61.0, 63.0)}),
+    const LabPartDef(
+        key: 'supply1', nameAr: 'تغذية أحادية الطور 230 فولت (L N PE)', category: 'التغذية', sprite: 'terminal_strip', engine: 'sup', prefix: 'X0',
+        terms: {'L1_2': 'L1', 'N_2': 'N', 'PE_2': 'PE'}, params: {'ph': 1}),
     const LabPartDef(
         key: 'trafo', nameAr: 'محوّل تحكم', category: 'التغذية', sprite: 'control_transformer', engine: 'trafo', prefix: 'T',
         terms: {'P0': 'P0', 'P220': 'P220', 'P380': 'P380', 'S0': 'S0', 'S24': 'S24', 'S48': 'S48'}, mount: Mount.free),
@@ -165,11 +172,18 @@ final Map<String, LabPartDef> kLabParts = {
     const LabPartDef(
         key: 'kc', nameAr: 'كونتاكتور', category: 'الكونتاكتورات', sprite: 'contactor', engine: 'kc', prefix: 'K', terms: _contactorTerms, params: {'coilV': 220.0}),
     const LabPartDef(
+        key: 'kc_rev', nameAr: 'كونتاكتور عاكس: كونتاكتوران بينهما منع تداخل ميكانيكي', category: 'الكونتاكتورات', sprite: 'contactor', engine: 'kc', prefix: 'K',
+        terms: _contactorTerms, params: {'coilV': 220.0}),
+    const LabPartDef(
         key: 'aux', nameAr: 'بلوك نقاط مساعدة', category: 'الكونتاكتورات', sprite: 'aux_block', engine: 'aux', prefix: 'K',
         terms: {'53': '53', '54': '54', '61': '61', '62': '62', '71': '71', '72': '72', '83': '83', '84': '84'}, attachTo: 'kc'),
     const LabPartDef(
-        key: 'ol', nameAr: 'أوفرلود حراري', category: 'الكونتاكتورات', sprite: 'overload', engine: 'ol', prefix: 'F',
+        key: 'ol', nameAr: 'أوفرلود يُركَّب على الكونتاكتور (خرج فقط)', category: 'الكونتاكتورات', sprite: 'overload', engine: 'ol', prefix: 'F',
         terms: {'2_T1': '2', '4_T2': '4', '6_T3': '6', '95': '95', '96': '96', '97': '97', '98': '98'}, params: {'set': 8.5}, attachTo: 'kc'),
+    const LabPartDef(
+        key: 'ol_free', nameAr: 'أوفرلود مستقل بدخل وخرج (على القضيب)', category: 'الكونتاكتورات', sprite: 'overload', engine: 'ol', prefix: 'F',
+        terms: {'2_T1': '2', '4_T2': '4', '6_T3': '6', '95': '95', '96': '96', '97': '97', '98': '98'}, params: {'set': 8.5},
+        extraTerms: {'1': (7.5, 5.0), '3': (18.5, 5.0), '5': (29.5, 5.0)}),
     const LabPartDef(
         key: 'relay', nameAr: 'مرحّل مساعد بقاعدته', category: 'المرحلات والمؤقتات', sprite: 'relay_my4', engine: 'relay', prefix: 'KA',
         terms: {'13': 'A1', '14': 'A2', '9': '11', '1': '12', '5': '14', '10': '21', '2': '22', '6': '24'}, params: {'coilV': 220.0}),
@@ -206,6 +220,9 @@ final Map<String, LabPartDef> kLabParts = {
     const LabPartDef(
         key: 'lamp_amber', nameAr: 'لمبة بيان صفراء', category: 'الضواغط والإشارة', sprite: 'lamp_amber_face', engine: 'lamp', prefix: 'H',
         side: ['X1', 'X2'], params: {'col': 'y', 'V': 220.0}, mount: Mount.free),
+    const LabPartDef(
+        key: 'siren', nameAr: 'سرينة إنذار 230 فولت', category: 'الضواغط والإشارة', sprite: 'siren', engine: 'lamp', prefix: 'H',
+        side: ['X1', 'X2'], params: {'V': 220.0, 'snd': 'siren', 'col': 'r'}, mount: Mount.free),
     LabPartDef(
         key: 'motor', nameAr: 'محرك 3 أطوار بستة أطراف (اربط نجمة أو دلتا بنفسك)', category: 'المحركات', sprite: 'motor', engine: 'motor', prefix: 'M',
         params: const {'links': 'none', 'In': 8.5}, mount: Mount.free, extraTerms: MotorPlate.terms()),

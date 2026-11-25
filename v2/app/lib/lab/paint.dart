@@ -106,6 +106,31 @@ class PlatePainter extends CustomPainter {
         ..layout();
       tp.paint(c, Offset(b.right - tp.width - 8 * kPx, b.top + 5 * kPx));
     }
+    final door = doc.doorRect;
+    if (door != null) {
+      final r = Rect.fromLTWH(door.left * kPx, door.top * kPx, door.width * kPx, door.height * kPx);
+      final rr0 = RRect.fromRectAndRadius(r, Radius.circular(4 * kPx));
+      c.drawShadow(Path()..addRRect(rr0), Colors.black, 10, false);
+      c.drawRRect(rr0, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFD9DCDD), Color(0xFFC4C8CA)]).createShader(r));
+      c.drawRRect(rr0, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2 * kPx
+        ..color = const Color(0xFF8E959C));
+      final tp = TextPainter(
+          text: TextSpan(text: 'باب اللوحة: ركّب هنا الضواغط ولمبات البيان والسرينة', style: TextStyle(fontSize: 5.6 * kPx, color: const Color(0xFF39414B), fontWeight: FontWeight.w700)),
+          textDirection: TextDirection.rtl)
+        ..layout();
+      tp.paint(c, Offset(r.right - tp.width - 6 * kPx, r.top + 5 * kPx));
+      for (final h in doc.doorHoles()) {
+        final o = h * kPx;
+        c.drawCircle(o, 11.5 * kPx, Paint()..color = const Color(0xFF9AA1A7));
+        c.drawCircle(o, 11 * kPx, Paint()..color = const Color(0xFF20252B));
+        c.drawCircle(o, 11 * kPx, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8 * kPx
+          ..color = const Color(0xFF5E666E));
+      }
+    }
     final plate = Rect.fromLTWH(0, 0, doc.plateW * kPx, doc.plateH * kPx);
     final rr = RRect.fromRectAndRadius(plate, const Radius.circular(18));
     c.drawShadow(Path()..addRRect(rr), Colors.black, 18, false);
@@ -812,3 +837,99 @@ class FxPainter extends CustomPainter {
 }
 
 ui.Color stateColor(bool on) => on ? const Color(0xFF35E08A) : const Color(0xFF8798BF);
+
+/// mechanical interlock between two contactors: a bracket across their sides
+class InterlockPainter extends CustomPainter {
+  final LabDoc doc;
+  InterlockPainter(this.doc);
+  @override
+  void paint(Canvas c, Size size) {
+    const s = kPx;
+    for (final m in doc.mech) {
+      final a = doc.byId(m[0]), b = doc.byId(m[1]);
+      if (a == null || b == null) continue;
+      final l = a.x < b.x ? a : b, r = a.x < b.x ? b : a;
+      final gap = r.x - (l.x + l.size.width);
+      if (gap > 30 || (a.y - b.y).abs() > 20) continue; // only when mounted side by side
+      final cy = (l.y + l.size.height * 0.42) * s;
+      final rect = Rect.fromLTRB((l.x + l.size.width - 6) * s, cy - 7 * s, (r.x + 6) * s, cy + 7 * s);
+      c.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(2 * s)), Paint()..color = const Color(0xFF2B3139));
+      c.drawRRect(RRect.fromRectAndRadius(rect.deflate(1.2 * s), Radius.circular(1.5 * s)), Paint()..color = const Color(0xFF4A535E));
+      final tp = TextPainter(text: TextSpan(text: '⇄', style: TextStyle(fontSize: 7 * s, color: const Color(0xFFF5B83D), fontWeight: FontWeight.w900)), textDirection: TextDirection.ltr)..layout();
+      tp.paint(c, rect.center - Offset(tp.width / 2, tp.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant InterlockPainter old) => true;
+}
+
+/// a running motor: turning coupling on the shaft end with a direction arrow
+class MotorRunPainter extends CustomPainter {
+  final double angle; // degrees
+  final int dir; // 1 clockwise seen from the shaft end, -1 anticlockwise
+  final double speed; // 0..1
+  final Offset shaft; // mm in the part frame, shaft tip
+  MotorRunPainter(this.angle, this.dir, this.speed, this.shaft);
+  @override
+  void paint(Canvas c, Size size) {
+    const s = kPx;
+    final o = shaft * s;
+    // coupling cylinder on the shaft (seen from the side): stripes slide with the rotation
+    final body = Rect.fromCenter(center: o + Offset(7 * s, 0), width: 14 * s, height: 22 * s);
+    c.save();
+    c.clipRRect(RRect.fromRectAndRadius(body, Radius.circular(2.5 * s)));
+    c.drawRect(body, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF59616C), Color(0xFFD5DADF), Color(0xFF59616C)]).createShader(body));
+    final pitch = 6.0 * s;
+    final shift = (angle / 360 * pitch * 4 * dir) % pitch;
+    for (var y = body.top - pitch + shift; y < body.bottom + pitch; y += pitch) {
+      c.drawLine(Offset(body.left, y), Offset(body.right, y + 3 * s), Paint()
+        ..color = const Color(0xFFF5B83D)
+        ..strokeWidth = 1.6 * s);
+    }
+    c.restore();
+    // direction arrow around the shaft end
+    final arc = Rect.fromCenter(center: o + Offset(7 * s, 0), width: 40 * s, height: 40 * s);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4 * s
+      ..strokeCap = StrokeCap.round
+      ..color = Color.lerp(const Color(0x003DFF8B), const Color(0xFF35E08A), speed.clamp(0.0, 1.0))!;
+    final start = (angle * math.pi / 180) * dir;
+    c.drawArc(arc, start, 4.2 * dir, false, paint);
+    final end = start + 4.2 * dir;
+    final tip = arc.center + Offset(math.cos(end), math.sin(end)) * arc.width / 2;
+    final tang = Offset(-math.sin(end), math.cos(end)) * dir.toDouble();
+    final nrm = Offset(math.cos(end), math.sin(end));
+    final head = Path()
+      ..moveTo(tip.dx + tang.dx * 5 * s, tip.dy + tang.dy * 5 * s)
+      ..lineTo(tip.dx - tang.dx * 1 * s + nrm.dx * 4 * s, tip.dy - tang.dy * 1 * s + nrm.dy * 4 * s)
+      ..lineTo(tip.dx - tang.dx * 1 * s - nrm.dx * 4 * s, tip.dy - tang.dy * 1 * s - nrm.dy * 4 * s)
+      ..close();
+    c.drawPath(head, Paint()..color = paint.color);
+  }
+
+  @override
+  bool shouldRepaint(covariant MotorRunPainter old) => true;
+}
+
+/// sound waves from a sounding siren
+class SirenPainter extends CustomPainter {
+  final double phase;
+  SirenPainter(this.phase);
+  @override
+  void paint(Canvas c, Size size) {
+    final o = size.center(Offset.zero);
+    for (var i = 0; i < 3; i++) {
+      final k = (phase * 3 + i / 3) % 1;
+      final r = size.shortestSide * (0.45 + 0.55 * k);
+      c.drawCircle(o, r, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5 * kPx
+        ..color = const Color(0xFFFF3B30).withValues(alpha: (1 - k) * 0.8));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant SirenPainter old) => true;
+}

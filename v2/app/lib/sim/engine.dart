@@ -68,7 +68,9 @@ List<Term> _t(List<Term> t) => t;
 final Map<String, CompType> kTypes = {
   'sup': CompType(
       key: 'sup', nameAr: 'مصدر التغذية ثلاثي الأطوار 380 فولت', w: 340, h: 78,
-      terms: (_) => _t(const [Term('L1', 40, 62, 'b'), Term('L2', 100, 62, 'b'), Term('L3', 160, 62, 'b'), Term('N', 230, 62, 'b'), Term('PE', 290, 62, 'b')])),
+      terms: (c) => c.p['ph'] == 1
+          ? _t(const [Term('L1', 40, 62, 'b'), Term('N', 230, 62, 'b'), Term('PE', 290, 62, 'b')])
+          : _t(const [Term('L1', 40, 62, 'b'), Term('L2', 100, 62, 'b'), Term('L3', 160, 62, 'b'), Term('N', 230, 62, 'b'), Term('PE', 290, 62, 'b')])),
   'mcb1': CompType(
       key: 'mcb1', nameAr: 'قاطع أحادي القطب', w: 44, h: 124, breaker: true, rating: 6,
       terms: (_) => _t(const [Term('1', 22, 12, 't'), Term('2', 22, 112, 'b')]),
@@ -290,6 +292,7 @@ class Comp {
       s.mx = (this.p['x0'] as num?)?.toDouble() ?? switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
     }
     if (type == 'motor1') this.p['In'] ??= 4.0;
+    if (type == 'sup' && this.p['on0'] == true) s.on = true;
     if (this.p['burnt'] == true) s.dead = true;
   }
   CompType get t => kTypes[type]!;
@@ -305,6 +308,9 @@ class Wire {
   @override
   String toString() => '$a—$b';
 }
+
+/// a supply with its own main switch (isolator) feeds only when switched on
+bool supLive(Comp c) => c.p['sw'] != true || c.s.on;
 
 int machSwitches(String? kind) => kind == 'lift' ? 3 : 2;
 
@@ -475,8 +481,9 @@ class Lab {
     final src = <String, List<_Src>>{};
     void add(String term, String g, Ph ph, String key) => (src[uf.f(term)] ??= []).add(_Src(g, ph, key));
     if (power) {
-      for (final s in comps.where((c) => c.type == 'sup')) {
+      for (final s in comps.where((c) => c.type == 'sup' && supLive(c))) {
         kPhase.forEach((k, v) {
+          if (s.p['ph'] == 1 && (k == 'L2' || k == 'L3')) return;
           if (s.s.fault == 'phase_loss' && k == (s.p['lost'] ?? 'L3')) return;
           add('${s.id}.$k', 'M', Ph.polar(v[0], v[1]), k);
         });
@@ -1070,7 +1077,7 @@ class Lab {
           edge('${c.attach}.${pr[0]}', '${c.id}.${pr[1]}', -1);
         }
       }
-      if (c.type == 'sup' && power) {
+      if (c.type == 'sup' && power && supLive(c)) {
         for (final k in kPhase.keys) {
           if (c.s.fault == 'phase_loss' && k == (c.p['lost'] ?? 'L3')) continue;
           src.add('${c.id}.$k');

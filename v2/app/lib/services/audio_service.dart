@@ -7,11 +7,23 @@ import '../data/repository.dart';
 class AudioService {
   AudioService._() {
     _voice.onPlayerComplete.listen((_) => playing.value = null);
+    // effects, loops and narration mix together instead of stealing audio focus
+    try {
+      AudioPlayer.global.setAudioContext(AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build());
+    } catch (_) {}
+    for (var i = 0; i < 6; i++) {
+      final p = AudioPlayer(playerId: 'sfx$i');
+      p.setReleaseMode(ReleaseMode.stop);
+      _pool.add(p);
+    }
   }
+
+  final List<AudioPlayer> _pool = [];
+  int _next = 0;
+  final Map<String, AudioPlayer> _loops = {};
   static final AudioService instance = AudioService._();
 
   final AudioPlayer _voice = AudioPlayer(playerId: 'voice');
-  final AudioPlayer _sfx = AudioPlayer(playerId: 'sfx');
   final AudioPlayer _intro = AudioPlayer(playerId: 'intro');
 
   /// what is currently narrating (content audio ref), null when idle
@@ -40,9 +52,8 @@ class AudioService {
   }
 
   Future<void> playIntro() async {
-    if (!Repository.instance.hasAsset('assets/audio/sfx/intro_theme.mp3')) return;
     try {
-      await _intro.play(AssetSource('audio/sfx/intro_theme.mp3'), volume: 0.9);
+      await _intro.play(AssetSource('audio/sfx/intro_theme.mp3'), volume: 1.0);
     } catch (_) {}
   }
 
@@ -52,13 +63,47 @@ class AudioService {
     } catch (_) {}
   }
 
-  Future<void> sfx(String name) async {
+  /// A short effect. Several can overlap (a pool of players), so a contactor click is not
+  /// cut off by the button click that caused it.
+  Future<void> sfx(String name, {double volume = 0.85}) async {
     if (!sfxOn) return;
-    final key = 'assets/audio/sfx/$name.mp3';
-    if (!Repository.instance.hasAsset(key)) return;
+    final p = _pool[_next];
+    _next = (_next + 1) % _pool.length;
     try {
-      await _sfx.stop();
-      await _sfx.play(AssetSource(key.substring('assets/'.length)), volume: 0.6);
+      await p.play(AssetSource('audio/sfx/$name.mp3'), volume: volume);
     } catch (_) {}
+  }
+
+  /// Start or stop a looping sound (motor running, siren, buzzer, coil hum).
+  Future<void> loop(String name, bool on, {double volume = 0.7}) async {
+    final cur = _loops[name];
+    if (!on || !sfxOn) {
+      if (cur != null) {
+        _loops.remove(name);
+        try {
+          await cur.stop();
+          await cur.dispose();
+        } catch (_) {}
+      }
+      return;
+    }
+    if (cur != null) {
+      try {
+        await cur.setVolume(volume);
+      } catch (_) {}
+      return;
+    }
+    final p = AudioPlayer(playerId: 'loop_$name');
+    _loops[name] = p;
+    try {
+      await p.setReleaseMode(ReleaseMode.loop);
+      await p.play(AssetSource('audio/sfx/$name.mp3'), volume: volume);
+    } catch (_) {}
+  }
+
+  Future<void> stopLoops() async {
+    for (final n in _loops.keys.toList()) {
+      await loop(n, false);
+    }
   }
 }

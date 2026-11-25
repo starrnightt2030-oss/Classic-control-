@@ -75,6 +75,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // faults (free mode)
   FaultSession? fault;
 
+  // clip-on parts (overload / aux block): the contactor it would snap onto, where it came from
+  Placed? _snapHost;
+  String? _clipFrom;
+
   // hand wiring by dragging from a terminal
   String? _wireFrom;
   Offset? _wireTo;
@@ -104,6 +108,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    AudioService.instance.stopLoops();
     _ticker.dispose();
     _save?.cancel();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -398,13 +403,6 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // --------------------------------------------------------------- hit tests
   Set<String> _hiddenTerms() {
     final h = <String>{};
-    for (final p in doc.parts) {
-      if (p.def == 'ol' && p.attach != null) {
-        for (final t in ['2', '4', '6']) {
-          h.add('${p.attach}.$t');
-        }
-      }
-    }
     return h;
   }
 
@@ -484,12 +482,18 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     final p = _partAt(mm);
     if (p != null && (p.id == selPart || !p.structural)) {
-      final root = p.attach != null ? doc.byId(p.attach!) ?? p : p;
+      // a clip-on part (overload / aux block) is pulled off its contactor and moved alone
+      final root = (p.attach != null && p.d.attachTo == null) ? doc.byId(p.attach!) ?? p : p;
+      if (p.d.attachTo != null) _clipFrom = p.attach;
       setState(() => dragId = root.id);
       _partStart = Offset(root.x, root.y);
+      final partners = {for (final m in doc.mech) if (m.contains(root.id)) m[0] == root.id ? m[1] : m[0]};
       _childStart
         ..clear()
-        ..addEntries([for (final c in doc.parts) if (c.attach == root.id) MapEntry(c.id, Offset(c.x, c.y))]);
+        ..addEntries([
+          for (final c in doc.parts)
+            if (c.attach == root.id || partners.contains(c.id) || (c.attach != null && partners.contains(c.attach))) MapEntry(c.id, Offset(c.x, c.y))
+        ]);
     }
   }
 
@@ -508,6 +512,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _moved = true;
     }
     final p = doc.byId(dragId!)!;
+    if (p.d.attachTo != null && p.attach != null) p.attach = null; // lifted off
     p.x = _partStart!.dx + d.dx;
     p.y = _partStart!.dy + d.dy;
     for (final c in doc.parts) {
@@ -517,7 +522,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         c.y = s.dy + d.dy;
       }
     }
-    _blocked = _collides(p);
+    _snapHost = _clipHost(p);
+    _blocked = _snapHost == null && _collides(p);
     setState(() {});
   }
 
@@ -723,9 +729,53 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     return 'rd';
   }
 
+  /// reversing contactor: two contactors side by side with a mechanical interlock between them
+  void _addReversing() {
+    _addPart('kc');
+    final a = doc.parts.last;
+    if (a.def != 'kc') return;
+    final b = Placed(doc.nextId('K'), 'kc', a.x + a.size.width + 4, a.y, p: {...kLabParts['kc']!.params});
+    doc.parts.add(b);
+    if (_collides(b)) {
+      // no room on the right: try the left
+      b.x = a.x - b.size.width - 4;
+      if (_collides(b)) {
+        doc.parts.remove(b);
+        _toast('لا توجد مساحة لكونتاكتور ثانٍ بجانب ${a.id}. أفسح مكانًا على القضيب ثم حاول مرة أخرى.');
+        return;
+      }
+    }
+    doc.mech.add([a.id, b.id]);
+    AudioService.instance.sfx('din_rail_click');
+    _toast('كونتاكتور عاكس: ${a.id} و ${b.id} بينهما منع تداخل ميكانيكي، فلا يُغلقان معًا. أضف أيضًا منع التداخل الكهربائي بالنقاط المغلقة.');
+    _changed();
+  }
+
   // --------------------------------------------------------------- placing
+  /// contactor a dragged clip-on part would plug into (its terminals line up within 18 mm)
+  Placed? _clipHost(Placed p) {
+    final want = p.d.attachTo;
+    if (want == null) return null;
+    Placed? best;
+    var bd = 18.0;
+    for (final q in doc.parts) {
+      if (q.d.engine != want || q.id == p.id) continue;
+      if (doc.parts.any((o) => o.attach == q.id && o.def == p.def && o.id != p.id)) continue;
+      final ghost = Placed('${p.id}~', p.def, 0, 0);
+      placeAttached(ghost, q);
+      final dd = (Offset(ghost.x, ghost.y) - Offset(p.x, p.y)).distance;
+      if (dd < bd) {
+        bd = dd;
+        best = q;
+      }
+    }
+    return best;
+  }
+
   bool _collides(Placed p) {
-    final family = {p.id, for (final c in doc.parts) if (c.attach == p.id) c.id};
+    // a contactor and everything clipped onto it count as one block
+    final root = p.attach != null ? (doc.byId(p.attach!) ?? p) : p;
+    final family = {p.id, root.id, for (final c in doc.parts) if (c.attach == root.id) c.id};
     final mine = [for (final q in doc.parts) if (family.contains(q.id)) q.rect.deflate(0.8)];
     for (final q in doc.parts) {
       if (family.contains(q.id)) continue;
@@ -747,7 +797,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   void _drop(Placed p) {
     // DIN mounting: snap the part's centre line onto the nearest rail
-    if (p.d.mount == Mount.din && p.attach == null) {
+    if (p.d.mount == Mount.din && p.attach == null && p.d.attachTo == null) {
       Placed? best;
       var bd = 40.0;
       for (final r in doc.parts.where((q) => q.def == 'din_rail')) {
@@ -768,19 +818,40 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       }
     }
     // clip-on parts: attach to the contactor under them
+    final prevHost = _clipFrom;
     if (p.d.attachTo != null) {
-      Placed? host;
-      for (final q in doc.parts) {
-        if (q.d.engine == p.d.attachTo && q.rect.inflate(20).overlaps(p.rect) && !doc.parts.any((o) => o.attach == q.id && o.def == p.def && o.id != p.id)) {
-          host = q;
-          break;
-        }
-      }
+      final host = _clipHost(p);
+      _snapHost = null;
       if (host != null) {
         p.attach = host.id;
         placeAttached(p, host);
+        if (_clipFrom != host.id) _toast('تم تركيب ${p.d.nameAr} ${p.id} على الكونتاكتور ${host.id}.');
       } else {
         p.attach = null;
+        if (_clipFrom != null && _clipFrom!.isNotEmpty) _toast('فُكّ ${p.id} من الكونتاكتور ${_clipFrom!}. اسحبه قريبًا من مخارج كونتاكتور ليُركَّب عليه.');
+      }
+      _clipFrom = null;
+    }
+    // door devices snap into the nearest free hole of the door
+    final door = doc.doorRect;
+    if (p.d.side.isNotEmpty && door != null && door.contains(p.rect.center)) {
+      final taken = {
+        for (final o in doc.parts)
+          if (o.id != p.id && o.d.side.isNotEmpty) o.rect.center
+      };
+      Offset? best;
+      var bd = double.infinity;
+      for (final h in doc.doorHoles()) {
+        if (taken.any((t) => (t - h).distance < 20)) continue;
+        final dd = (h - p.rect.center).distance;
+        if (dd < bd) {
+          bd = dd;
+          best = h;
+        }
+      }
+      if (best != null) {
+        p.x = best.dx - p.size.width / 2;
+        p.y = best.dy - p.size.height / 2;
       }
     }
     // snap to 1 mm
@@ -802,6 +873,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           c.y = s.dy;
         }
       }
+      if (p.d.attachTo != null && prevHost != null && prevHost.isNotEmpty) {
+        // dropped on a busy spot: it goes back onto its contactor
+        final h = doc.byId(prevHost);
+        if (h != null) {
+          p.attach = h.id;
+          placeAttached(p, h);
+        }
+      }
       if (_undo.isNotEmpty) _undo.removeLast();
       _toast('المكان مشغول. اترك مسافة بين المكونات.');
       AudioService.instance.sfx('soft_fail');
@@ -814,6 +893,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   void _addPart(String def) {
     if (!_editable()) return;
+    if (def == 'kc_rev') {
+      _addReversing();
+      return;
+    }
     final d = kLabParts[def]!;
     final c = _viewCenterMm();
     final id = doc.nextId(d.prefix);
@@ -845,6 +928,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     doc.parts.add(p);
     _partStart = Offset(p.x, p.y);
     _childStart.clear();
+    if (p.d.attachTo != null) {
+      _clipFrom = '';
+      _toast(p.def == 'ol'
+          ? 'اسحب الأوفرلود إلى أسفل الكونتاكتور حتى يتلوّن الكونتاكتور بالأخضر، ثم اتركه ليُركَّب.'
+          : 'اسحب بلوك النقاط إلى جانب الكونتاكتور حتى يتلوّن بالأخضر، ثم اتركه ليُركَّب.');
+    }
     _drop(p);
     if (doc.parts.contains(p)) selPart = p.id;
     selWire = null;
@@ -870,6 +959,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _power() {
     if (running) {
       AudioService.instance.sfx('mcb_trip');
+      AudioService.instance.stopLoops();
       if (fx.isEmpty) _ticker.stop();
       setState(() {
         sim = null;
@@ -907,6 +997,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       l.step(dt);
       _handle(l.drain());
       flows = l.flowPaths();
+      _sounds(l);
       fault?.tick(dt);
       _checkTasks();
     } else if (fx.isEmpty) {
@@ -914,6 +1005,23 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _last = Duration.zero;
     }
     setState(() {});
+  }
+
+  /// continuous sounds: running motors, humming coils / stalled motors, sirens
+  void _sounds(Lab l) {
+    final a = AudioService.instance;
+    var spd = 0.0, strain = false, hum = false, siren = false;
+    for (final c in l.comps) {
+      if (c.type == 'motor' || c.type == 'motor1') {
+        if (c.s.mode == 'star' || c.s.mode == 'delta' || c.s.mode == 'run') spd = math.max(spd, c.s.spd);
+        if (c.s.mode == 'single' || c.s.mode == 'over') strain = true;
+      }
+      if (c.s.hum && !c.s.dead) hum = true;
+      if (c.type == 'lamp' && c.p['snd'] == 'siren' && !c.s.dead && c.s.v > c.num_('V') * 0.6) siren = true;
+    }
+    a.loop('motor_run', spd > 0.04, volume: 0.15 + 0.6 * spd);
+    a.loop('coil_hum_loud', strain || hum, volume: strain ? 0.7 : 0.4);
+    a.loop('alarm_siren', siren, volume: 0.55);
   }
 
   /// sparks where the two sources met, the shorted wires flash red
@@ -1020,6 +1128,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     if (down && p != null) {
       final c = l.byId(p.id);
       switch (p.d.engine) {
+        case 'sup':
+          if (p.p['sw'] == true) {
+            AudioService.instance.sfx('estop_latch');
+            l.actuate(p.id, 'mcb');
+            _toast(l[p.id].s.on ? 'مفتاح العزل ${p.id} على وضع التشغيل I.' : 'مفتاح العزل ${p.id} على وضع الفصل 0.');
+          }
         case 'pb_no':
         case 'pb_nc':
         case 'ls':
@@ -1405,6 +1519,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 Positioned.fill(child: CustomPaint(painter: PlatePainter(doc, selPart))),
                 for (final p in _drawOrder())
                   if (!p.structural) _partWidget(p),
+                if (doc.mech.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: InterlockPainter(doc)))),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
@@ -1512,6 +1627,19 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         ),
       ),
     ));
+    if (_snapHost?.id == p.id) {
+      children.add(Positioned.fill(
+        child: IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: CC.green, width: 3),
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: glow(CC.green, 1.0),
+            ),
+          ),
+        ),
+      ));
+    }
     if (sel) {
       children.add(Positioned.fill(
         child: IgnorePointer(
@@ -1579,9 +1707,38 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           ),
         );
     switch (p.d.engine) {
+      case 'sup':
+        if (p.p['sw'] != true) return const [];
+        return [badge(c.s.on ? 'I · ON' : 'O · OFF', c.s.on ? const Color(0xFF1FA463) : const Color(0xFF59657A))];
       case 'lamp':
         final lit = c.s.v > (c.num_('V') * 0.6) && !c.s.dead && c.s.fault != 'lamp_dead';
         if (!lit) return const [];
+        if (p.p['snd'] == 'siren') {
+          final on = (_phase * 6) % 1 < 0.5;
+          return [
+            Positioned(
+                left: -14 * kPx,
+                right: -14 * kPx,
+                top: -14 * kPx,
+                bottom: -14 * kPx,
+                child: IgnorePointer(child: CustomPaint(painter: SirenPainter(_phase)))),
+            Positioned(
+              left: kLug * kPx,
+              right: kLug * kPx,
+              top: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFFF3B30).withValues(alpha: on ? 0.45 : 0.1),
+                    boxShadow: [BoxShadow(color: const Color(0xFFFF3B30).withValues(alpha: on ? 0.9 : 0.2), blurRadius: 50, spreadRadius: 8)],
+                  ),
+                ),
+              ),
+            ),
+          ];
+        }
         final col = switch (p.p['col'] ?? p.d.params['col']) {
           'r' => const Color(0xFFFF3B30),
           'y' => const Color(0xFFFFC21A),
@@ -1648,6 +1805,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       case 'motor':
       case 'motor1':
         final run = c.s.mode == 'star' || c.s.mode == 'delta' || c.s.mode == 'run';
+        final spin = run || c.s.spd > 0.02
+            ? [
+                Positioned.fill(
+                    child: IgnorePointer(
+                        child: CustomPaint(painter: MotorRunPainter(c.s.ang, c.s.dir == 0 ? 1 : c.s.dir, c.s.spd, const Offset(8, 122))))),
+              ]
+            : const <Widget>[];
         final mode = {
               'off': 'STOPPED',
               'star': 'RUN · STAR',
@@ -1660,6 +1824,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             c.s.mode;
         final bad = c.s.mode == 'single' || c.s.mode == 'over' || c.s.mode == 'dead';
         return [
+          ...spin,
           Positioned(
             right: 4 * kPx,
             bottom: 6 * kPx,

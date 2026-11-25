@@ -80,24 +80,25 @@ LabExercise buildExercise(Circuit c) {
   }
   d.plateH = math.max(560, railY + 190);
 
-  // ---- bench: door devices, motors, cart
+  // ---- bench: door with the buttons and lamps, then motors and the cart
   final bx = d.plateW + LabDoc.benchGap + 14;
-  var by = 18.0, bxx = bx;
-  for (final cp in comps.where((o) => const {'pb_no', 'pb_nc', 'lamp'}.contains(o.type))) {
+  final door = comps.where((o) => const {'pb_no', 'pb_nc', 'lamp'}.contains(o.type)).toList();
+  final perRow = ((d.benchW - 20 - LabDoc.doorLeft) / LabDoc.doorPitchX).floor() + 1;
+  final rowsN = (door.length / perRow).ceil().clamp(1, 4);
+  d.doorH = LabDoc.doorTop + rowsN * LabDoc.doorPitchY + 6;
+  var hi = 0;
+  for (final cp in door) {
     final col = cp.p['col'] as String?;
     final def = switch (cp.type) {
       'pb_no' => 'pb_green',
       'pb_nc' => 'pb_red',
       _ => switch (col) { 'r' => 'lamp_red', 'y' => 'lamp_amber', _ => 'lamp_green' },
     };
-    if (bxx + w(def) > bx + d.benchW - 28) {
-      bxx = bx;
-      by += 50;
-    }
-    add(def, cp.id, bxx, by, p: cp.type == 'lamp' ? {'col': col ?? 'g', 'V': 220.0} : null);
-    bxx += w(def) + 10;
+    final q = add(def, cp.id, 0, 0, p: cp.type == 'lamp' ? {'col': col ?? 'g', 'V': 220.0} : null);
+    placeOnDoor(d, q, hi++);
   }
-  by += 62;
+  var by = 10 + d.doorH + 14;
+
   var mx = bx;
   final motors = comps.where((o) => o.type == 'motor').toList();
   for (var i = 0; i < motors.length; i++) {

@@ -277,4 +277,38 @@ void main() {
       expect(l.short, isNull);
     });
   });
+
+  test('supplies: isolator feeds only when switched on; single-phase has L N PE', () {
+    final d = emptyPanel();
+    d.parts.add(Placed('X0', 'supply_iso', 40, 30, p: {'sw': true}));
+    d.parts.add(Placed('H1', 'lamp_green', 200, 300, p: {'col': 'g', 'V': 220.0}));
+    d.wires
+      ..add(LabWire('X0.L1', 'H1.X1', 'rd'))
+      ..add(LabWire('X0.N', 'H1.X2', 'bu'));
+    final l = d.toLab()..setPower(true);
+    expect(l['H1'].s.v, lessThan(1));
+    l.actuate('X0', 'mcb');
+    expect(l['H1'].s.v, greaterThan(200));
+
+    final s1 = emptyPanel();
+    s1.parts.add(Placed('X0', 'supply1', 40, 60));
+    final l1 = s1.toLab()..setPower(true);
+    expect(l1['X0'].terms.map((t) => t.id), unorderedEquals(['L1', 'N', 'PE']));
+  });
+
+  test('stand-alone overload passes current from its inputs', () {
+    final d = emptyPanel();
+    d.parts.add(Placed('X0', 'supply', 40, 60));
+    d.parts.add(Placed('F2', 'ol_free', 200, 60));
+    d.parts.add(Placed('M1', 'motor_d', 470, 200));
+    d.wires
+      ..add(LabWire('X0.L1', 'F2.1', 'br'))
+      ..add(LabWire('X0.L2', 'F2.3', 'bk'))
+      ..add(LabWire('X0.L3', 'F2.5', 'gy'))
+      ..add(LabWire('F2.2', 'M1.U1', 'br'))
+      ..add(LabWire('F2.4', 'M1.V1', 'bk'))
+      ..add(LabWire('F2.6', 'M1.W1', 'gy'));
+    final l = d.toLab()..setPower(true);
+    expect(l['M1'].s.mode, 'delta');
+  });
 }

@@ -92,6 +92,16 @@ jobs:
         run: |
           set -o pipefail
           flutter build windows --release 2>&1 | tee build.txt || { python tool/ci_report.py build.txt --tail; exit 1; }
+      - name: Bundle the Visual C++ runtime
+        # app-local copies so the app starts on PCs without the VC++ Redistributable
+        shell: pwsh
+        run: |
+          $rel = "build/windows/x64/runner/Release"
+          foreach ($d in @("msvcp140.dll","msvcp140_1.dll","msvcp140_2.dll","vcruntime140.dll","vcruntime140_1.dll","concrt140.dll")) {
+            $src = Join-Path $env:WINDIR "System32\$d"
+            if (Test-Path $src) { Copy-Item $src $rel -Force; Write-Host "bundled $d" } else { Write-Host "missing $d" }
+          }
+          Get-ChildItem $rel | Format-Table Name, Length
       - name: Zip
         shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath ClassicControl-Windows.zip
@@ -123,7 +133,7 @@ jobs:
           body: |
             نسخة تجريبية من فرع v2-rebuild.
             - Android: نزّل ClassicControl-Android.apk وثبّته (اسمح بالتثبيت من مصادر غير معروفة).
-            - Windows: فك ضغط ClassicControl-Windows.zip وشغّل classic_control.exe (محتاج Microsoft Edge WebView2، موجود في ويندوز 10/11).
+            - Windows: فك ضغط ClassicControl-Windows.zip كله في فولدر (مش من جوه ملف الضغط) وشغّل classic_control.exe. مكتبات Visual C++ مضافة جوه الفولدر، ومحتاج Microsoft Edge WebView2 (موجود في ويندوز 10/11).
           files: |
             dist/ClassicControl-Android.apk
             dist/ClassicControl-Windows.zip

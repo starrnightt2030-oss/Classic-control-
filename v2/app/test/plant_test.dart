@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:ui';
 
+import 'package:classic_control/schem/machine3d.dart';
 import 'package:classic_control/schem/plant_paint.dart';
 import 'package:classic_control/schem/ladder.dart';
 import 'package:classic_control/schem/model.dart';
@@ -135,5 +137,33 @@ void main() {
         rec.endRecording();
       }
     }
+  });
+
+  test('the 3D state of every machine is JSON the page understands', () {
+    const keys = {
+      'cart': ['x', 'run', 'lamps'],
+      'hoist': ['z', 'lamps'],
+      'lift': ['z', 'door', 'lamps'],
+      'sort': ['ext', 'belt', 'items', 'lamps'],
+      'press': ['ext', 'part', 'lamps'],
+      'fill': ['belt', 'y1', 'items', 'lamps'],
+    };
+    for (final d in kPlants) {
+      final r = Rig(d.ready);
+      r.press('S1');
+      r.run(20);
+      for (final io in [null, r.io]) {
+        final m = jsonDecode(jsonEncode(machineState(r.p, io))) as Map<String, dynamic>;
+        expect(m.keys.toList(), keys[d.key], reason: d.key);
+      }
+    }
+    // a box keeps its id while it moves, so the scene can follow it
+    final r = Rig('x_sort');
+    r.press('S1');
+    r.run(6);
+    final a = (machineState(r.p, r.io)['items'] as List).map((e) => (e as List).first).toSet();
+    r.run(0.5);
+    final b = (machineState(r.p, r.io)['items'] as List).map((e) => (e as List).first).toSet();
+    expect(a.intersection(b), isNotEmpty);
   });
 }

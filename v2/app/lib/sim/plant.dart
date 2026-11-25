@@ -34,6 +34,10 @@ class PlantDef {
 }
 
 class Box {
+  static int _ids = 0;
+
+  /// stays the same while the box is on the machine (the 3D scene follows it by id)
+  final int id = ++_ids;
   double s; // position along the belt 0…1 (1 = end stop)
   final bool metal;
   double dwell = 0, fill = 0;

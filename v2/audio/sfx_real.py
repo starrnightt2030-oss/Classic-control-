@@ -8,7 +8,7 @@ frequency with its harmonics, rotor-slot whine tied to the speed, fan blade-pass
 and turbulent air rising with the speed squared. The siren is a rotating-disc wail.
 The intro theme is a short power-up: charge, a contactor closing, an opening chord.
 
-Run: python sfx_real.py   ->  ../assets/audio/sfx/<id>.mp3   (synced into the app in CI)
+Run: python sfx_real.py [id ...]  ->  ../assets/audio/sfx/<id>.mp3   (synced into the app in CI)
 """
 import os
 import subprocess
@@ -373,34 +373,126 @@ def whoosh(d=0.45, up=True):
 
 
 def intro_theme():
-    """power-up: charge rises, a contactor closes, the chord opens, shimmer tail (≈4.5 s)"""
-    d = 5.0
+    """soundtrack of the intro (lib/ui/intro_page.dart, 8 s):
+    0–1.9 s the schematic draws itself (charge rising on a 100 Hz bed),
+    1.9 s S1 pressed, 2.1 s the contactor pulls in, 2.15–3.6 s the motor runs up,
+    3.7 s the logo hits: sub, opening chord, bells, shimmer tail"""
+    d = 8.0
     y = silence(d)
     x = t(d)
-    # 0.0–1.2 s charge: rising filtered noise + rising sine with tremolo, 50 Hz bed
-    ch = whoosh(1.25, True) * 0.5
-    rise = np.sin(2 * np.pi * np.cumsum(np.linspace(90, 880, n_(1.25))) / SR) * np.linspace(0, 0.35, n_(1.25)) ** 2
-    rise *= 1 + 0.3 * np.sin(2 * np.pi * np.linspace(6, 18, n_(1.25)) * t(1.25))
-    place(y, ch + rise, 0)
-    bed = (np.sin(2 * np.pi * 100 * x) + 0.4 * np.sin(2 * np.pi * 200 * x)) * 0.05 * np.minimum(1, x / 1.0) * np.exp(-np.maximum(0, x - 1.25) / 0.4)
+    # pen strokes: soft filtered scratches while the lines are drawn
+    for k in range(14):
+        sc = bp(noise(0.09), 2500, 7000) * np.hanning(n_(0.09)) * (0.05 + 0.04 * rng.random())
+        place(y, sc, 0.1 + k * 0.125)
+    rise = np.sin(2 * np.pi * np.cumsum(np.linspace(70, 520, n_(1.9))) / SR) * np.linspace(0, 0.22, n_(1.9)) ** 2
+    place(y, rise + whoosh(1.9, True) * 0.25, 0)
+    bed = (np.sin(2 * np.pi * 100 * x) + 0.4 * np.sin(2 * np.pi * 200 * x)) * 0.05 * np.minimum(1, x / 1.6) * np.exp(-np.maximum(0, x - 3.6) / 0.3)
     y += bed
-    # 1.2 s: contactor closes + sub hit
-    place(y, contactor_pull() * 1.4, 1.2)
-    sub = np.sin(2 * np.pi * 41.2 * t(1.6)) * np.exp(-t(1.6) / 0.45) * 0.9
-    place(y, sub, 1.21)
-    place(y, arc(0.18) * 0.35, 1.2)
-    # 1.25 s: chord E – B – E – G# – B – F# (Eadd9), opening filter
-    chord = pad([82.41, 123.47, 164.81, 207.65, 246.94, 369.99], 3.7, (300, 5200)) * 1.1
-    chord *= np.minimum(1, t(3.7) / 0.08) * np.exp(-t(3.7) / 2.2)
-    place(y, chord, 1.25)
-    # arpeggio of bells on top
+    place(y, pushbutton() * 0.9, 1.9)
+    place(y, contactor_pull() * 1.3, 2.1)
+    md = 1.6
+    mx = t(md)
+    sp = 1 - np.exp(-mx * 2.4)
+    inr = np.exp(-mx * 2.2)
+    mot = motor(sp, md, inr) * np.minimum(1, (md - mx) / 0.25) * 0.55
+    place(y, mot, 2.15)
+    place(y, whoosh(0.5, True) * 0.4, 3.2)
+    # 3.7 s: the hit
+    sub = np.sin(2 * np.pi * 41.2 * t(1.8)) * np.exp(-t(1.8) / 0.5) * 1.0
+    place(y, sub, 3.7)
+    place(y, arc(0.16) * 0.3, 3.7)
+    chord = pad([82.41, 123.47, 164.81, 207.65, 246.94, 369.99], 4.2, (300, 5200)) * 1.1
+    chord *= np.minimum(1, t(4.2) / 0.06) * np.exp(-t(4.2) / 2.0)
+    place(y, chord, 3.72)
     for i, f in enumerate([659.25, 987.77, 1244.5, 1318.5, 1975.5]):
-        place(y, bell(f, 2.5, 0.9, 0.7) * (0.32 - i * 0.03), 1.32 + i * 0.11)
-    # final shimmer
-    sh = hp(noise(2.0), 7000) * np.exp(-t(2.0) / 0.6) * 0.06
-    place(y, sh, 1.3)
-    y = room(y, 1.6, 0.3, 8000)
-    return y
+        place(y, bell(f, 2.5, 0.9, 0.7) * (0.3 - i * 0.03), 3.8 + i * 0.11)
+    place(y, hp(noise(2.4), 7000) * np.exp(-t(2.4) / 0.7) * 0.06, 3.75)
+    y *= np.minimum(1, (d - x) / 0.6)
+    return room(y, 1.6, 0.3, 8000)
+
+
+# ----------------------------------------------------------------- machines
+def conveyor_run():
+    """small geared belt drive: gearbox whine, rollers ticking under the belt, belt rub"""
+    d = 4.0
+    x = t(d)
+    y = motor(np.full(n_(d), 1.0), d) * 0.35
+    y += np.sin(2 * np.pi * 410 * x) * 0.03 * (1 + 0.2 * np.sin(2 * np.pi * 3 * x))  # gear mesh
+    for k in range(int(d * 11)):
+        place(y, impact(0.05, (220, 0.008), [1400, 2300]) * (0.05 + 0.04 * rng.random()), k / 11 + rng.uniform(0, 0.01))
+    y += lp(noise(d), 700) * 0.08
+    return loopable(room(y, 0.4, 0.2), 0.4)
+
+
+def air_extend():
+    """valve opens: solenoid clunk, compressed air rushing in, piston hits its end stop"""
+    d = 0.8
+    y = silence(d)
+    place(y, solenoid() * 0.6, 0)
+    rush = bp(noise(0.45), 900, 6500) * np.minimum(1, t(0.45) / 0.01) * np.exp(-t(0.45) / 0.15) * 0.5
+    place(y, rush, 0.015)
+    place(y, impact(0.3, (85, 0.05), [900, 1700, 2600]) * 0.8, 0.28)
+    return room(y, 0.35, 0.2)
+
+
+def air_exhaust():
+    """valve drops: exhaust blast through the silencer, spring return, soft end stop"""
+    d = 0.9
+    y = silence(d)
+    place(y, relay_click() * 0.4, 0)
+    hiss = hp(bp(noise(0.6), 2200, 11000), 1800) * np.minimum(1, t(0.6) / 0.004) * np.exp(-t(0.6) / 0.18) * 0.6
+    place(y, hiss, 0.008)
+    place(y, impact(0.25, (120, 0.04), [1200, 2100]) * 0.5, 0.38)
+    return room(y, 0.35, 0.2)
+
+
+def press_stamp():
+    """the ram lands on the part: heavy body, ringing steel, a little air"""
+    d = 1.2
+    y = bounce([(0, 1.4, (55, 0.12), [420, 760, 1310, 2210, 3480]), (0.012, 0.5, (90, 0.06), [980, 1800])], d)
+    place(y, np.sin(2 * np.pi * 36 * t(0.6)) * np.exp(-t(0.6) / 0.12) * 0.8, 0)
+    return room(y, 0.6, 0.25)
+
+
+def lift_ding():
+    y = silence(1.8)
+    place(y, bell(1318.5, 1.6, 0.7, 0.5) * 0.5, 0)
+    place(y, bell(1046.5, 1.6, 0.8, 0.5) * 0.5, 0.32)
+    return room(y, 0.8, 0.3, 9000)
+
+
+def door_slide():
+    d = 1.0
+    x = t(d)
+    env_ = np.sin(np.pi * x / d) ** 1.5
+    y = lp(noise(d), 900) * env_ * 0.4 + bp(noise(d), 2000, 5000) * env_ * 0.03
+    y += np.sin(2 * np.pi * 52 * x) * env_ * 0.1
+    place(y, impact(0.2, (160, 0.03), [1200, 2400]) * 0.35, d - 0.2)
+    return room(y, 0.3, 0.15)
+
+
+def horn():
+    """electromechanical diaphragm horn, loopable"""
+    d = 2.0
+    x = t(d)
+    y = np.sign(np.sin(2 * np.pi * 345 * x)) * 0.6 + np.sign(np.sin(2 * np.pi * 690 * x + 0.4)) * 0.2
+    y = bp(y, 300, 3200) + bp(y, 1200, 1800) * 0.8  # bell-mouth formant
+    y *= 1 + 0.03 * np.sin(2 * np.pi * 50 * x)
+    return loopable(room(y * 0.5, 0.4, 0.2), 0.3)
+
+
+def bottle_clink():
+    y = silence(0.7)
+    place(y, modal([2650, 4310, 6020, 7900], [0.12, 0.08, 0.05, 0.03], [1, 0.6, 0.4, 0.2], 0.6) * 0.5, 0)
+    place(y, modal([2900, 4700, 6600], [0.1, 0.06, 0.04], [0.8, 0.5, 0.3], 0.5) * 0.3, 0.06)
+    return room(y, 0.3, 0.15)
+
+
+def box_drop():
+    d = 0.6
+    y = bounce([(0, 1.0, (110, 0.05), [520, 940, 1500]), (0.09, 0.35, (130, 0.03), [700, 1300])], d)
+    place(y, lp(noise(0.2), 1500) * np.exp(-t(0.2) / 0.05) * 0.4, 0)
+    return room(y, 0.3, 0.18)
 
 
 def intro_jingle():
@@ -451,15 +543,29 @@ def sfx():
     S["outro_sting"] = chime([1318.5, 987.77, 659.25], 0.16, 0.8, 0.7)
     S["intro_jingle"] = intro_jingle()
     S["intro_theme"] = intro_theme()
+    S["conveyor_run"] = conveyor_run()
+    S["air_extend"] = air_extend()
+    S["air_exhaust"] = air_exhaust()
+    S["press_stamp"] = press_stamp()
+    S["lift_ding"] = lift_ding()
+    S["door_slide"] = door_slide()
+    S["horn"] = horn()
+    S["bottle_clink"] = bottle_clink()
+    S["box_drop"] = box_drop()
     return S
 
 
-LOOPS = {"motor_run", "coil_hum", "coil_hum_loud", "alarm_siren", "buzzer", "water_flow"}
+LOOPS = {"motor_run", "coil_hum", "coil_hum_loud", "alarm_siren", "buzzer", "water_flow", "conveyor_run", "horn"}
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    import sys
+
     S = sfx()
+    only = set(sys.argv[1:])  # e.g. python sfx_real.py intro_theme horn: write just these
     for k, y in S.items():
+        if only and k not in only:
+            continue
         y = norm(np.asarray(y, dtype=float), 0.89 if k != "intro_theme" else 0.95)
         if k not in LOOPS:
             y = fade(y, 0.0005, 0.02)

@@ -56,8 +56,13 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          # one retry: plugin-portal downloads occasionally fail on the runner
-          flutter build apk --release 2>&1 | tee build.txt || { sleep 20; flutter build apk --release 2>&1 | tee build.txt; } || { python3 tool/ci_report.py build.txt --tail; exit 1; }
+          # retries with back-off: Maven Central / the plugin portal answer 429 now and then
+          for i in 1 2 3 4; do
+            if flutter build apk --release 2>&1 | tee build.txt; then exit 0; fi
+            grep -q "429\|Could not resolve\|Could not GET" build.txt || break
+            sleep $((i * 45))
+          done
+          python3 tool/ci_report.py build.txt --tail; exit 1
       - uses: actions/upload-artifact@v5
         with:
           name: classic-control-android

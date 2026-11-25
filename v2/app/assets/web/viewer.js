@@ -640,6 +640,7 @@ async function recordLesson(token, plan) {
       const src = ac.createBufferSource();
       src.buffer = bufs[idx];
       src.connect(dest);
+      src.connect(ac.destination); // heard while recording too
       src.start();
     }
     if (st && st.kind === 'part') select(st.part); else select(null);

@@ -77,3 +77,10 @@ flutter run -d windows              # أو جهاز أندرويد
 - `export.dart`: ملف PDF (صفحة الرسم + قائمة المكونات).
 - المعاينة في CI: `lib/main_lab_preview.dart?page=schem`.
 - الصور: `models/render_panel.py` يرندر من ملفات GLB إلى `assets/panel/`.
+
+## تمارين الدوائر والمخططات الجاهزة والاختبارات
+- `lib/schem/ladder.dart`: المخططات الجاهزة. القوى على الشمال، والتحكم شجرة توالي وتوازي بتترتب لوحدها بين L1 و N.
+- `lib/schem/ready_page.dart`: صفحة المخططات الجاهزة.
+- `lib/lab/exercise.dart`: التمرين من الدائرة. المكونات بتتركب، وأسماء أطراف الحل المرجعي بتتحوّل لأسماء أطراف اللوحة.
+- `lib/quiz/`: بنك الأسئلة (`bank.dart`)، والصفحات (`quiz_page.dart`).
+- الفيديو: `recordLesson` في `assets/web/viewer.js`.

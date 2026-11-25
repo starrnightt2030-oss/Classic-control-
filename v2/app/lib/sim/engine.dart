@@ -621,6 +621,8 @@ class Lab {
           active = kind.startsWith('T') ? host.s.sw : host.s.on;
         } else if (host.type == 'ol') {
           active = host.s.trip;
+        } else if (host.type == 'ls' || host.type == 'prox') {
+          active = host.s.act; // an extra contact block of a limit switch / sensor
         } else {
           active = host.s.on;
         }
@@ -972,7 +974,7 @@ class Lab {
       ol.s.current = i;
       final r = i / ol.num_('set');
       if (r > 1.1 && !ol.s.trip) {
-        ol.s.heat += 4 * (r * r - 1.1) * dt;
+        ol.s.heat += 1.2 * (r * r - 1.1) * dt; // about class 10: a direct-on-line start (6 × In) takes ~5 s to trip
       } else if (!ol.s.trip) {
         ol.s.heat = math.max(0.0, ol.s.heat - 12 * dt);
       }

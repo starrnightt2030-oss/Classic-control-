@@ -106,7 +106,8 @@ SchemSim buildFaulted(SchemDoc d, List<SFault> faults) {
         c?.p['set'] = math.max(1.0, c.num_('set') * 0.45);
       default:
         final c = l.byId(s.compOf[f.sym] ?? '');
-        c?.s.fault = f.kind;
+        // an extra contact block of a switch fails like any contact
+        c?.s.fault = c.type == 'contact' && (f.kind == 'no_close' || f.kind == 'nc_open') ? 'stuck_open' : f.kind;
     }
   }
   return s;

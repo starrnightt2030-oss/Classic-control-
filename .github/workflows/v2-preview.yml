@@ -6,6 +6,8 @@ on:
     paths:
       - 'v2/app/lib/lab/**'
       - 'v2/app/lib/sim/**'
+      - 'v2/app/lib/schem/**'
+      - 'v2/app/lib/main_lab_preview.dart'
       - 'v2/app/lib/ui/theme.dart'
       - 'v2/app/assets/panel/**'
       - '.github/workflows/v2-preview.yml'

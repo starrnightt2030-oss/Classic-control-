@@ -10,6 +10,10 @@ const puppeteer = require('puppeteer');
     ['lab_run_phone', '?demo=1', 412, 915],
     ['lab_short_desktop', '?demo=3', 1600, 1000],
     ['lab_burn_desktop', '?demo=4', 1600, 1000],
+    ['schem_edit_desktop', '?page=schem&demo=3', 1600, 1000],
+    ['schem_run_desktop', '?page=schem&demo=1', 1600, 1000],
+    ['schem_library_desktop', '?page=schem&demo=2', 1600, 1000],
+    ['schem_run_phone', '?page=schem&demo=1', 412, 915],
   ];
   for (const [name, q, w, h] of shots) {
     const page = await browser.newPage();

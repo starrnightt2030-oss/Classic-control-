@@ -10,6 +10,8 @@ import 'library_page.dart';
 import 'section_pages.dart';
 import 'sim_pages.dart';
 import '../lab/lab_page.dart';
+import '../schem/schem_page.dart';
+import '../services/export_service.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -41,8 +43,10 @@ class _HomePageState extends State<HomePage> {
             CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات', child: DiagramsPage())),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر', '17 دائرة كلاسيكية تعمل حيًّا: الضواغط والكونتاكتورات والمؤقتات والمحرك، ومهام بالترتيب',
             CcIcons.bolt, CC.green, (_) => const CircuitListPage()),
-        _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'لوحة حقيقية بقضبان أوميجا ومجاري أسلاك: ركّب ووصّل وشغّل، ومولّد أعطال للتدريب',
+        _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'ورقة عمل فارغة: أدخل المكونات الحقيقية من المكتبة، ووصّل كل سلك بيدك، وشغّل. الخطأ يعطي شرارة أو يحرق المكوّن',
             CcIcons.lab, CC.cyan, (_) => const LabPage()),
+        _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر الخطية', 'ارسم الدائرة برموز IEC من المكتبة ووصّلها وحاكِها، ثم اطبعها PDF مع قائمة المكونات',
+            CcIcons.diagram, CC.green, (_) => SchemPage(deliver: (b, n, m) => ExportService.deliverBytes(b, n, mime: m))),
         _Section('assets/images/cards/quiz.webp', 'اختبر نفسك', 'أسئلة وأعطال عملية على كل مكوّن ودايرة', CcIcons.quiz, CC.red,
             (_) => const SoonPage(title: 'الاختبارات', image: 'assets/images/cards/quiz.webp'),
             soon: true),

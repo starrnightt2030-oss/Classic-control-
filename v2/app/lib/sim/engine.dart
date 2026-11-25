@@ -185,6 +185,12 @@ final Map<String, CompType> kTypes = {
       key: 'phr', nameAr: 'مرحّل مراقبة الأطوار', w: 80, h: 120,
       terms: (_) => _t(const [Term('L1', 0, 0, 't'), Term('L2', 0, 0, 't'), Term('L3', 0, 0, 't'), Term('11', 0, 0, 'b'), Term('12', 0, 0, 'b'), Term('14', 0, 0, 'b')]),
       links: (c) => c.s.on ? [['11', '14']] : [['11', '12']]),
+  // schematic: one auxiliary contact that follows its host device (attach = host id)
+  // p['kind']: NO · NC · TNO · TNC (timer, timed state) · OLNO · OLNC (overload trip)
+  'contact': CompType(
+      key: 'contact', nameAr: 'تلامس', w: 40, h: 80,
+      terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
+      links: (c) => c.s.on ? [['1', '2']] : []),
   'tb': CompType(
       key: 'tb', nameAr: 'طرف توصيل', w: 20, h: 60,
       terms: (_) => _t(const [Term('1', 0, 0, 't'), Term('2', 0, 0, 'b')]),
@@ -545,6 +551,25 @@ class Lab {
           c.s.on = ok;
           changed = true;
           emit(SimEvent(ok ? 'kon' : 'koff', c.id, {'type': 'relay'}));
+        }
+      }
+      for (final c in comps.where((c) => c.type == 'contact')) {
+        final host = c.attach == null ? null : byId(c.attach!);
+        final kind = (c.p['kind'] as String?) ?? 'NO';
+        final bool active;
+        if (host == null) {
+          active = false;
+        } else if (host.type == 'timer') {
+          active = kind.startsWith('T') ? host.s.sw : host.s.on;
+        } else if (host.type == 'ol') {
+          active = host.s.trip;
+        } else {
+          active = host.s.on;
+        }
+        final closed = kind.endsWith('NO') ? active : !active;
+        if (closed != c.s.on) {
+          c.s.on = closed;
+          changed = true;
         }
       }
       for (final c in comps.where((c) => c.type == 'aux')) {

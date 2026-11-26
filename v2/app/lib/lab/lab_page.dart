@@ -97,6 +97,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   bool _multi = false; // a second finger came down: the gesture is a zoom, not an edit
   DateTime _lastTap = DateTime(0);
   Offset _lastTapMm = Offset.zero;
+  Offset _downScreen = Offset.zero;
+
+  // bending a placed wire: which wire, which leg (or free bend point), and how
+  int? _bendWire;
+  int _bendSeg = -1;
+  bool _bendHoriz = true, _bendFree = false, _bendMoved = false;
+  List<Offset> _bendOrig = const [];
+  bool _bendHinted = false;
 
   /// how the sorting belt / press / filling line look before the power is on
   final Map<String, Plant> _idlePlants = {};
@@ -516,6 +524,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _multi = false;
     _pointer = e.pointer;
     _downMm = mm;
+    _downScreen = e.position;
     _moved = false;
     _blocked = false;
     final t0 = _termAt(mm);
@@ -542,8 +551,210 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       }
       return;
     }
+    // the selected wire: drag it to move a leg (square bends), hold it to bend freely
+    if (!meter && selWire != null && selWire! < doc.wires.length && _grabWire(selWire!, mm)) {
+      _hold?.cancel();
+      final pointer = e.pointer;
+      _hold = Timer(const Duration(milliseconds: 420), () {
+        if (!mounted || _pointer != pointer || _bendMoved || _bendWire == null) return;
+        _freeBend(mm);
+        HapticFeedback.mediumImpact();
+      });
+      return;
+    }
+    // a short touch leaves the part alone (the finger was after a terminal): only
+    // holding it still picks it up
     final p = _partAt(mm);
-    if (p != null && (p.id == selPart || !p.structural)) _startPartDrag(p);
+    if (p != null && (p.id == selPart || !p.structural)) {
+      _hold?.cancel();
+      final pointer = e.pointer;
+      _hold = Timer(const Duration(milliseconds: 420), () {
+        if (!mounted || _pointer != pointer || _multi) return;
+        HapticFeedback.mediumImpact();
+        AudioService.instance.sfx('part_select');
+        setState(() {
+          selPart = p.id;
+          selWire = null;
+        });
+        _startPartDrag(p);
+      });
+    }
+  }
+
+  // --------------------------------------------------------------- bending wires
+  /// the middle of a wire drawn as a free curve
+  Offset? _curveMid(int i) {
+    final path = wirePath(WireRouter(doc).route(doc.wires[i], i));
+    for (final m in path.computeMetrics()) {
+      final t = m.getTangentForOffset(m.length / 2);
+      if (t != null) return t.position / kPx;
+    }
+    return null;
+  }
+
+  List<Offset> _routeOf(LabWire w) => [doc.termPos(w.a)!, ...w.pts, doc.termPos(w.b)!];
+
+  /// start bending wire [i] if [mm] is on it; a free curve first becomes a square route
+  /// through the finger
+  bool _grabWire(int i, Offset mm) {
+    final w = doc.wires[i];
+    if (doc.termPos(w.a) == null || doc.termPos(w.b) == null) return false;
+    final tol = math.max(2.4, (_touch ? 16 : 10) / (_scale * kPx));
+    if (routeDistance(wirePath(WireRouter(doc).route(w, i)), mm) > tol) return false;
+    _snapshot();
+    _bendOrig = List.of(w.pts);
+    final a = doc.termPos(w.a)!, b = doc.termPos(w.b)!;
+    if (w.pts.isEmpty) {
+      final vert = doc.termDir(w.a).dy != 0;
+      w.pts = vert ? [Offset(a.dx, mm.dy), Offset(b.dx, mm.dy)] : [Offset(mm.dx, a.dy), Offset(mm.dx, b.dy)];
+      _bendWire = i;
+      _bendSeg = 1;
+      _bendHoriz = vert;
+      _bendFree = false;
+      _bendMoved = false;
+      setState(() {});
+      return true;
+    }
+    // the nearest leg
+    final r = _routeOf(w);
+    var best = 0;
+    var bd = double.infinity;
+    for (var k = 0; k < r.length - 1; k++) {
+      final d = _segDist(mm, r[k], r[k + 1]);
+      if (d < bd) {
+        bd = d;
+        best = k;
+      }
+    }
+    final s0 = r[best], s1 = r[best + 1];
+    _bendHoriz = (s1.dy - s0.dy).abs() <= (s1.dx - s0.dx).abs();
+    // a leg that starts or ends on a terminal gets a corner there, so the terminal stays put
+    var k = best;
+    if (k == 0) {
+      w.pts.insert(0, a);
+      k = 1;
+    }
+    if (k == w.pts.length) w.pts.add(b);
+    _bendWire = i;
+    _bendSeg = k;
+    _bendFree = false;
+    _bendMoved = false;
+    return true;
+  }
+
+  /// held on the wire: put a corner under the finger that follows it in any direction
+  void _freeBend(Offset mm) {
+    final i = _bendWire;
+    if (i == null) return;
+    final w = doc.wires[i];
+    final r = _routeOf(w);
+    var best = 0;
+    var bd = double.infinity;
+    for (var k = 0; k < r.length - 1; k++) {
+      final d = _segDist(mm, r[k], r[k + 1]);
+      if (d < bd) {
+        bd = d;
+        best = k;
+      }
+    }
+    w.pts = _cleanBends(r.sublist(1, r.length - 1), r.first, r.last);
+    // re-find the leg after cleaning, then put the free corner in it
+    final r2 = _routeOf(w);
+    best = 0;
+    bd = double.infinity;
+    for (var k = 0; k < r2.length - 1; k++) {
+      final d = _segDist(mm, r2[k], r2[k + 1]);
+      if (d < bd) {
+        bd = d;
+        best = k;
+      }
+    }
+    w.pts.insert(best, mm);
+    _bendSeg = best;
+    _bendFree = true;
+    setState(() {});
+  }
+
+  void _bendTo(Offset mm) {
+    final w = doc.wires[_bendWire!];
+    _bendMoved = true;
+    if (_bendFree) {
+      w.pts[_bendSeg] = mm;
+    } else {
+      final k = _bendSeg; // the leg runs from pts[k-1] to pts[k]
+      final p0 = w.pts[k - 1], p1 = w.pts[k];
+      w.pts[k - 1] = _bendHoriz ? Offset(p0.dx, mm.dy) : Offset(mm.dx, p0.dy);
+      w.pts[k] = _bendHoriz ? Offset(p1.dx, mm.dy) : Offset(mm.dx, p1.dy);
+    }
+    setState(() {});
+  }
+
+  void _endBend() {
+    final i = _bendWire;
+    _bendWire = null;
+    if (i == null || i >= doc.wires.length) return;
+    final w = doc.wires[i];
+    if (!_bendMoved && !_bendFree) {
+      // a tap on the selected wire: nothing bent, drop the snapshot
+      w.pts = List.of(_bendOrig);
+      if (_undo.isNotEmpty) _undo.removeLast();
+      setState(() {});
+      return;
+    }
+    final a = doc.termPos(w.a), b = doc.termPos(w.b);
+    if (a != null && b != null) w.pts = _cleanBends(w.pts, a, b);
+    HapticFeedback.selectionClick();
+    _changed();
+  }
+
+  /// drop repeated corners and corners that sit on a straight line
+  List<Offset> _cleanBends(List<Offset> pts, Offset a, Offset b) {
+    final all = [a, ...pts, b];
+    final out = <Offset>[all.first];
+    for (var i = 1; i < all.length; i++) {
+      if ((all[i] - out.last).distance < 0.6) continue;
+      out.add(all[i]);
+    }
+    var changed = true;
+    while (changed && out.length > 2) {
+      changed = false;
+      for (var i = 1; i < out.length - 1; i++) {
+        final u = out[i] - out[i - 1], v = out[i + 1] - out[i];
+        if ((u.dx * v.dy - u.dy * v.dx).abs() < 0.5 * (u.distance + v.distance) && u.dx * v.dx + u.dy * v.dy > 0) {
+          out.removeAt(i);
+          changed = true;
+          break;
+        }
+      }
+    }
+    return out.sublist(1, out.length - 1);
+  }
+
+  static double _segDist(Offset p, Offset a, Offset b) {
+    final ab = b - a;
+    final l2 = ab.dx * ab.dx + ab.dy * ab.dy;
+    if (l2 < 1e-6) return (p - a).distance;
+    final t = (((p - a).dx * ab.dx + (p - a).dy * ab.dy) / l2).clamp(0.0, 1.0);
+    return (p - (a + ab * t)).distance;
+  }
+
+  /// moving parts carry the corners next to their terminals, so square routes stay square
+  void _carryBends(Map<String, Offset> moved) {
+    for (final w in doc.wires) {
+      if (w.pts.isEmpty) continue;
+      for (final end in [true, false]) {
+        final key = end ? w.a : w.b;
+        final d = moved[key.substring(0, key.indexOf('.'))];
+        if (d == null) continue;
+        final t = doc.termPos(key);
+        if (t == null) continue;
+        final old = t - d;
+        final i = end ? 0 : w.pts.length - 1;
+        final q = w.pts[i];
+        if ((q.dx - old.dx).abs() < 0.6) w.pts[i] = Offset(q.dx + d.dx, q.dy);
+        if ((q.dy - old.dy).abs() < 0.6) w.pts[i] = Offset(w.pts[i].dx, q.dy + d.dy);
+      }
+    }
   }
 
   void _startPartDrag(Placed p) {
@@ -565,6 +776,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _abandonEdit() {
     _hold?.cancel();
     _stopEdgePan();
+    if (_bendWire != null) {
+      _bendMoved = true;
+      _endBend();
+    }
     if (dragId != null && _moved && _partStart != null) {
       final p = doc.byId(dragId!);
       if (p != null) {
@@ -605,6 +820,15 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   void _move(PointerMoveEvent e) {
     if (_multi) return;
+    if (e.pointer == _pointer && _bendWire != null) {
+      final mm = e.localPosition / kPx;
+      if (!_bendMoved && (e.position - _downScreen).distance < 6) return;
+      _hold?.cancel();
+      _bendTo(mm);
+      return;
+    }
+    // the finger slid away before the hold: it is panning, not picking up
+    if (e.pointer == _pointer && dragId == null && _wireFrom == null && (e.position - _downScreen).distance > 10) _hold?.cancel();
     if (e.pointer == _pointer && _wireFrom != null && _downMm != null) {
       final mm = e.localPosition / kPx;
       if (_wireTo != null || (mm - _downMm!).distance > 2.5) {
@@ -624,15 +848,20 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     final p = doc.byId(dragId!)!;
     if (p.d.attachTo != null && p.attach != null) p.attach = null; // lifted off
-    p.x = _partStart!.dx + d.dx;
-    p.y = _partStart!.dy + d.dy;
+    final step = <String, Offset>{};
+    final np = Offset(_partStart!.dx + d.dx, _partStart!.dy + d.dy);
+    step[p.id] = np - Offset(p.x, p.y);
+    p.x = np.dx;
+    p.y = np.dy;
     for (final c in doc.parts) {
       final s = _childStart[c.id];
       if (s != null) {
+        step[c.id] = Offset(s.dx + d.dx - c.x, s.dy + d.dy - c.y);
         c.x = s.dx + d.dx;
         c.y = s.dy + d.dy;
       }
     }
+    _carryBends(step);
     _snapHost = _clipHost(p);
     _blocked = _snapHost == null && _collides(p);
     setState(() {});
@@ -676,6 +905,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _pointer = null;
     _hold?.cancel();
     _stopEdgePan();
+    if (_bendWire != null) {
+      _endBend();
+      return;
+    }
     if (_wireFrom != null && _wireTo != null) {
       final from = _wireFrom!;
       final to = _wireSnap ?? _termAt(mm, except: from);
@@ -724,6 +957,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _pointer = null;
     _hold?.cancel();
     _stopEdgePan();
+    if (_bendWire != null) _endBend();
     _wireFrom = null;
     _wireTo = null;
     _wireSnap = null;
@@ -817,14 +1051,20 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         selWire = w;
         selPart = null;
       });
+      if (!_bendHinted) {
+        _bendHinted = true;
+        _toast('اسحب السلك من أي حتة فيه لتعديل مساره بزوايا 90°، أو اضغط عليه مطوّلًا واسحب لثنيه في أي اتجاه.');
+      }
       return;
     }
+    // a short tap on a part does nothing to it (hold it to pick it up and select it);
+    // a tap on the empty plate clears the selection
     final p = _partAt(mm);
+    if (p != null && p.id == selPart) return;
     setState(() {
-      selPart = p?.id;
+      selPart = null;
       selWire = null;
     });
-    if (p != null) AudioService.instance.sfx('part_select');
   }
 
   void _terminalTap(String t) {
@@ -923,7 +1163,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   String _pretty(String key) {
     final i = key.indexOf('.');
     final p = doc.byId(key.substring(0, i));
-    return '${key.substring(0, i)}:${p?.d.printed(key.substring(i + 1)) ?? key.substring(i + 1)}';
+    return '${p == null ? key.substring(0, i) : doc.label(p)}:${p?.d.printed(key.substring(i + 1)) ?? key.substring(i + 1)}';
   }
 
   String _autoColor(String a, String b) {
@@ -951,6 +1191,90 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     return 'rd';
   }
 
+  /// the part's name: renaming a contactor carries its wires and blocks along; naming an
+  /// auxiliary block after a contactor clips the block onto that contactor
+  Widget _nameField(Placed p, BuildContext ctx, StateSetter set) {
+    final c = TextEditingController(text: doc.label(p));
+    void apply() {
+      final to = c.text.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9_]'), '');
+      if (to.isEmpty || to == doc.label(p)) return;
+      final host = doc.byId(to);
+      if (p.def == 'aux' && host != null && host.d.engine == 'kc') {
+        _linkAux(p, host);
+        set(() {});
+        return;
+      }
+      if (ex != null) {
+        _toast('في التمرين الأسماء ثابتة عشان فحص التوصيل يطابق المخطط.');
+        return;
+      }
+      if (host != null) {
+        _toast('الاسم $to مستخدم لمكوّن تاني.');
+        AudioService.instance.sfx('soft_fail');
+        return;
+      }
+      _snapshot();
+      final from = p.id;
+      doc.renamePart(p, to);
+      if (selPart == from) selPart = to;
+      _toast('اتغيّر الاسم من $from إلى $to.');
+      _changed();
+      set(() {});
+    }
+
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          controller: c,
+          textDirection: TextDirection.ltr,
+          textCapitalization: TextCapitalization.characters,
+          decoration: InputDecoration(
+            labelText: p.def == 'aux' ? 'الاسم (اكتب اسم الكونتاكتور، مثلًا K1، عشان يتربط بيه)' : 'اسم المكوّن',
+            isDense: true,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => apply(),
+        ),
+      ),
+      const SizedBox(width: 8),
+      FilledButton(onPressed: apply, child: const Text('حفظ')),
+    ]);
+  }
+
+  /// resize a part (and whatever is clipped on it); the top-left corner stays put
+  void _resize(Placed p, double k, StateSetter set, {bool snapshot = true}) {
+    k = (k * 20).roundToDouble() / 20;
+    k = k.clamp(0.5, 2.0).toDouble();
+    if ((k - p.scale).abs() < 0.001) return;
+    if (snapshot) _snapshot();
+    final old = {for (final w in doc.wires) w: (doc.termPos(w.a), doc.termPos(w.b))};
+    if (k == 1.0) {
+      p.p.remove('scale');
+    } else {
+      p.p['scale'] = k;
+    }
+    for (final c in doc.parts.where((c) => c.attach == p.id)) {
+      placeAttached(c, p);
+    }
+    // wires with hand-made bends: the corners next to the moved terminals follow them
+    for (final e in old.entries) {
+      final w = e.key;
+      if (w.pts.isEmpty) continue;
+      final (oa, ob) = e.value;
+      final na = doc.termPos(w.a), nb = doc.termPos(w.b);
+      if (oa != null && na != null && oa != na) {
+        final q = w.pts.first;
+        w.pts[0] = Offset((q.dx - oa.dx).abs() < 0.6 ? na.dx : q.dx, (q.dy - oa.dy).abs() < 0.6 ? na.dy : q.dy);
+      }
+      if (ob != null && nb != null && ob != nb) {
+        final q = w.pts.last;
+        w.pts[w.pts.length - 1] = Offset((q.dx - ob.dx).abs() < 0.6 ? nb.dx : q.dx, (q.dy - ob.dy).abs() < 0.6 ? nb.dy : q.dy);
+      }
+    }
+    set(() {});
+    _changed();
+  }
+
   /// reversing contactor: two contactors side by side with a mechanical interlock between them
   void _addReversing() {
     _addPart('kc');
@@ -969,7 +1293,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     doc.mech.add([a.id, b.id]);
     AudioService.instance.sfx('din_rail_click');
-    _toast('كونتاكتور عاكس: ${a.id} و ${b.id} بينهما منع تداخل ميكانيكي، فلا يُغلقان معًا. أضف أيضًا منع التداخل الكهربائي بالنقاط المغلقة.');
+    _toast('كونتاكتور عاكس: ${a.id} و ${b.id} بينهما منع تداخل ميكانيكي، فلا يُغلقان معًا. لكل واحد اسمه وممكن تركّب على كل واحد بلوك مساعد (اسحبه جنبه، أو سمّيه باسمه).');
     _changed();
   }
 
@@ -983,15 +1307,51 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     for (final q in doc.parts) {
       if (q.d.engine != want || q.id == p.id) continue;
       if (doc.parts.any((o) => o.attach == q.id && o.def == p.def && o.id != p.id)) continue;
-      final ghost = Placed('${p.id}~', p.def, 0, 0);
-      placeAttached(ghost, q);
-      final dd = (Offset(ghost.x, ghost.y) - Offset(p.x, p.y)).distance;
-      if (dd < bd) {
-        bd = dd;
-        best = q;
+      // an auxiliary block can go on either flank of the contactor
+      for (final side in p.def == 'aux' ? const ['l', 'r'] : const ['l']) {
+        final ghost = Placed('${p.id}~', p.def, 0, 0, p: {'side': side});
+        placeAttached(ghost, q);
+        final dd = (Offset(ghost.x, ghost.y) - Offset(p.x, p.y)).distance;
+        if (dd < bd) {
+          bd = dd;
+          best = q;
+          _clipSide = side;
+        }
       }
     }
     return best;
+  }
+
+  String _clipSide = 'l';
+
+  /// the flank of [host] an auxiliary block fits on: left unless something is there
+  /// (the other contactor of a reversing pair), then right
+  String _freeFlank(Placed aux, Placed host) {
+    for (final side in const ['l', 'r']) {
+      final g = Placed('${aux.id}~', aux.def, 0, 0, p: {'side': side});
+      placeAttached(g, host);
+      final r = g.rect.deflate(1);
+      final hit = doc.parts.any((o) => o.id != aux.id && o.id != host.id && !o.structural && o.attach != host.id && o.rect.overlaps(r));
+      if (!hit) return side;
+    }
+    return 'l';
+  }
+
+  /// clip [aux] onto [host] (named on the block, or picked from the list)
+  void _linkAux(Placed aux, Placed host) {
+    final other = doc.parts.where((o) => o.attach == host.id && o.def == aux.def && o.id != aux.id);
+    if (other.isNotEmpty) {
+      _toast('الكونتاكتور ${host.id} عليه بلوك مساعد بالفعل (${other.first.id}).');
+      AudioService.instance.sfx('soft_fail');
+      return;
+    }
+    _snapshot();
+    aux.p['side'] = _freeFlank(aux, host);
+    aux.attach = host.id;
+    placeAttached(aux, host);
+    AudioService.instance.sfx('din_rail_click');
+    _toast('اتربط البلوك المساعد بالكونتاكتور ${host.id}: نقطه بتشتغل مع ملف ${host.id}.');
+    _changed();
   }
 
   bool _collides(Placed p) {
@@ -1046,6 +1406,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _snapHost = null;
       if (host != null) {
         p.attach = host.id;
+        if (p.def == 'aux') p.p['side'] = _clipSide;
         placeAttached(p, host);
         if (_clipFrom != host.id) _toast('تم تركيب ${p.d.nameAr} ${p.id} على الكونتاكتور ${host.id}.');
       } else {
@@ -1491,8 +1852,43 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         return Padding(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text('${p.d.nameAr} · ${p.id}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('${p.d.nameAr} · ${doc.label(p)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
+            _nameField(p, ctx, set),
+            if (p.def == 'aux') ...[
+              const SizedBox(height: 10),
+              const Text('مركّب على الكونتاكتور', style: TextStyle(color: CC.text2)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final k in doc.parts.where((q) => q.d.engine == 'kc'))
+                  ChoiceChip(
+                    label: Text(k.id, textDirection: TextDirection.ltr),
+                    selected: p.attach == k.id,
+                    onSelected: (_) {
+                      if (p.attach == k.id) return;
+                      _linkAux(p, k);
+                      set(() {});
+                    },
+                  ),
+                if (doc.parts.every((q) => q.d.engine != 'kc')) const Text('أضف كونتاكتور الأول.', style: TextStyle(color: CC.muted)),
+              ]),
+            ],
+            if (!p.structural && p.d.attachTo == null) ...[
+              const SizedBox(height: 12),
+              Row(children: [
+                const Text('حجم المكوّن', style: TextStyle(color: CC.text2)),
+                const Spacer(),
+                Text('${(p.scale * 100).round()}%', textDirection: TextDirection.ltr, style: const TextStyle(color: CC.text2, fontFamily: CC.mono)),
+              ]),
+              Row(children: [
+                IconButton(onPressed: () => _resize(p, p.scale - 0.1, set), icon: const Icon(Icons.remove_circle_outline_rounded)),
+                Expanded(
+                  child: Slider(min: 0.5, max: 2.0, divisions: 15, value: p.scale, onChanged: (v) => _resize(p, v, set, snapshot: false), onChangeStart: (_) => _snapshot()),
+                ),
+                IconButton(onPressed: () => _resize(p, p.scale + 0.1, set), icon: const Icon(Icons.add_circle_outline_rounded)),
+              ]),
+            ],
+            const SizedBox(height: 4),
             if (p.p['burnt'] == true) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1756,8 +2152,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             constrained: false,
             minScale: 0.08,
             maxScale: 6,
-            panEnabled: dragId == null && _wireFrom == null,
-            scaleEnabled: dragId == null && _wireFrom == null,
+            panEnabled: dragId == null && _wireFrom == null && _bendWire == null,
+            scaleEnabled: dragId == null && _wireFrom == null && _bendWire == null,
             boundaryMargin: const EdgeInsets.all(2400),
             onInteractionUpdate: (_) => setState(() {}),
             child: SizedBox(
@@ -1791,6 +2187,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                     child: IgnorePointer(
                         child: CustomPaint(
                             painter: TermPainter(doc, pending ?? _wireFrom, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack, target: _wireSnap)))),
+                if (!running && selWire != null && selWire! < doc.wires.length && doc.termPos(doc.wires[selWire!].a) != null && doc.termPos(doc.wires[selWire!].b) != null)
+                  Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: _BendHandles(_routeOf(doc.wires[selWire!]), doc.wires[selWire!].pts.isEmpty ? _curveMid(selWire!) : null)))),
                 if (fx.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: FxPainter(fx, _clock)))),
                 Positioned.fill(
                   child: Listener(
@@ -1913,7 +2311,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   Widget _partWidget(Placed p) {
     final sel = p.id == selPart || p.id == dragId;
-    final sz = p.size;
+    final sz = p.baseSize;
     final c = sim?.byId(p.id);
     final children = <Widget>[];
     final mk = p.d.machine;
@@ -1976,7 +2374,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 2.2 * kPx, vertical: 0.2 * kPx),
           decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx), boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 2))]),
-          child: Text('-${p.id}', textDirection: TextDirection.ltr, style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
+          child: Text('-${doc.label(p)}', textDirection: TextDirection.ltr, style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
         ),
       ),
     ));
@@ -2006,12 +2404,28 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         ),
       ));
     }
+    final k = p.scale;
+    final body = Stack(clipBehavior: Clip.none, children: children);
     return Positioned(
       left: p.x * kPx,
       top: p.y * kPx,
-      width: sz.width * kPx,
-      height: sz.height * kPx,
-      child: IgnorePointer(child: Stack(clipBehavior: Clip.none, children: children)),
+      width: sz.width * k * kPx,
+      height: sz.height * k * kPx,
+      child: IgnorePointer(
+        child: k == 1.0
+            ? body
+            : Transform.scale(
+                scale: k,
+                alignment: Alignment.topLeft,
+                child: OverflowBox(
+                    alignment: Alignment.topLeft,
+                    minWidth: sz.width * kPx,
+                    maxWidth: sz.width * kPx,
+                    minHeight: sz.height * kPx,
+                    maxHeight: sz.height * kPx,
+                    child: body),
+              ),
+      ),
     );
   }
 
@@ -2045,7 +2459,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       ];
 
   List<Widget> _liveOverlay(Placed p, Comp c) {
-    final sz = p.size;
+    final sz = p.baseSize;
     if (p.p['burnt'] == true && !p.d.engine.startsWith('motor')) return const [];
     Widget badge(String t, Color col) => Positioned(
           top: -11 * kPx,
@@ -2329,6 +2743,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),
                 if (selP != null) _tool(Icons.tune_rounded, 'الخصائص', () => _propsSheet(selP)),
+                if (selWire != null && selWire! < doc.wires.length && doc.wires[selWire!].pts.isNotEmpty)
+                  _tool(Icons.gesture_rounded, 'رجّع السلك منحني تلقائي', () {
+                    _snapshot();
+                    doc.wires[selWire!].pts = [];
+                    _changed();
+                  }),
                 if (selP != null || selWire != null) _tool(Icons.delete_outline_rounded, 'حذف', _deleteSel, danger: true),
                 _tool(Icons.more_horiz_rounded, 'المزيد', _moreSheet),
               ]),
@@ -2569,4 +2989,39 @@ class _DotGrid extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DotGrid old) => old._key != _key;
+}
+
+/// the selected wire's grips: a dot on each corner and a bar across each leg's middle
+/// (a free curve shows one grip in its middle)
+class _BendHandles extends CustomPainter {
+  final List<Offset> route;
+  final Offset? curveMid; // set when the wire is still a free curve
+  _BendHandles(this.route, this.curveMid);
+
+  @override
+  void paint(Canvas c, Size size) {
+    final fill = Paint()..color = const Color(0xFFFFFFFF);
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..color = const Color(0xFF3D8BFF);
+    void grip(Offset o, double r) {
+      c.drawCircle(o * kPx, r, fill);
+      c.drawCircle(o * kPx, r, ring);
+    }
+
+    if (curveMid != null) {
+      grip(curveMid!, 9);
+      return;
+    }
+    for (var i = 1; i < route.length - 1; i++) {
+      grip(route[i], 6);
+    }
+    for (var i = 0; i < route.length - 1; i++) {
+      if ((route[i + 1] - route[i]).distance > 12) grip((route[i] + route[i + 1]) / 2, 8);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BendHandles old) => true;
 }

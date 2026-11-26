@@ -4,13 +4,21 @@ import 'model.dart';
 
 /// position an attached part (overload under / aux block above) relative to its host
 void placeAttached(Placed child, Placed host) {
+  // a clip-on part is as big as the contactor it sits on
+  if (host.scale != 1.0) {
+    child.p['scale'] = host.scale;
+  } else {
+    child.p.remove('scale');
+  }
+  final k = host.scale;
   if (child.def == 'ol') {
     final ht = host.d.termPos()['2'], ct = child.d.termPos()['2'];
-    child.x = host.x + (ht?.$1 ?? 0) - (ct?.$1 ?? 0);
-    child.y = host.y + (ht?.$2 ?? host.size.height * 0.75) - 5;
+    child.x = host.x + (ht?.$1 ?? 0) * k - (ct?.$1 ?? 0) * k;
+    child.y = host.y + (ht?.$2 ?? host.baseSize.height * 0.75) * k - 5 * k;
   } else if (child.def == 'aux') {
-    // side-mounted auxiliary contact block, clipped to the contactor's left flank
-    child.x = host.x - child.size.width + 3;
+    // side-mounted auxiliary contact block, clipped to the contactor's left flank, or
+    // its right one (the right-hand contactor of a reversing pair)
+    child.x = child.p['side'] == 'r' ? host.x + host.size.width - 3 * k : host.x - child.size.width + 3 * k;
     child.y = host.y + (host.size.height - child.size.height) / 2;
   }
 }

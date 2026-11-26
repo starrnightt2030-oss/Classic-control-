@@ -16,16 +16,25 @@ class Placed {
   LabPartDef get d => kLabParts[def]!;
   bool get structural => kStructural.contains(def);
 
-  Size get size {
+  /// size as drawn in the catalogue (before the user's resize)
+  Size get baseSize {
     if (def == 'din_rail') return Size(len, 35);
     if (d.engine == 'motor' || d.engine == 'motor1') return const Size(MotorPlate.w, MotorPlate.h);
     return d.frame;
   }
 
+  /// the user's resize of this part (structural parts keep their size)
+  double get scale => structural ? 1.0 : ((p['scale'] as num?)?.toDouble() ?? 1.0).clamp(0.5, 2.0).toDouble();
+
+  Size get size => baseSize * scale;
+
   double get len => (p['len'] as num?)?.toDouble() ?? 300;
   Rect get rect => Rect.fromLTWH(x, y, size.width, size.height);
 
-  Map<String, Offset> termsAbs() => {for (final e in d.termPos().entries) e.key: Offset(x + e.value.$1, y + e.value.$2)};
+  Map<String, Offset> termsAbs() {
+    final k = scale;
+    return {for (final e in d.termPos().entries) e.key: Offset(x + e.value.$1 * k, y + e.value.$2 * k)};
+  }
 
   Map<String, Object?> toJson() => {'id': id, 'def': def, 'x': x, 'y': y, 'p': p, if (attach != null) 'attach': attach};
   static Placed fromJson(Map<String, dynamic> j) =>
@@ -34,11 +43,21 @@ class Placed {
 }
 
 class LabWire {
-  final String a, b; // '<partId>.<engineTerm>'
+  String a, b; // '<partId>.<engineTerm>'
   String color;
-  LabWire(this.a, this.b, this.color);
-  Map<String, Object?> toJson() => {'a': a, 'b': b, 'c': color};
-  static LabWire fromJson(Map<String, dynamic> j) => LabWire(j['a'] as String, j['b'] as String, j['c'] as String);
+
+  /// the bends the user gave the wire (mm on the plate); empty: drawn as a free curve
+  List<Offset> pts;
+  LabWire(this.a, this.b, this.color, [List<Offset>? pts]) : pts = pts ?? [];
+  Map<String, Object?> toJson() => {
+        'a': a,
+        'b': b,
+        'c': color,
+        if (pts.isNotEmpty) 'p': [for (final o in pts) [o.dx, o.dy]],
+      };
+  static LabWire fromJson(Map<String, dynamic> j) => LabWire(j['a'] as String, j['b'] as String, j['c'] as String, [
+        for (final o in (j['p'] as List? ?? const [])) Offset(((o as List)[0] as num).toDouble(), (o[1] as num).toDouble()),
+      ]);
 }
 
 class WireColor {
@@ -131,6 +150,33 @@ class LabDoc {
     if (p.d.machine != null) return const Offset(0, 1);
     if (p.d.side.isNotEmpty) return t.dx < p.x + p.size.width / 2 ? const Offset(-1, 0) : const Offset(1, 0);
     return t.dy < p.y + p.size.height / 2 ? const Offset(0, -1) : const Offset(0, 1);
+  }
+
+  /// what the part's tag shows: a clip-on block carries its contactor's name
+  String label(Placed p) {
+    if (p.attach != null && p.def == 'aux') return p.attach!;
+    return p.id;
+  }
+
+  /// give a part a new name, carrying its wires, clip-on parts and interlocks along
+  bool renamePart(Placed p, String to) {
+    if (to.isEmpty || to == p.id || byId(to) != null) return false;
+    final from = p.id;
+    String fix(String k) => k.startsWith('$from.') ? '$to${k.substring(from.length)}' : k;
+    for (final w in wires) {
+      w.a = fix(w.a);
+      w.b = fix(w.b);
+    }
+    for (final q in parts) {
+      if (q.attach == from) q.attach = to;
+    }
+    for (final m in mech) {
+      for (var i = 0; i < m.length; i++) {
+        if (m[i] == from) m[i] = to;
+      }
+    }
+    p.id = to;
+    return true;
   }
 
   void removePart(Placed p) {

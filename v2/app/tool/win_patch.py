@@ -5,8 +5,9 @@
 Writes DIR/windows-files.json (sha256 of every file in the Release folder). When the
 newest earlier `v2-app-build-N` release has its windows-files.json, also writes
 DIR/ClassicControl-Windows-patch.zip with the changed and new files (same layout as
-the full zip) and DIR/windows-patch.json {name, from, files}. A PC on build N then
-downloads only the patch; any other PC gets the full zip.
+the full zip) and DIR/windows-patch.json {name, from, fromCode, files}. A PC on build N,
+or on any build with the same program (code hash) as N, then downloads only the patch;
+any other PC gets the full zip.
 Uses GH_TOKEN for the GitHub API when it is set.
 """
 import argparse
@@ -40,7 +41,7 @@ def get(url: str, api: bool = False) -> bytes:
 
 
 def previous(repo: str):
-    """(build, files) of the newest earlier release that has windows-files.json"""
+    """(build, files, code) of the newest earlier release that has windows-files.json"""
     rels = json.loads(get(f"https://api.github.com/repos/{repo}/releases?per_page=20", api=True))
     best = None
     for r in rels:
@@ -48,11 +49,18 @@ def previous(repo: str):
         if not tag.startswith(PREFIX) or not tag[len(PREFIX):].isdigit():
             continue
         a = next((x for x in r.get("assets", []) if x["name"] == "windows-files.json"), None)
+        u = next((x for x in r.get("assets", []) if x["name"] == "update.json"), None)
         if a and (best is None or int(tag[len(PREFIX):]) > best[0]):
-            best = (int(tag[len(PREFIX):]), a["browser_download_url"])
+            best = (int(tag[len(PREFIX):]), a["browser_download_url"], u and u["browser_download_url"])
     if not best:
         return None
-    return best[0], json.loads(get(best[1]))
+    code = ""
+    if best[2]:
+        try:
+            code = json.loads(get(best[2])).get("code", "")
+        except Exception:
+            code = ""
+    return best[0], json.loads(get(best[1])), code
 
 
 def main() -> None:
@@ -72,13 +80,13 @@ def main() -> None:
         prev = None
     if not prev:
         return
-    build, old = prev
+    build, old, code = prev
     changed = [k for k, h in files.items() if old.get(k) != h]
     name = "ClassicControl-Windows-patch.zip"
     with zipfile.ZipFile(out / name, "w", zipfile.ZIP_DEFLATED) as z:
         for k in changed:
             z.write(rel / k, k)
-    (out / "windows-patch.json").write_text(json.dumps({"name": name, "from": build, "files": len(changed)}), encoding="utf-8")
+    (out / "windows-patch.json").write_text(json.dumps({"name": name, "from": build, "fromCode": code, "files": len(changed)}), encoding="utf-8")
     size = (out / name).stat().st_size
     print(f"patch from build {build}: {len(changed)} of {len(files)} files, {size / 1e6:.1f} MB")
 

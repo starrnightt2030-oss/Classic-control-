@@ -57,6 +57,32 @@ void main() {
     expect(info.windowsFor(0)!.name, 'ClassicControl-Windows.zip');
   });
 
+  test('a build that only changed content offers no new program', () {
+    UpdateInfo build(String code, {String fromCode = ''}) => UpdateInfo.fromJson({
+          'build': 47,
+          'sha': 'def',
+          'code': code,
+          'android': {'name': 'ClassicControl-Android.apk', 'size': 60000000, 'sha': 'a2'},
+          'windows': {
+            'name': 'ClassicControl-Windows.zip',
+            'size': 40000000,
+            'sha': 'w2',
+            'patch': {'name': 'ClassicControl-Windows-patch.zip', 'size': 9000000, 'sha': 'p2', 'from': 46, 'fromCode': fromCode, 'files': 6},
+          },
+        }, tag: 'v2-app-build-47');
+    // same program: lessons and models come as a pack, no APK, no Windows folder
+    expect(build('c1').newProgramFor('c1'), isFalse);
+    expect(build('c2').newProgramFor('c1'), isTrue);
+    // older releases and dev builds carry no hash: always offer as before
+    expect(build('').newProgramFor('c1'), isTrue);
+    expect(build('c2').newProgramFor(''), isTrue);
+    // a PC still on build 44 that skipped content-only builds 45 and 46 has the same
+    // program as 46, so the patch made from 46 fits it
+    expect(build('c2', fromCode: 'c1').windowsFor(44, 'c1')!.name, 'ClassicControl-Windows-patch.zip');
+    expect(build('c2', fromCode: 'c1').windowsFor(44, 'c0')!.name, 'ClassicControl-Windows.zip');
+    expect(build('c2').windowsFor(44, '')!.name, 'ClassicControl-Windows.zip');
+  });
+
   test('content packs fetch only what differs', () {
     final have = {'assets/content/contactor.json': 's1', 'assets/models/contactor.glb': 'old'};
     final todo = info.changedFiles(have);

@@ -17,8 +17,14 @@ import 'packs.dart';
 class UpdateInfo {
   final int build;
   final String version, sha, notes, tag, repo;
+
+  /// hash of the program (tool/pack_manifest.py code_hash); empty for older releases
+  final String code;
   final ReleaseFile? android, windows, windowsPatch;
   final int patchFrom;
+
+  /// program hash of the build the Windows patch was made from
+  final String patchFromCode;
 
   /// asset key → (sha256, size, path in the repository)
   final Map<String, (String, int, String)> files;
@@ -30,10 +36,12 @@ class UpdateInfo {
     required this.notes,
     required this.tag,
     required this.repo,
+    this.code = '',
     this.android,
     this.windows,
     this.windowsPatch,
     this.patchFrom = 0,
+    this.patchFromCode = '',
     this.files = const {},
   });
 
@@ -56,10 +64,12 @@ class UpdateInfo {
       notes: j['notes'] as String? ?? '',
       tag: tag,
       repo: j['repo'] as String? ?? UpdateService.repo,
+      code: j['code'] as String? ?? '',
       android: rf(j['android']),
       windows: rf(win),
       windowsPatch: rf(patch),
       patchFrom: (patch?['from'] as num?)?.toInt() ?? 0,
+      patchFromCode: patch?['fromCode'] as String? ?? '',
       files: files,
     );
   }
@@ -67,9 +77,16 @@ class UpdateInfo {
   Uri asset(String name) => Uri.parse('https://github.com/$repo/releases/download/$tag/$name');
   Uri raw(String src) => Uri.parse('https://raw.githubusercontent.com/$repo/$sha/$src');
 
+  /// whether a PC or phone running [myCode] needs this build's program at all: builds
+  /// that only changed lessons, sounds or 3D models have the same code hash, and their
+  /// content already arrives as a pack (no new APK, no new Windows folder)
+  bool newProgramFor(String myCode) => code.isEmpty || myCode.isEmpty || code != myCode;
+
   /// the Windows download for a PC on [build]: only the changed files when it is
-  /// the build the patch was made from, the whole folder otherwise
-  ReleaseFile? windowsFor(int build) => windowsPatch != null && patchFrom > 0 && patchFrom == build ? windowsPatch : windows;
+  /// the build the patch was made from (or the same program as that build: the
+  /// builds between only changed content), the whole folder otherwise
+  ReleaseFile? windowsFor(int build, [String myCode = '']) =>
+      windowsPatch != null && ((patchFrom > 0 && patchFrom == build) || (patchFromCode.isNotEmpty && patchFromCode == myCode)) ? windowsPatch : windows;
 
   /// content files that differ from what the app has
   List<String> changedFiles(Map<String, String> have) => [
@@ -100,6 +117,8 @@ class UpdateStatus {
 /// Looks for new builds, keeps content packs in step, and installs new app builds:
 /// * content (lessons, narration, sounds, 3D models): only the changed files are
 ///   downloaded, straight from the repository at the release commit, and used at once;
+/// * the program itself is offered only when its code hash differs from the installed
+///   one, so a build that only changed content never asks for a new APK or Windows build;
 /// * Windows: only the changed program files when coming from the previous build,
 ///   swapped in by a small script after the app closes, then the app opens again;
 /// * Android: the new APK is downloaded and Android's installer opens (Android
@@ -161,7 +180,7 @@ class UpdateService {
       final info = UpdateInfo.fromJson(jsonDecode(utf8.decode(await _get(Uri.parse(latest.$3)))) as Map<String, dynamic>, tag: latest.$1);
       await _syncContent(info, manual: manual);
       final mine = AppInfo.buildNumber;
-      if (mine > 0 && info.build > mine && _fileFor(info) != null) {
+      if (mine > 0 && info.build > mine && info.newProgramFor(PackStore.instance.code) && _fileFor(info) != null) {
         status.value = UpdateStatus(UpdatePhase.available, info: info);
         return info;
       }
@@ -175,7 +194,7 @@ class UpdateService {
     }
   }
 
-  ReleaseFile? _fileFor(UpdateInfo i) => Platform.isAndroid ? i.android : (Platform.isWindows ? i.windowsFor(AppInfo.buildNumber) : null);
+  ReleaseFile? _fileFor(UpdateInfo i) => Platform.isAndroid ? i.android : (Platform.isWindows ? i.windowsFor(AppInfo.buildNumber, PackStore.instance.code) : null);
 
   /// the size the user will download for [i] on this device
   int downloadSize(UpdateInfo i) => _fileFor(i)?.size ?? 0;

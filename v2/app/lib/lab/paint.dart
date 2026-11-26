@@ -213,7 +213,11 @@ class WirePainter extends CustomPainter {
   /// rubber-band wire being dragged: from (mm) → to (mm)
   final (Offset, Offset, bool)? drag;
   final String dragColor;
+  /// the still wiring only (in its own layer that is kept while nothing changes);
+  /// false: the live part on top of it (current, flashes, the wire being drawn, ferrules)
+  final bool still;
   late final WireRouter router = WireRouter(doc);
+  late final int _sig = _signature();
   WirePainter(
       {required this.doc,
       this.selectedWire,
@@ -224,25 +228,50 @@ class WirePainter extends CustomPainter {
       this.flows = const {},
       this.flash = const {},
       this.drag,
-      this.dragColor = 'rd'});
+      this.dragColor = 'rd',
+      this.still = false});
 
-  @override
-  void paint(Canvas c, Size size) {
+  /// the still part of the wiring (bodies, stripes, halos, ferrules) recorded once
+  /// and replayed every frame; only the current dashes are drawn live. A big panel
+  /// running its circuit used to rebuild every wire, stripe and blur 30 times a second.
+  static _WireCache? _cache;
+
+  int _signature() {
+    final h = <Object?>[selectedWire, doc.wires.length];
+    for (var i = 0; i < doc.wires.length; i++) {
+      final w = doc.wires[i];
+      h
+        ..add(w.a)
+        ..add(w.b)
+        ..add(w.color)
+        ..add(Object.hashAll(w.pts))
+        ..add(doc.termPos(w.a))
+        ..add(doc.termPos(w.b))
+        ..add(doc.termUp(w.a))
+        ..add(doc.termUp(w.b))
+        ..add(nets != null && nets!.live(w.a));
+    }
+    return Object.hashAll(h);
+  }
+
+  _WireCache _build(int sig) {
     final numbers = doc.netNumbers();
     final paths = <Path>[];
+    final thicks = <double>[];
+    final rec = ui.PictureRecorder();
+    final c = Canvas(rec);
     for (var i = 0; i < doc.wires.length; i++) {
       final w = doc.wires[i];
       if (doc.termPos(w.a) == null || doc.termPos(w.b) == null) {
         paths.add(Path());
+        thicks.add(0);
         continue;
       }
-      final r = router.route(w, i);
-      final path = wirePath(r);
+      final path = wirePath(router.route(w, i));
       paths.add(path);
       final col = wireColor(w.color);
       final thick = w.color == 'br' || w.color == 'bk' || w.color == 'gy' || w.color == 'ge' ? 2.6 * kPx : 2.0 * kPx;
-      final live = nets != null && nets!.live(w.a);
-      final hot = flash.contains(i);
+      thicks.add(thick);
       if (i == selectedWire) {
         c.drawPath(path, Paint()
           ..style = PaintingStyle.stroke
@@ -251,22 +280,19 @@ class WirePainter extends CustomPainter {
           ..strokeJoin = StrokeJoin.round
           ..color = const Color(0xAA3D8BFF));
       }
-      if (hot) {
-        final a = 0.55 + 0.45 * math.sin(phase * math.pi * 12);
+      if (nets != null && nets!.live(w.a)) {
+        // energised but no current: faint halo (two soft strokes: a blur on every
+        // live wire was the slowest thing on a phone)
         c.drawPath(path, Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = thick + 12
+          ..strokeWidth = thick + 7
           ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7)
-          ..color = const Color(0xFFFF3B30).withValues(alpha: a));
-      } else if (live) {
-        // energised but no current: faint halo
+          ..color = const Color(0x1AFFD54A));
         c.drawPath(path, Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = thick + 5
+          ..strokeWidth = thick + 3.5
           ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
-          ..color = const Color(0x40FFD54A));
+          ..color = const Color(0x2EFFD54A));
       }
       // shadow, outline, body, specular
       c.drawPath(path.shift(const Offset(2.5, 4)), Paint()
@@ -287,23 +313,58 @@ class WirePainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..color = col.color);
       if (col.stripe != null) {
+        final stripes = Path();
         for (final m in path.computeMetrics()) {
           for (var t = 0.0; t < m.length; t += 22) {
-            c.drawPath(m.extractPath(t, math.min(t + 10, m.length)), Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = thick
-              ..color = col.stripe!);
+            stripes.addPath(m.extractPath(t, math.min(t + 10, m.length)), Offset.zero);
           }
         }
+        c.drawPath(stripes, Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thick
+          ..color = col.stripe!);
       }
       c.drawPath(path.shift(const Offset(-0.8, -1.2)), Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = thick * 0.22
         ..strokeCap = StrokeCap.round
         ..color = Colors.white.withValues(alpha: 0.28));
-      final f = flows[i];
-      if (f != null) _flow(c, path, f, thick);
     }
+    final base = rec.endRecording();
+    // ferrules on top of everything at each end
+    final rec2 = ui.PictureRecorder();
+    final c2 = Canvas(rec2);
+    for (var i = 0; i < doc.wires.length; i++) {
+      final w = doc.wires[i];
+      for (final (t, up) in [(w.a, doc.termUp(w.a)), (w.b, doc.termUp(w.b))]) {
+        final p = doc.termPos(t);
+        if (p == null) continue;
+        _ferrule(c2, p * kPx, up, numbers[t] ?? 0, w.color);
+      }
+    }
+    _cache?.dispose();
+    return _WireCache(sig, base, rec2.endRecording(), paths, thicks, [for (final p in paths) p.computeMetrics().toList()]);
+  }
+
+  @override
+  void paint(Canvas c, Size size) {
+    final sig = _sig;
+    final cache = _cache != null && _cache!.sig == sig ? _cache! : (_cache = _build(sig));
+    if (still) {
+      c.drawPicture(cache.base);
+      return;
+    }
+    for (final i in flash) {
+      if (i >= cache.paths.length) continue;
+      final a = 0.55 + 0.45 * math.sin(phase * math.pi * 12);
+      c.drawPath(cache.paths[i], Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = cache.thick[i] + 12
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7)
+        ..color = const Color(0xFFFF3B30).withValues(alpha: a));
+    }
+    if (flows.isNotEmpty) _flows(c, cache);
     final dg = drag;
     if (dg != null) {
       final a = dg.$1 * kPx, b = dg.$2 * kPx;
@@ -326,41 +387,40 @@ class WirePainter extends CustomPainter {
       c.drawCircle(b, 4.5 * kPx, Paint()..color = const Color(0x553D8BFF));
       c.drawCircle(b, 1.6 * kPx, Paint()..color = const Color(0xFFDDE7FF));
     }
-    // ferrules on top of everything at each end
-    for (var i = 0; i < doc.wires.length; i++) {
-      final w = doc.wires[i];
-      for (final (t, up) in [(w.a, doc.termUp(w.a)), (w.b, doc.termUp(w.b))]) {
-        final p = doc.termPos(t);
-        if (p == null) continue;
-        _ferrule(c, p * kPx, up, numbers[t] ?? 0, w.color);
-      }
-    }
+    c.drawPicture(cache.ferrules);
   }
 
-  /// moving bright dashes along a wire in the direction of the current
-  void _flow(Canvas c, Path path, int dir, double thick) {
+  /// the current's dashes on every carrying wire, gathered into one path per
+  /// thickness and drawn with two strokes (a soft halo stroke instead of a blur per dash)
+  void _flows(Canvas c, _WireCache cache) {
     const seg = 7.0 * kPx, gap = 11.0 * kPx;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thick * 0.55
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFFFF3B0);
-    final glowP = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thick * 1.6
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
-      ..color = const Color(0xAAFFC93D);
-    for (final m in path.computeMetrics()) {
-      final shift = (phase * 3 % 1) * (seg + gap);
-      for (var t = -seg - gap + shift; t < m.length; t += seg + gap) {
-        final s0 = dir > 0 ? t : m.length - t - seg;
-        final a = s0.clamp(0.0, m.length).toDouble(), b = (s0 + seg).clamp(0.0, m.length).toDouble();
-        if (b - a < 1) continue;
-        final part = m.extractPath(a, b);
-        c.drawPath(part, glowP);
-        c.drawPath(part, paint);
+    final shift = (phase * 3 % 1) * (seg + gap);
+    final byThick = <double, Path>{};
+    for (final e in flows.entries) {
+      final i = e.key;
+      if (i >= cache.metrics.length) continue;
+      final dir = e.value;
+      final dashes = byThick.putIfAbsent(cache.thick[i], Path.new);
+      for (final m in cache.metrics[i]) {
+        for (var t = -seg - gap + shift; t < m.length; t += seg + gap) {
+          final s0 = dir > 0 ? t : m.length - t - seg;
+          final a = s0.clamp(0.0, m.length).toDouble(), b = (s0 + seg).clamp(0.0, m.length).toDouble();
+          if (b - a < 1) continue;
+          dashes.addPath(m.extractPath(a, b), Offset.zero);
+        }
       }
+    }
+    for (final e in byThick.entries) {
+      c.drawPath(e.value, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = e.key * 2.2
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0x55FFC93D));
+      c.drawPath(e.value, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = e.key * 0.55
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFFFFF3B0));
     }
   }
 
@@ -386,7 +446,20 @@ class WirePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant WirePainter old) => true;
+  bool shouldRepaint(covariant WirePainter old) => !still || old._sig != _sig;
+}
+
+class _WireCache {
+  final int sig;
+  final ui.Picture base, ferrules;
+  final List<Path> paths;
+  final List<double> thick;
+  final List<List<ui.PathMetric>> metrics;
+  _WireCache(this.sig, this.base, this.ferrules, this.paths, this.thick, this.metrics);
+  void dispose() {
+    base.dispose();
+    ferrules.dispose();
+  }
 }
 
 /// Terminal markers: rings for every free terminal while wiring, live dots while running.

@@ -36,7 +36,44 @@ flutter:
     - assets/audio/sfx/
     - assets/pack/
     # >>> audio
+    - assets/audio/aux_block/
+    - assets/audio/contactor/
+    - assets/audio/control_relay/
+    - assets/audio/control_transformer/
+    - assets/audio/current_transformer/
+    - assets/audio/electronic_protection/
+    - assets/audio/enclosure/
+    - assets/audio/estop/
+    - assets/audio/fb/
+    - assets/audio/float_pressure/
+    - assets/audio/fuse/
+    - assets/audio/global/
+    - assets/audio/installation/
+    - assets/audio/limit_switch/
+    - assets/audio/mcb/
+    - assets/audio/motor/
+    - assets/audio/motor_1ph/
+    - assets/audio/mpcb/
+    - assets/audio/overload/
+    - assets/audio/panel_meter/
+    - assets/audio/pb_station/
+    - assets/audio/pilot_lamp/
+    - assets/audio/pneumatic_timer/
+    - assets/audio/power_supply_24v/
+    - assets/audio/proximity_sensor/
+    - assets/audio/pushbutton/
+    - assets/audio/rccb/
+    - assets/audio/reversing_contactor/
+    - assets/audio/rotary_switches/
+    - assets/audio/selector/
+    - assets/audio/signaling/
+    - assets/audio/solenoid_valve/
+    - assets/audio/stage/
+    - assets/audio/timer/
+    - assets/audio/tools/
+    - assets/audio/warn/
     # <<< audio
+    - assets/intro/
     - assets/images/
     - assets/images/thumbs/
     - assets/images/cards/

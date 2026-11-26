@@ -179,3 +179,43 @@ LabDoc benchDemo() {
     ..add(LabWire('H1.X2', 'H2.X2', 'bu'));
   return d;
 }
+
+/// all the bench machines wired to run by themselves (CI screenshots of the Blender sprites):
+/// the belt motor runs straight from the breaker, the press strokes when its part
+/// sensor B3 sees a part, the filling valve opens over a bottle (B1) until it is full (B2),
+/// the sorter pushes when B2 sees metal
+LabDoc machinesDemo() {
+  final d = emptyPanel()..plateH = 1500;
+  final bx = d.plateW + LabDoc.benchGap;
+  d.benchW = 900;
+  d.parts.add(Placed('X0', 'supply_iso', 40, 30, p: {'sw': true, 'on0': true}));
+  d.parts.add(Placed('Q1', 'mcb3', 160, 95 + 17.5 - (kLabParts['mcb3']!.info?.hMm ?? 90) / 2));
+  d.parts.add(Placed('M1', 'motor_d', bx + 10, 20));
+  d.parts.add(Placed('W1', 'mach_sort', bx + 10, 220, p: {'kind': 'sort', 'motor': 'M1'}));
+  d.parts.add(Placed('W2', 'mach_fill', bx + 10, 500, p: {'kind': 'fill', 'motor': 'M1'}));
+  d.parts.add(Placed('W3', 'mach_press', bx + 450, 500, p: {'kind': 'press'}));
+  d.parts.add(Placed('W4', 'mach_cart', bx + 450, 220, p: {'kind': 'cart', 'motor': 'M1'}));
+  d.parts.add(Placed('W5', 'mach_lift', bx + 10, 800, p: {'kind': 'lift', 'motor': 'M1'}));
+  d.parts.add(Placed('W6', 'mach_hoist', bx + 300, 800, p: {'kind': 'hoist', 'motor': 'M1'}));
+  d.wires
+    ..add(LabWire('X0.L1', 'Q1.1', 'br'))
+    ..add(LabWire('X0.L2', 'Q1.3', 'bk'))
+    ..add(LabWire('X0.L3', 'Q1.5', 'gy'))
+    ..add(LabWire('Q1.2', 'M1.U1', 'br'))
+    ..add(LabWire('Q1.4', 'M1.V1', 'bk'))
+    ..add(LabWire('Q1.6', 'M1.W1', 'gy'))
+    // press: B3 NO → Y1
+    ..add(LabWire('Q1.2', 'W3.S33', 'rd'))
+    ..add(LabWire('W3.S34', 'W3.A1', 'rd'))
+    ..add(LabWire('W3.A2', 'X0.N', 'bu'))
+    // filling: B1 NO, B2 NC → Y1
+    ..add(LabWire('Q1.2', 'W2.S13', 'rd'))
+    ..add(LabWire('W2.S14', 'W2.S21', 'rd'))
+    ..add(LabWire('W2.S22', 'W2.A1', 'rd'))
+    ..add(LabWire('W2.A2', 'X0.N', 'bu'))
+    // sorter: B2 NO → Y1
+    ..add(LabWire('Q1.2', 'W1.S23', 'rd'))
+    ..add(LabWire('W1.S24', 'W1.A1', 'rd'))
+    ..add(LabWire('W1.A2', 'X0.N', 'bu'));
+  return d;
+}

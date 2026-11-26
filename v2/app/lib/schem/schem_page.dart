@@ -15,6 +15,7 @@ import '../lab/projects.dart';
 import '../services/audio_service.dart';
 import '../sim/engine.dart';
 import '../sim/measure.dart';
+import '../lab/machine_sprites.dart';
 import '../sim/plant.dart';
 import '../ui/perf.dart';
 import '../ui/theme.dart';
@@ -25,7 +26,6 @@ import 'ladder.dart';
 import 'meters_ui.dart';
 import 'model.dart';
 import 'plant_io.dart';
-import 'plant_paint.dart';
 import 'sheet_paint.dart';
 import 'symbols.dart';
 
@@ -961,7 +961,7 @@ class _SchemPageState extends State<SchemPage> with SingleTickerProviderStateMix
                 ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Machine3D(plant: pl, io: _pio, frame: _frame))
                 : GestureDetector(
               onTapUp: (e) => setState(() => pl.tap(e.localPosition.dx / w, e.localPosition.dy / h)),
-              child: CustomPaint(painter: PlantPainter(pl, _pio, _frame), size: Size(w - 20, h)),
+              child: CustomPaint(painter: machineFlatPainter(pl, _pio, _frame), size: Size(w - 20, h)),
             ),
           ),
           const SizedBox(height: 6),

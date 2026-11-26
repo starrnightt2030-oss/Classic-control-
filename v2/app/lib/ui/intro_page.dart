@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_info.dart';
 import '../services/audio_service.dart';
@@ -38,17 +39,30 @@ class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMix
     _c.addStatusListener((s) {
       if (s == AnimationStatus.completed) _finish();
     });
-    // start with the first frame so picture and sound begin together
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _c.addListener(_follow);
+    // the 3D film is opened first (or given up on), then picture and sound start together
+    _film.open().timeout(const Duration(milliseconds: 1500), onTimeout: () => false).then((ok) {
       if (!mounted) return;
-      AudioService.instance.playIntro();
-      _c.forward();
+      setState(() => _hasFilm = ok);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AudioService.instance.playIntro();
+        _c.forward();
+      });
     });
+  }
+
+  final _film = IntroFilm();
+  bool _hasFilm = false;
+
+  void _follow() {
+    if (_hasFilm) _film.seek(_c.value * IntroTimes.end);
   }
 
   @override
   void dispose() {
     _c.dispose();
+    _film.dispose();
     super.dispose();
   }
 
@@ -85,8 +99,24 @@ class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMix
             final hit = seg(t, IntroTimes.hit, 1.1, Curves.easeOutBack);
             final title = seg(t, IntroTimes.title, 0.9);
             final credits = seg(t, IntroTimes.credits, 0.8);
+            final hold = seg(t, IntroTimes.hit, IntroTimes.end - IntroTimes.hit, Curves.linear);
             return Stack(fit: StackFit.expand, children: [
-              CustomPaint(painter: IntroPainter(t)),
+              if (_hasFilm)
+                // the Blender film; after the hit its last frame stays behind the logo,
+                // slowly closing in and dimmed
+                ValueListenableBuilder<ui.Image?>(
+                  valueListenable: _film.frame,
+                  builder: (_, img, __) => img == null
+                      ? const SizedBox()
+                      : Transform.scale(
+                          scale: 1 + 0.06 * hold,
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(Color.fromRGBO(4, 8, 18, 0.62 * seg(t, IntroTimes.hit + 0.2, 0.9)), BlendMode.srcOver),
+                            child: RawImage(image: img, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
+                          ),
+                        ),
+                ),
+              CustomPaint(painter: IntroPainter(t, film: _hasFilm)),
               // logo
               Align(
                 alignment: const Alignment(0, -0.22),
@@ -181,7 +211,10 @@ class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMix
 /// The blueprint and the start/stop circuit at time [t] (seconds).
 class IntroPainter extends CustomPainter {
   final double t;
-  IntroPainter(this.t);
+
+  /// the 3D film plays underneath: only the hit (flash, ring, glow) is drawn
+  final bool film;
+  IntroPainter(this.t, {this.film = false});
 
   static const _cyan = Color(0xFF3FD5E8), _amber = Color(0xFFF5A400), _ink = Color(0xFF7FA6D6);
 
@@ -190,6 +223,10 @@ class IntroPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final r = Offset.zero & size;
+    if (film) {
+      _hit(canvas, size);
+      return;
+    }
     canvas.drawRect(
         r,
         Paint()
@@ -203,7 +240,11 @@ class IntroPainter extends CustomPainter {
     }
     final fold = _seg(IntroTimes.hit - 0.3, 0.7, Curves.easeInCubic);
     if (fold < 1) _circuit(canvas, size, fold);
-    // the hit: flash and an expanding ring of energy
+    _hit(canvas, size);
+  }
+
+  /// the hit: flash and an expanding ring of energy
+  void _hit(Canvas canvas, Size size) {
     if (t >= IntroTimes.hit - 0.05) {
       final k = _seg(IntroTimes.hit - 0.05, 1.2);
       final c = Offset(size.width / 2, size.height * 0.39);
@@ -384,4 +425,62 @@ class IntroPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant IntroPainter old) => old.t != t;
+}
+
+/// The Blender intro (v2/models/intro3d.py → assets/intro/intro3d.webp, an animated
+/// WebP at 24 frames a second), decoded frame by frame as the timeline reaches it, so
+/// only one frame is held in memory and the picture stays on the sound's clock.
+class IntroFilm {
+  static const asset = 'assets/intro/intro3d.webp', fps = 24.0;
+  ui.Codec? _codec;
+  int _at = -1, _want = 0;
+  bool _busy = false, _gone = false;
+  final frame = ValueNotifier<ui.Image?>(null);
+
+  Future<bool> open() async {
+    try {
+      final data = await rootBundle.load(asset);
+      final c = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      if (c.frameCount < 2) return false;
+      _codec = c;
+      await _decode(0);
+      return frame.value != null;
+    } catch (_) {
+      return false; // no film in this build: the drawn intro plays
+    }
+  }
+
+  int get frames => _codec?.frameCount ?? 0;
+
+  void seek(double seconds) {
+    _want = math.min((seconds * fps).floor(), frames - 1);
+    if (!_busy && _want > _at) _decode(_want);
+  }
+
+  Future<void> _decode(int want) async {
+    final c = _codec;
+    if (c == null) return;
+    _busy = true;
+    try {
+      // frames come in order; ones the clock has already passed are decoded and dropped
+      while (_at < want && !_gone) {
+        final fi = await c.getNextFrame();
+        _at++;
+        if (_at >= want || _at >= frames - 1) {
+          frame.value = fi.image; // the old one is still on screen this frame: left to the GC
+          break;
+        }
+        fi.image.dispose();
+      }
+    } finally {
+      _busy = false;
+    }
+    if (!_gone && _want > _at) _decode(_want);
+  }
+
+  void dispose() {
+    _gone = true;
+    _codec?.dispose();
+    frame.dispose();
+  }
 }

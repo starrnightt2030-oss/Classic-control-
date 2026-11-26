@@ -37,6 +37,8 @@ void main() {
     await t.pumpWidget(const MaterialApp(home: IntroPage(next: Scaffold(body: Text('app')))));
     await t.pump(const Duration(milliseconds: 500));
     await t.tap(find.text('تخطي'));
+    // the page's double-tap-to-skip holds the tap for its timeout
+    await t.pump(const Duration(milliseconds: 400));
     await t.pumpAndSettle();
     expect(find.text('app'), findsOneWidget);
   });

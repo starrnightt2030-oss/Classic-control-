@@ -147,14 +147,12 @@ class Glass extends StatelessWidget {
     // (Perf.lite) the blur over a live, repainting sheet is the costliest thing on screen
     final opaque = tint.a >= 0.85;
     if (Perf.lite || opaque) {
-      return Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: opaque ? tint : Color.alphaBlend(tint, const Color(0xF20A1124)),
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: CC.glassBorder),
-        ),
-        child: child,
+      // a Material, not a coloured box, so list tiles inside keep their ink splashes
+      return Material(
+        color: opaque ? tint : Color.alphaBlend(tint, const Color(0xF20A1124)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius), side: const BorderSide(color: CC.glassBorder)),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: padding, child: child),
       );
     }
     return ClipRRect(

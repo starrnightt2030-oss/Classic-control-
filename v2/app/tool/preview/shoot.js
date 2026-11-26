@@ -12,6 +12,7 @@ const puppeteer = require('puppeteer');
     ['lab_burn_desktop', '?demo=4', 1600, 1000],
     ['lab_bench_desktop', '?demo=5', 1600, 1000],
     ['lab_bench_phone', '?demo=5', 915, 412],
+    ['lab_machines_run_desktop', '?demo=7', 1600, 1000],
     ['lab_ex_edit_desktop', '?ex=c_rev_auto', 1600, 1000],
     ['lab_ex_run_desktop', '?ex=c_rev_auto&demo=6', 1600, 1000],
     ['lab_ex_sd_run_desktop', '?ex=c_sd&demo=6', 1600, 1000],

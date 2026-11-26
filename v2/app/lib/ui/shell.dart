@@ -5,6 +5,7 @@ import '../schem/ready_page.dart';
 import 'home_page.dart';
 import 'icons.dart';
 import 'library_page.dart';
+import '../meters/meters_page.dart';
 import 'theme.dart';
 import 'update_ui.dart';
 
@@ -30,6 +31,7 @@ class _ShellState extends State<Shell> {
     _Dest('الرئيسية', CcIcons.home),
     _Dest('المكتبة', CcIcons.library),
     _Dest('المخططات', CcIcons.diagram),
+    _Dest('أجهزة القياس', CcIcons.meter),
     _Dest('عن التطبيق', CcIcons.info),
   ];
 
@@ -41,6 +43,7 @@ class _ShellState extends State<Shell> {
       HomePage(onGo: go),
       const LibraryPage(),
       const ReadyDiagramsPage(),
+      const MetersPage(),
       const AboutPage(),
     ];
     return UpdateWatcher(child: LayoutBuilder(builder: (context, c) {

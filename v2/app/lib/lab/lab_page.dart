@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -89,6 +90,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // hand wiring by dragging from a terminal
   String? _wireFrom;
   Offset? _wireTo;
+  String? _wireSnap; // the terminal the dragged wire end has snapped to
+  Offset? _wireScreen; // the finger on the screen, for the magnifier and edge panning
+  Timer? _edgePan, _hold;
+  bool _touch = false;
+  bool _multi = false; // a second finger came down: the gesture is a zoom, not an edit
+  DateTime _lastTap = DateTime(0);
+  Offset _lastTapMm = Offset.zero;
 
   /// how the sorting belt / press / filling line look before the power is on
   final Map<String, Plant> _idlePlants = {};
@@ -124,6 +132,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     AudioService.instance.stopLoops();
     _ticker.dispose();
     _save?.cancel();
+    _edgePan?.cancel();
+    _hold?.cancel();
+    _zoomAnim?.cancel();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -420,17 +431,23 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     return h;
   }
 
-  String? _termAt(Offset mm) {
-    final r = math.max(3.8, 16 / (_scale * kPx));
+  int _wiresOn(String k) => doc.wires.where((w) => w.a == k || w.b == k).length;
+
+  /// the terminal under [mm]: within a fingertip on a touch screen, a little less with
+  /// a mouse; never further than a few millimetres so the part's body stays grabbable
+  String? _termAt(Offset mm, {double? px, double? capMm, String? except, bool free = false}) {
+    final screen = px ?? (_touch ? 24.0 : 16.0);
+    final r = math.max(3.8, math.min(screen / (_scale * kPx), capMm ?? (_touch ? 7.0 : 5.0)));
     final hidden = _hiddenTerms();
     String? best;
     var bd = r;
     for (final p in doc.parts.reversed) {
       for (final e in p.termsAbs().entries) {
         final k = '${p.id}.${e.key}';
-        if (hidden.contains(k)) continue;
+        if (hidden.contains(k) || k == except) continue;
         final d = (e.value - mm).distance;
         if (d < bd) {
+          if (free && _wiresOn(k) >= kMaxWiresPerTerm) continue;
           bd = d;
           best = k;
         }
@@ -470,7 +487,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   // --------------------------------------------------------------- pointer handling
+  // One finger: from a terminal it draws a wire (the end snaps to the nearest free
+  // terminal, a magnifier shows what is under the finger, and the view pans when the
+  // finger reaches the edge); from a part it moves the part; holding still on a
+  // terminal for a moment picks up its part instead. A second finger cancels the edit
+  // and the gesture becomes a pinch zoom. A double tap zooms onto a part and back.
   void _down(PointerDownEvent e) {
+    _touch = e.kind == PointerDeviceKind.touch || e.kind == PointerDeviceKind.stylus;
     final mm = e.localPosition / kPx;
     if (running) {
       if (meter) {
@@ -484,37 +507,111 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       if (p != null) _runPress(p, e.pointer, true);
       return;
     }
-    if (_pointer != null) return; // second finger: let the viewer zoom
+    if (_pointer != null) {
+      // second finger: drop what the first one started and let the viewer zoom
+      _abandonEdit();
+      _multi = true;
+      return;
+    }
+    _multi = false;
     _pointer = e.pointer;
     _downMm = mm;
     _moved = false;
     _blocked = false;
     final t0 = _termAt(mm);
     if (t0 != null) {
-      if (!meter) setState(() => _wireFrom = t0); // drag out a wire (or tap: handled on up)
+      if (!meter) {
+        setState(() {
+          _wireFrom = t0;
+          _wireScreen = e.position;
+        });
+        // held still: the finger meant the part, not the terminal
+        final p = _partAt(mm);
+        if (p != null && (p.id == selPart || !p.structural)) {
+          _hold?.cancel();
+          _hold = Timer(const Duration(milliseconds: 420), () {
+            if (!mounted || _pointer != e.pointer || _wireTo != null || _wireFrom == null) return;
+            setState(() {
+              _wireFrom = null;
+              _wireScreen = null;
+            });
+            HapticFeedback.mediumImpact();
+            _startPartDrag(p);
+          });
+        }
+      }
       return;
     }
     final p = _partAt(mm);
-    if (p != null && (p.id == selPart || !p.structural)) {
-      // a clip-on part (overload / aux block) is pulled off its contactor and moved alone
-      final root = (p.attach != null && p.d.attachTo == null) ? doc.byId(p.attach!) ?? p : p;
-      if (p.d.attachTo != null) _clipFrom = p.attach;
-      setState(() => dragId = root.id);
-      _partStart = Offset(root.x, root.y);
-      final partners = {for (final m in doc.mech) if (m.contains(root.id)) m[0] == root.id ? m[1] : m[0]};
-      _childStart
-        ..clear()
-        ..addEntries([
-          for (final c in doc.parts)
-            if (c.attach == root.id || partners.contains(c.id) || (c.attach != null && partners.contains(c.attach))) MapEntry(c.id, Offset(c.x, c.y))
-        ]);
+    if (p != null && (p.id == selPart || !p.structural)) _startPartDrag(p);
+  }
+
+  void _startPartDrag(Placed p) {
+    // a clip-on part (overload / aux block) is pulled off its contactor and moved alone
+    final root = (p.attach != null && p.d.attachTo == null) ? doc.byId(p.attach!) ?? p : p;
+    if (p.d.attachTo != null) _clipFrom = p.attach;
+    setState(() => dragId = root.id);
+    _partStart = Offset(root.x, root.y);
+    final partners = {for (final m in doc.mech) if (m.contains(root.id)) m[0] == root.id ? m[1] : m[0]};
+    _childStart
+      ..clear()
+      ..addEntries([
+        for (final c in doc.parts)
+          if (c.attach == root.id || partners.contains(c.id) || (c.attach != null && partners.contains(c.attach))) MapEntry(c.id, Offset(c.x, c.y))
+      ]);
+  }
+
+  /// put a half-moved part back and drop a half-drawn wire (a second finger came down)
+  void _abandonEdit() {
+    _hold?.cancel();
+    _stopEdgePan();
+    if (dragId != null && _moved && _partStart != null) {
+      final p = doc.byId(dragId!);
+      if (p != null) {
+        final d = Offset(p.x, p.y) - _partStart!;
+        p.x = _partStart!.dx;
+        p.y = _partStart!.dy;
+        for (final c in doc.parts) {
+          if (_childStart.containsKey(c.id)) {
+            c.x -= d.dx;
+            c.y -= d.dy;
+          }
+        }
+        if (_clipFrom != null && p.d.attachTo != null) p.attach = _clipFrom;
+      }
+      if (_undo.isNotEmpty) _undo.removeLast(); // the snapshot taken when the move began
     }
+    setState(() {
+      dragId = null;
+      _snapHost = null;
+      _blocked = false;
+      _wireFrom = null;
+      _wireTo = null;
+      _wireSnap = null;
+      _wireScreen = null;
+      _moved = false;
+    });
+  }
+
+  void _wireDragTo(Offset mm, Offset screen) {
+    final snap = _termAt(mm, px: _touch ? 44 : 26, capMm: 14, except: _wireFrom, free: true);
+    if (snap != _wireSnap && snap != null) HapticFeedback.selectionClick();
+    setState(() {
+      _wireTo = mm;
+      _wireSnap = snap;
+      _wireScreen = screen;
+    });
   }
 
   void _move(PointerMoveEvent e) {
+    if (_multi) return;
     if (e.pointer == _pointer && _wireFrom != null && _downMm != null) {
       final mm = e.localPosition / kPx;
-      if (_wireTo != null || (mm - _downMm!).distance > 2.5) setState(() => _wireTo = mm);
+      if (_wireTo != null || (mm - _downMm!).distance > 2.5) {
+        _hold?.cancel();
+        _wireDragTo(mm, e.position);
+        _edgePan ??= Timer.periodic(const Duration(milliseconds: 16), (_) => _panAtEdge());
+      }
       return;
     }
     if (e.pointer != _pointer || dragId == null || _downMm == null) return;
@@ -541,20 +638,52 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     setState(() {});
   }
 
+  /// while a wire is dragged near the screen's edge, slide the plate the other way so
+  /// the far end of a long wire can be reached without letting go
+  void _panAtEdge() {
+    final sp = _wireScreen;
+    final sz = context.size;
+    if (sp == null || sz == null || _wireFrom == null) {
+      _stopEdgePan();
+      return;
+    }
+    const band = 56.0, speed = 12.0;
+    double push(double v, double max) => v < band ? (band - v) / band * speed : (v > max - band ? -(v - (max - band)) / band * speed : 0);
+    final dx = push(sp.dx, sz.width), dy = push(sp.dy, sz.height);
+    if (dx == 0 && dy == 0) return;
+    tc.value = tc.value.clone()..translateByDouble(dx / _scale, dy / _scale, 0, 1);
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    _wireDragTo(tc.toScene(box.globalToLocal(sp)) / kPx, sp);
+  }
+
+  void _stopEdgePan() {
+    _edgePan?.cancel();
+    _edgePan = null;
+  }
+
   void _up(PointerUpEvent e) {
     final mm = e.localPosition / kPx;
     if (running) {
       _runPress(null, e.pointer, false);
       return;
     }
+    if (_multi) {
+      if (e.pointer == _pointer) _pointer = null;
+      return;
+    }
     if (e.pointer != _pointer) return;
     _pointer = null;
+    _hold?.cancel();
+    _stopEdgePan();
     if (_wireFrom != null && _wireTo != null) {
       final from = _wireFrom!;
-      final to = _termAt(mm);
+      final to = _wireSnap ?? _termAt(mm, except: from);
       setState(() {
         _wireFrom = null;
         _wireTo = null;
+        _wireSnap = null;
+        _wireScreen = null;
         pending = null;
       });
       if (to != null && to != from) {
@@ -565,6 +694,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       return;
     }
     _wireFrom = null;
+    _wireScreen = null;
     if (dragId != null && _moved) {
       final p = doc.byId(dragId!)!;
       _drop(p);
@@ -572,6 +702,16 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       return;
     }
     setState(() => dragId = null);
+    // double tap: zoom onto the part, or back out
+    final now = DateTime.now();
+    if (now.difference(_lastTap) < const Duration(milliseconds: 450) && (mm - _lastTapMm).distance < 8) {
+      _lastTap = DateTime(0);
+      setState(() => pending = null); // the first tap may have picked a terminal
+      _zoomAt(mm);
+      return;
+    }
+    _lastTap = now;
+    _lastTapMm = mm;
     _tap(mm);
   }
 
@@ -582,10 +722,78 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
     if (e.pointer != _pointer) return;
     _pointer = null;
+    _hold?.cancel();
+    _stopEdgePan();
     _wireFrom = null;
     _wireTo = null;
+    _wireSnap = null;
+    _wireScreen = null;
     if (dragId != null && _moved) _drop(doc.byId(dragId!)!);
     setState(() => dragId = null);
+  }
+
+  // --------------------------------------------------------------- zoom
+  Timer? _zoomAnim;
+
+  /// glide the view to [to] in a quarter of a second
+  void _animateView(Matrix4 to) {
+    _zoomAnim?.cancel();
+    final from = tc.value.clone();
+    final t0 = DateTime.now();
+    _zoomAnim = Timer.periodic(const Duration(milliseconds: 16), (tm) {
+      final k = (DateTime.now().difference(t0).inMilliseconds / 260).clamp(0.0, 1.0);
+      final e = Curves.easeOutCubic.transform(k);
+      final m = Matrix4.zero();
+      for (var i = 0; i < 16; i++) {
+        m.storage[i] = from.storage[i] + (to.storage[i] - from.storage[i]) * e;
+      }
+      if (!mounted) {
+        tm.cancel();
+        return;
+      }
+      tc.value = m;
+      setState(() {});
+      if (k >= 1) tm.cancel();
+    });
+  }
+
+  /// zoom the view by [f] about the middle of the screen (the + / − buttons)
+  void _zoomBy(double f) {
+    final sz = context.size;
+    if (sz == null) return;
+    final s = _scale;
+    final ns = (s * f).clamp(0.08, 6.0);
+    final c = Offset(sz.width / 2, sz.height / 2);
+    final p = tc.toScene(c);
+    _animateView(Matrix4.identity()
+      ..translateByDouble(c.dx - p.dx * ns, c.dy - p.dy * ns, 0, 1)
+      ..scaleByDouble(ns, ns, ns, 1));
+    AudioService.instance.sfx('ui_tap');
+  }
+
+  /// double tap: fill the screen with the part under the finger, or go back to the
+  /// whole plate when already close
+  void _zoomAt(Offset mm) {
+    final sz = context.size;
+    if (sz == null) return;
+    final p = _partAt(mm);
+    final r = p?.rect;
+    if (r == null) {
+      _fit();
+      return;
+    }
+    const top = 80.0, bottom = showUiBottom;
+    final ns = math.min((sz.width - 60) / (r.width * kPx), (sz.height - top - bottom - 40) / (r.height * kPx)).clamp(0.08, 6.0) * 0.8;
+    if (_scale > ns * 0.85) {
+      _fit();
+      return;
+    }
+    final c = Offset(sz.width / 2, top + (sz.height - top - bottom) / 2);
+    final m = r.center * kPx;
+    _animateView(Matrix4.identity()
+      ..translateByDouble(c.dx - m.dx * ns, c.dy - m.dy * ns, 0, 1)
+      ..scaleByDouble(ns, ns, ns, 1));
+    HapticFeedback.selectionClick();
   }
 
   void _tap(Offset mm) {
@@ -620,10 +828,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   void _terminalTap(String t) {
-    final count = doc.wires.where((w) => w.a == t || w.b == t).length;
+    final count = _wiresOn(t);
     if (pending == null) {
-      if (count >= 2) {
-        _toast('الطرف عليه سلكان بالفعل. لا يُربط أكثر من سلكين تحت مسمار واحد.');
+      if (count >= kMaxWiresPerTerm) {
+        _toast('الطرف عليه $kMaxWiresPerTerm أسلاك بالفعل، وده أقصى عدد تحت مسمار واحد.');
         AudioService.instance.sfx('soft_fail');
         return;
       }
@@ -644,11 +852,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _connect(a, t);
   }
 
-  /// a new wire between two terminals (max two wires under one screw)
+  /// a new wire between two terminals (at most [kMaxWiresPerTerm] under one screw)
   void _connect(String a, String t) {
-    int count(String k) => doc.wires.where((w) => w.a == k || w.b == k).length;
-    if (count(a) >= 2 || count(t) >= 2) {
-      _toast('الطرف عليه سلكان بالفعل. لا يُربط أكثر من سلكين تحت مسمار واحد.');
+    if (_wiresOn(a) >= kMaxWiresPerTerm || _wiresOn(t) >= kMaxWiresPerTerm) {
+      _toast('الطرف عليه $kMaxWiresPerTerm أسلاك بالفعل، وده أقصى عدد تحت مسمار واحد.');
       AudioService.instance.sfx('soft_fail');
       setState(() {});
       return;
@@ -660,6 +867,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _snapshot();
     final c = color == 'auto' ? _autoColor(a, t) : color;
     doc.wires.add(LabWire(a, t, c));
+    HapticFeedback.lightImpact();
     AudioService.instance.sfx('screw_tighten');
     _changed();
   }
@@ -1572,9 +1780,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                         flows: flows,
                         flash: flash,
                         drag: (_wireFrom != null && _wireTo != null && doc.termPos(_wireFrom!) != null)
-                            ? (doc.termPos(_wireFrom!)!, _wireTo!, doc.termUp(_wireFrom!))
+                            ? (doc.termPos(_wireFrom!)!, (_wireSnap == null ? null : doc.termPos(_wireSnap!)) ?? _wireTo!, doc.termUp(_wireFrom!))
                             : null,
-                        dragColor: color == 'auto' && _wireFrom != null ? _autoColor(_wireFrom!, _termAt(_wireTo ?? Offset.zero) ?? _wireFrom!) : (color == 'auto' ? 'rd' : color),
+                        dragColor: color == 'auto' && _wireFrom != null ? _autoColor(_wireFrom!, _wireSnap ?? _wireFrom!) : (color == 'auto' ? 'rd' : color),
                       ),
                     ),
                   ),
@@ -1582,7 +1790,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 Positioned.fill(
                     child: IgnorePointer(
                         child: CustomPaint(
-                            painter: TermPainter(doc, pending ?? _wireFrom, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack)))),
+                            painter: TermPainter(doc, pending ?? _wireFrom, !running && !meter, _hiddenTerms(), probeRed: probeRed, probeBlack: probeBlack, target: _wireSnap)))),
                 if (fx.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: FxPainter(fx, _clock)))),
                 Positioned.fill(
                   child: Listener(
@@ -1599,7 +1807,36 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         ),
         if (showUi) ..._overlays(context) else _restoreButton(),
         if (_view3d != null) _machine3d(context),
+        if (_touch && _wireFrom != null && _wireTo != null && _wireScreen != null) _loupe(context),
       ]),
+    );
+  }
+
+  /// a magnifier above the finger while a wire is dragged on a touch screen, so the
+  /// terminal under the fingertip can be seen
+  Widget _loupe(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    final f = box == null ? _wireScreen! : box.globalToLocal(_wireScreen!);
+    const d = 124.0, lift = 104.0;
+    final sz = MediaQuery.sizeOf(context);
+    // above the finger, or below it near the top of the screen
+    final up = f.dy - lift - d / 2 > 8;
+    final cy = up ? f.dy - lift : f.dy + lift;
+    final cx = f.dx.clamp(d / 2 + 4, sz.width - d / 2 - 4).toDouble();
+    return Positioned(
+      left: cx - d / 2,
+      top: cy - d / 2,
+      child: IgnorePointer(
+        child: RawMagnifier(
+          size: const Size(d, d),
+          magnificationScale: 2.2,
+          focalPointOffset: Offset(f.dx - cx, f.dy - cy),
+          decoration: MagnifierDecoration(
+            shape: CircleBorder(side: BorderSide(color: _wireSnap != null ? const Color(0xFF32E37A) : const Color(0xFF4FD8FF), width: 3)),
+            shadows: const [BoxShadow(color: Color(0x88000000), blurRadius: 14, offset: Offset(0, 4))],
+          ),
+        ),
+      ),
     );
   }
 
@@ -2021,7 +2258,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                                 ? 'اسحب إلى الطرف الآخر ثم اترك…'
                                 : ex != null
                                     ? 'تمرين: وصّل حسب المخطط، ثم افحص التوصيل وشغّل'
-                                    : 'ورقة العمل · أضف المكونات من المكتبة، واسحب من طرف إلى طرف لتوصيل سلك',
+                                    : 'اسحب من طرف لطرف للتوصيل · مطوّلًا على المكون لتحريكه',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
@@ -2086,6 +2323,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                         probeBlack = null;
                       }
                     }), active: meter),
+                _tool(Icons.zoom_in_rounded, 'تكبير', () => _zoomBy(1.4)),
+                _tool(Icons.zoom_out_rounded, 'تصغير', () => _zoomBy(1 / 1.4)),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),

@@ -194,20 +194,36 @@ if arm:
             for kp in fc.keyframe_points:
                 kp.interpolation = "CONSTANT"
 
-# motor shaft and fan run up
+# motor shaft and fan run up. Both are imported turned 90° about Y, so their own axis
+# is local Z: with Euler order ZXY the Z turn is applied first, about that axis.
+sh = find(m_objs, "shaft")
+if sh:
+    # a keyway on the shaft end, so the turning can be seen
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    key = bpy.context.object
+    key.name = "shaft_key"
+    key.scale = (0.0045, 0.007, 0.04)
+    key.data.materials.append(lib.mat("key", (0.05, 0.05, 0.06), metal=0.8, rough=0.35))
+    key.parent = sh
+    key.matrix_parent_inverse.identity()
+    key.location = (0.0115, 0, -0.118)
 for nm in ("shaft", "fan"):
     o = find(m_objs, nm)
     if not o:
         continue
-    # keyframe a smooth run-up on the motor's long axis
-    axis = 0 if (mmx.x - mmn.x) > (mmx.y - mmn.y) else 1
-    base = o.rotation_euler[axis]
-    o.rotation_mode = "XYZ"
-    for f in range(f_pull, N + 1, 2):
+    o.rotation_mode = "ZXY"
+    base = o.rotation_euler.z
+    for f in range(f_pull, N + 1):
         t = (f - f_pull) / FPS
-        total = 9.0 * t * t if t < 0.8 else 9.0 * 0.64 + 14.4 * (t - 0.8)
-        o.rotation_euler[axis] = base + total * 2.4
-        o.keyframe_insert("rotation_euler", index=axis, frame=f)
+        # up to about 1.6 turns a second: fast enough to read as running, slow enough
+        # that the frames don't strobe
+        total = 6.0 * t * t if t < 0.85 else 6.0 * 0.7225 + 10.2 * (t - 0.85)
+        o.rotation_euler.z = base + total
+        o.keyframe_insert("rotation_euler", index=2, frame=f)
+    if o.animation_data and o.animation_data.action and hasattr(o.animation_data.action, "fcurves"):
+        for fc in o.animation_data.action.fcurves:
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
 
 # cables: breaker → contactor → overload, and on to the motor; current glows at the pull-in
 b_objs = parts["mcb_3p"][1]

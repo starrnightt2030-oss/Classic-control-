@@ -390,13 +390,19 @@ class WirePainter extends CustomPainter {
 }
 
 /// Terminal markers: rings for every free terminal while wiring, live dots while running.
+/// wires one terminal screw takes
+const kMaxWiresPerTerm = 4;
+
 class TermPainter extends CustomPainter {
   final LabDoc doc;
   final String? pending;
   final bool wiring;
   final Set<String> hidden;
   final String? probeRed, probeBlack;
-  TermPainter(this.doc, this.pending, this.wiring, this.hidden, {this.probeRed, this.probeBlack});
+
+  /// the terminal a dragged wire has snapped to
+  final String? target;
+  TermPainter(this.doc, this.pending, this.wiring, this.hidden, {this.probeRed, this.probeBlack, this.target});
 
   @override
   void paint(Canvas c, Size size) {
@@ -410,7 +416,13 @@ class TermPainter extends CustomPainter {
         final key = '${p.id}.${e.key}';
         if (hidden.contains(key)) continue;
         final o = e.value * kPx;
-        if (key == pending) {
+        if (key == target) {
+          c.drawCircle(o, 6.5 * kPx, Paint()..color = const Color(0x4432E37A));
+          c.drawCircle(o, 4.6 * kPx, Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.5
+            ..color = const Color(0xFF32E37A));
+        } else if (key == pending) {
           c.drawCircle(o, 4.2 * kPx, Paint()..color = const Color(0x553D8BFF));
           c.drawCircle(o, 4.2 * kPx, Paint()
             ..style = PaintingStyle.stroke
@@ -429,7 +441,7 @@ class TermPainter extends CustomPainter {
           c.drawCircle(o, 3.0 * kPx, Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2
-            ..color = n >= 2 ? const Color(0x88FF5A64) : const Color(0xCC4FD8FF));
+            ..color = n >= kMaxWiresPerTerm ? const Color(0x88FF5A64) : const Color(0xCC4FD8FF));
         }
       }
     }

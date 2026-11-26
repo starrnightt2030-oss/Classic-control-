@@ -372,12 +372,35 @@ def whoosh(d=0.45, up=True):
     return out * np.sin(np.pi * x / d) ** 2
 
 
+def zap(d=0.5, f0=2600, f1=110):
+    """an electric discharge: a falling buzzy chirp torn by noise"""
+    x = t(d)
+    f = f1 + (f0 - f1) * np.exp(-x / (d * 0.22))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sign(np.sin(ph)) * 0.5 + np.sin(2 * ph) * 0.3
+    torn = tone * (0.6 + 0.4 * bp(noise(d), 40, 400) / 3)
+    return bp(torn, 120, 9000) * np.minimum(1, x / 0.002) * np.exp(-x / (d * 0.35))
+
+
+def neon_buzz(d=0.6, flicker=((0, 0.05), (0.09, 0.13), (0.18, 0.6))):
+    """a gas tube striking: a 100 Hz buzz switched by its flicker"""
+    x = t(d)
+    buzz = np.sign(np.sin(2 * np.pi * 100 * x)) * 0.4 + np.sin(2 * np.pi * 300 * x) * 0.25
+    gate = np.zeros_like(x)
+    for a, b in flicker:
+        gate[(x >= a) & (x < b)] = 1
+    gate = lp(gate, 120)
+    return bp(buzz, 90, 5000) * gate * np.exp(-np.maximum(0, x - 0.3) / 0.15)
+
+
 def intro_theme():
-    """soundtrack of the intro (lib/ui/intro_page.dart, 8 s):
+    """soundtrack of the intro (lib/ui/intro_page.dart, 8.6 s):
     0–1.9 s the schematic draws itself (charge rising on a 100 Hz bed),
-    1.9 s S1 pressed, 2.1 s the contactor pulls in, 2.15–3.6 s the motor runs up,
-    3.7 s the logo hits: sub, opening chord, bells, shimmer tail"""
-    d = 8.0
+    1.9 s S1 pressed, 2.1 s the contactor pulls in and current crackles along the cables,
+    2.15–3.6 s the motor runs up, 3.55 s the charge builds, 3.7 s the logo hits with a
+    discharge: sub, opening chord, bells, shimmer tail. 5.7 s the developer's name
+    strikes like a tube light and 5.95 s a light sweeps across it"""
+    d = 8.6
     y = silence(d)
     x = t(d)
     # pen strokes: soft filtered scratches while the lines are drawn
@@ -390,6 +413,14 @@ def intro_theme():
     y += bed
     place(y, pushbutton() * 0.9, 1.9)
     place(y, contactor_pull() * 1.3, 2.1)
+    # current runs along the cables: a mains buzz swelling with crackles riding on it
+    cd = 1.4
+    cx = t(cd)
+    buzz = bp(np.sign(np.sin(2 * np.pi * 100 * cx)) * 0.5 + np.sin(2 * np.pi * 300 * cx) * 0.3, 150, 3500)
+    buzz *= np.minimum(1, cx / 0.05) * np.exp(-cx / 0.45) * 0.22
+    place(y, buzz, 2.12)
+    for k in range(10):
+        place(y, bp(noise(0.014), 2000, 12000) * np.exp(-t(0.014) / 0.003) * rng.uniform(0.12, 0.3), 2.13 + k * 0.045 + rng.uniform(0, 0.02))
     md = 1.6
     mx = t(md)
     sp = 1 - np.exp(-mx * 2.4)
@@ -397,16 +428,29 @@ def intro_theme():
     mot = motor(sp, md, inr) * np.minimum(1, (md - mx) / 0.25) * 0.55
     place(y, mot, 2.15)
     place(y, whoosh(0.5, True) * 0.4, 3.2)
-    # 3.7 s: the hit
+    # the charge builds just before the hit
+    ch = t(0.16)
+    place(y, np.sin(2 * np.pi * np.cumsum(np.linspace(600, 3200, len(ch))) / SR) * (ch / 0.16) ** 2 * 0.12, 3.54)
+    # 3.7 s: the hit, an electric discharge
     sub = np.sin(2 * np.pi * 41.2 * t(1.8)) * np.exp(-t(1.8) / 0.5) * 1.0
     place(y, sub, 3.7)
-    place(y, arc(0.16) * 0.3, 3.7)
+    place(y, zap(0.55) * 0.5, 3.7)
+    place(y, arc(0.3) * 0.45, 3.7)
     chord = pad([82.41, 123.47, 164.81, 207.65, 246.94, 369.99], 4.2, (300, 5200)) * 1.1
     chord *= np.minimum(1, t(4.2) / 0.06) * np.exp(-t(4.2) / 2.0)
     place(y, chord, 3.72)
     for i, f in enumerate([659.25, 987.77, 1244.5, 1318.5, 1975.5]):
         place(y, bell(f, 2.5, 0.9, 0.7) * (0.3 - i * 0.03), 3.8 + i * 0.11)
     place(y, hp(noise(2.4), 7000) * np.exp(-t(2.4) / 0.7) * 0.06, 3.75)
+    # 5.7 s: the developer's name strikes like a tube light, then a light sweeps over it
+    place(y, neon_buzz() * 0.28, 5.7)
+    for k in range(5):
+        place(y, bp(noise(0.01), 2500, 12000) * np.exp(-t(0.01) / 0.0025) * rng.uniform(0.15, 0.3), 5.7 + k * 0.04)
+    sw = t(0.7)
+    zing = np.sin(2 * np.pi * np.cumsum(np.linspace(900, 2400, len(sw))) / SR) * np.sin(np.pi * sw / 0.7) ** 2 * 0.06
+    place(y, zing + whoosh(0.7, True) * 0.12, 5.95)
+    for i, f in enumerate([1318.5, 1975.5]):
+        place(y, bell(f, 1.6, 0.7, 0.5) * 0.12, 6.55 + i * 0.09)
     y *= np.minimum(1, (d - x) / 0.6)
     return room(y, 1.6, 0.3, 8000)
 

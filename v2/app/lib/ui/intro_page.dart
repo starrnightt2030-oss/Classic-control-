@@ -26,7 +26,7 @@ class IntroPage extends StatefulWidget {
 
 /// the intro's timeline, in seconds
 class IntroTimes {
-  static const draw = 1.9, press = 1.9, pull = 2.1, motorUp = 2.15, hit = 3.7, title = 4.4, credits = 5.1, end = 8.0;
+  static const draw = 1.9, press = 1.9, pull = 2.1, motorUp = 2.15, hit = 3.7, title = 4.4, credits = 5.1, dev = 5.7, shine = 5.95, end = 8.6;
 }
 
 class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMixin {
@@ -158,6 +158,8 @@ class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMix
                         decoration: const BoxDecoration(
                             gradient: LinearGradient(colors: [Colors.transparent, Color(0xFF3FD5E8), Color(0xFFF5A400), Color(0xFF3FD5E8), Colors.transparent])),
                       ),
+                      const SizedBox(height: 14),
+                      _DevName(t: t, fontSize: math.min(size.width * 0.05, 24)),
                     ]),
                   ),
                 ),
@@ -180,7 +182,6 @@ class _IntroPageState extends State<IntroPage> with SingleTickerProviderStateMix
                                 style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFFC9D4DB)), overflow: TextOverflow.ellipsis)),
                       ]),
                       const SizedBox(height: 6),
-                      const Text('تطوير: ${AppInfo.developer}', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w700, fontSize: 12.5, color: Color(0xFFE8EEF2))),
                       const Text('الإصدار ${AppInfo.version} · ${AppInfo.build}', style: TextStyle(fontFamily: 'Cairo', fontSize: 12, color: Color(0xFF93A3AF))),
                     ]),
                   ),
@@ -425,6 +426,56 @@ class IntroPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant IntroPainter old) => old.t != t;
+}
+
+/// The developer's name under the logo: it strikes like a tube light (a few flickers
+/// with a cyan glow), then a band of light sweeps across the letters and the glow
+/// breathes until the end.
+class _DevName extends StatelessWidget {
+  final double t, fontSize;
+  const _DevName({required this.t, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = t - IntroTimes.dev;
+    if (s < 0) return SizedBox(height: fontSize * 2.6);
+    // tube strike: on, off, on, off, then on to stay
+    final on = s > 0.3 || (s % 0.09) < 0.05 ? 1.0 : 0.15;
+    final sweep = ((t - IntroTimes.shine) / 0.8).clamp(0.0, 1.0);
+    final breathe = 0.75 + 0.25 * math.sin((t - IntroTimes.dev) * 3.2);
+    final glow = on * (s < 0.5 ? 1.0 : breathe);
+    final style = TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w700, fontSize: fontSize, letterSpacing: 1.5, height: 1.2);
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Opacity(
+        opacity: 0.85 * on,
+        child: Text('تطوير وبرمجة', style: TextStyle(fontFamily: 'Cairo', fontSize: fontSize * 0.55, color: const Color(0xFF93A3AF))),
+      ),
+      Opacity(
+        opacity: on,
+        child: Stack(alignment: Alignment.center, children: [
+          // the glow, drawn on its own under the letters
+          Text(AppInfo.developer,
+              textDirection: TextDirection.ltr,
+              style: style.copyWith(color: const Color(0x00000000), shadows: [
+                Shadow(color: const Color(0xFF3FD5E8).withValues(alpha: 0.9 * glow), blurRadius: 14 * glow + 2),
+                Shadow(color: const Color(0xFFF5A400).withValues(alpha: 0.65 * glow), blurRadius: 30 * glow + 4),
+              ])),
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (r) {
+              // a bright band, a third of the width, crossing from left to right
+              final c = -0.4 + 1.8 * sweep;
+              return LinearGradient(
+                colors: const [Color(0xFFF5B400), Color(0xFFF5B400), Color(0xFFFFFFFF), Color(0xFFF5B400), Color(0xFFF5B400)],
+                stops: [0, (c - 0.18).clamp(0.0, 1.0), c.clamp(0.0, 1.0), (c + 0.18).clamp(0.0, 1.0), 1],
+              ).createShader(r);
+            },
+            child: Text(AppInfo.developer, textDirection: TextDirection.ltr, style: style.copyWith(color: Colors.white)),
+          ),
+        ]),
+      ),
+    ]);
+  }
 }
 
 /// The Blender intro (v2/models/intro3d.py → assets/intro/intro3d.webp, an animated

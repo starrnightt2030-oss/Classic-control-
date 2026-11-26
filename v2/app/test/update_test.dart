@@ -97,4 +97,19 @@ void main() {
     expect(s, contains('Expand-Archive -LiteralPath \$Zip -DestinationPath \$Dest -Force'));
     expect(s, contains('Start-Process -FilePath \$Exe'));
   });
+
+  test('the fixed latest copy points downloads at the build\'s own release', () {
+    final i = UpdateService.fromLatest({
+      'build': 57,
+      'sha': 'abc',
+      'android': {'name': 'ClassicControl-Android.apk', 'size': 10, 'sha': ''},
+    });
+    expect(i.tag, 'v2-app-build-57');
+    expect(i.asset('ClassicControl-Android.apk').toString(),
+        'https://github.com/starrnightt2030-oss/Classic-control-/releases/download/v2-app-build-57/ClassicControl-Android.apk');
+    expect(UpdateService.latestUrl.toString(), endsWith('/releases/download/v2-app-latest/update.json'));
+    expect(UpdateService.pickLatest([
+      {'tag_name': 'v2-app-latest', 'assets': [{'name': 'update.json', 'browser_download_url': 'x'}]}
+    ]), isNull, reason: 'the fixed copy is not a build of its own');
+  });
 }

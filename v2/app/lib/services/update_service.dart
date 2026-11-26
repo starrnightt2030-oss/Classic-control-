@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_info.dart';
 import 'packs.dart';
@@ -104,7 +105,7 @@ class ReleaseFile {
   factory ReleaseFile.fromJson(Map<String, dynamic> j) => ReleaseFile(j['name'] as String, (j['size'] as num?)?.toInt() ?? 0, j['sha'] as String? ?? '');
 }
 
-enum UpdatePhase { idle, checking, upToDate, available, downloading, installing, failed }
+enum UpdatePhase { idle, checking, upToDate, available, syncing, downloading, installing, failed }
 
 class UpdateStatus {
   final UpdatePhase phase;
@@ -130,8 +131,14 @@ class UpdateService {
   static const repo = 'starrnightt2030-oss/Classic-control-';
   static const tagPrefix = 'v2-app-build-';
 
-  /// content packs up to this size are fetched without asking
-  static const autoContentBytes = 25 * 1024 * 1024;
+  /// CI copies every build's update.json to this fixed release too: one plain download
+  /// (GitHub's file servers) instead of the releases API, which answers only 60 calls an
+  /// hour for a whole network (a training centre's Wi-Fi or a phone carrier share one)
+  static const latestTag = 'v2-app-latest';
+  static Uri get latestUrl => Uri.parse('https://github.com/$repo/releases/download/$latestTag/update.json');
+
+  /// content files fetched at the same time
+  static const parallel = 4;
 
   final ValueNotifier<UpdateStatus> status = ValueNotifier(const UpdateStatus(UpdatePhase.idle));
 
@@ -140,14 +147,36 @@ class UpdateService {
 
   Timer? _timer;
   bool _busy = false;
+  DateTime _lastCheck = DateTime(0);
+  // ignore: unused_field
+  AppLifecycleListener? _life;
 
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isWindows);
 
-  /// check now and then every hour while the app is open
+  /// check as the app starts (while the intro plays), whenever it comes back to the
+  /// front (opening it from the recent apps does not start it again), and every
+  /// hour while it stays open
   void start() {
-    if (!supported) return;
+    if (!supported || _timer != null) return;
     unawaited(check());
-    _timer ??= Timer.periodic(const Duration(hours: 1), (_) => check());
+    _timer = Timer.periodic(const Duration(hours: 1), (_) => check());
+    _life = AppLifecycleListener(onResume: () {
+      if (DateTime.now().difference(_lastCheck) > const Duration(minutes: 1)) unawaited(check());
+    });
+  }
+
+  /// the fixed copy names no release: its files live under the build's own tag
+  static UpdateInfo fromLatest(Map<String, dynamic> j) => UpdateInfo.fromJson(j, tag: '$tagPrefix${(j['build'] as num).toInt()}');
+
+  /// update.json of the newest build: the fixed copy first, the releases API if that fails
+  Future<UpdateInfo?> _latest() async {
+    try {
+      return fromLatest(jsonDecode(utf8.decode(await _get(latestUrl))) as Map<String, dynamic>);
+    } catch (_) {}
+    final list = jsonDecode(utf8.decode(await _get(Uri.parse('https://api.github.com/repos/$repo/releases?per_page=15')))) as List<dynamic>;
+    final latest = pickLatest(list);
+    if (latest == null) return null;
+    return UpdateInfo.fromJson(jsonDecode(utf8.decode(await _get(Uri.parse(latest.$3)))) as Map<String, dynamic>, tag: latest.$1);
   }
 
   /// pick the newest `v2-app-build-N` release that carries an update.json
@@ -169,29 +198,41 @@ class UpdateService {
   Future<UpdateInfo?> check({bool manual = false}) async {
     if (_busy || !supported) return null;
     _busy = true;
-    if (manual) status.value = const UpdateStatus(UpdatePhase.checking);
+    _lastCheck = DateTime.now();
+    // a new program is being installed: leave its screen alone
+    final now = status.value.phase;
+    if (manual && now != UpdatePhase.available && now != UpdatePhase.downloading && now != UpdatePhase.installing) {
+      status.value = const UpdateStatus(UpdatePhase.checking);
+    }
     try {
-      final list = jsonDecode(utf8.decode(await _get(Uri.parse('https://api.github.com/repos/$repo/releases?per_page=15')))) as List<dynamic>;
-      final latest = pickLatest(list);
-      if (latest == null) {
+      final info = await _latest();
+      if (info == null) {
         status.value = const UpdateStatus(UpdatePhase.upToDate);
         return null;
       }
-      final info = UpdateInfo.fromJson(jsonDecode(utf8.decode(await _get(Uri.parse(latest.$3)))) as Map<String, dynamic>, tag: latest.$1);
-      await _syncContent(info, manual: manual);
-      final mine = AppInfo.buildNumber;
-      if (mine > 0 && info.build > mine && info.newProgramFor(PackStore.instance.code) && _fileFor(info) != null) {
-        status.value = UpdateStatus(UpdatePhase.available, info: info);
+      // a new program first: its download brings the new content with it
+      if (needsProgram(info)) {
+        if (now != UpdatePhase.downloading && now != UpdatePhase.installing) status.value = UpdateStatus(UpdatePhase.available, info: info);
         return info;
       }
+      await _syncContent(info);
       status.value = UpdateStatus(UpdatePhase.upToDate, info: info);
       return null;
     } catch (e) {
-      status.value = UpdateStatus(manual ? UpdatePhase.failed : UpdatePhase.idle, message: 'مفيش اتصال بالإنترنت أو GitHub مش بيرد. جرّب تاني بعد شوية.');
+      // offline: the app goes on as it is; a pending install keeps its screen
+      if (now != UpdatePhase.available && now != UpdatePhase.downloading && now != UpdatePhase.installing) {
+        status.value = UpdateStatus(manual ? UpdatePhase.failed : UpdatePhase.idle, message: 'مفيش اتصال بالإنترنت أو GitHub مش بيرد. جرّب تاني بعد شوية.');
+      }
       return null;
     } finally {
       _busy = false;
     }
+  }
+
+  /// this device must install [i]'s program (a newer build with different code)
+  bool needsProgram(UpdateInfo i) {
+    final mine = AppInfo.buildNumber;
+    return mine > 0 && i.build > mine && i.newProgramFor(PackStore.instance.code) && _fileFor(i) != null;
   }
 
   ReleaseFile? _fileFor(UpdateInfo i) => Platform.isAndroid ? i.android : (Platform.isWindows ? i.windowsFor(AppInfo.buildNumber, PackStore.instance.code) : null);
@@ -200,38 +241,36 @@ class UpdateService {
   int downloadSize(UpdateInfo i) => _fileFor(i)?.size ?? 0;
   bool isPatch(UpdateInfo i) => Platform.isWindows && identical(_fileFor(i), i.windowsPatch);
 
-  /// a later reminder for this build: not before a day has passed
-  Future<bool> snoozed(int build) async {
-    final p = await SharedPreferences.getInstance();
-    final at = p.getInt('update_snooze_$build') ?? 0;
-    return DateTime.now().millisecondsSinceEpoch - at < const Duration(hours: 20).inMilliseconds;
-  }
-
-  Future<void> snooze(int build) async {
-    final p = await SharedPreferences.getInstance();
-    await p.setInt('update_snooze_$build', DateTime.now().millisecondsSinceEpoch);
-  }
-
   // ------------------------------------------------------------- content packs
-  Future<void> _syncContent(UpdateInfo info, {bool manual = false}) async {
+  /// only the content files that changed, a few at a time; the app shows the progress
+  /// and waits for them (the next check picks up any file that failed)
+  Future<void> _syncContent(UpdateInfo info) async {
     final store = PackStore.instance;
     // a build without the bundled manifest (development) cannot tell what changed
     if (!store.ready || store.have.isEmpty || info.files.isEmpty || info.sha.isEmpty) return;
     final todo = info.changedFiles(store.have);
     if (todo.isEmpty) return;
-    if (!manual && info.sizeOf(todo) > autoContentBytes) return;
-    var n = 0;
-    for (final k in todo) {
-      final (sha, _, src) = info.files[k]!;
-      try {
-        final bytes = await _get(info.raw(src));
-        if (sha256.convert(bytes).toString() != sha) continue;
-        await store.put(k, sha, bytes);
-        n++;
-      } catch (_) {
-        // the next check picks it up again
+    final total = math.max(1, info.sizeOf(todo));
+    var n = 0, got = 0;
+    status.value = UpdateStatus(UpdatePhase.syncing, info: info, message: '${todo.length}|$total');
+    final queue = List.of(todo);
+    Future<void> worker() async {
+      while (queue.isNotEmpty) {
+        final k = queue.removeLast();
+        final (sha, size, src) = info.files[k]!;
+        try {
+          final bytes = await _get(info.raw(src));
+          if (sha256.convert(bytes).toString() == sha) {
+            await store.put(k, sha, bytes);
+            n++;
+          }
+        } catch (_) {}
+        got += size;
+        status.value = UpdateStatus(UpdatePhase.syncing, info: info, progress: got / total, message: '${todo.length}|$total');
       }
     }
+
+    await Future.wait([for (var i = 0; i < parallel; i++) worker()]);
     if (n > 0) {
       await store.save(info.build);
       contentArrived.value = contentArrived.value + n;

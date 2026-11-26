@@ -16,6 +16,10 @@ import '../ui/theme.dart';
 class Inst3DController {
   _Inst3DState? _s;
   void focus(String name) => _s?._focus(name);
+
+  /// 'near': put the instrument down on a free surface next to the points being measured;
+  /// 'home': back where it started. (A drag on the instrument in the 3D view moves it too.)
+  void place(String where) => _s?._place(where);
 }
 
 class Inst3D extends StatefulWidget {
@@ -76,6 +80,7 @@ class _Inst3DState extends State<Inst3D> {
   }
 
   void _focus(String name) => _web?.evaluateJavascript(source: 'inst.focus(${jsonEncode(name)})');
+  void _place(String where) => _web?.evaluateJavascript(source: 'inst.place(${jsonEncode(where)})');
 
   @override
   void didUpdateWidget(Inst3D old) {

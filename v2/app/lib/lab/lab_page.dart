@@ -59,6 +59,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   String? selPart;
   int? selWire;
   String? pending; // first terminal of a wire being drawn
+  String? _pendingBefore;
   String color = 'auto';
   bool showUi = true;
   bool libOpen = false;
@@ -104,6 +105,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   int _bendSeg = -1;
   bool _bendHoriz = true, _bendFree = false, _bendMoved = false;
   List<Offset> _bendOrig = const [];
+  /// the finger came down on an existing corner (a tap on it removes it)
+  bool _bendCorner = false;
+  Offset _bendDown = Offset.zero;
   bool _bendHinted = false;
 
   /// how the sorting belt / press / filling line look before the power is on
@@ -556,7 +560,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _hold?.cancel();
       final pointer = e.pointer;
       _hold = Timer(const Duration(milliseconds: 420), () {
-        if (!mounted || _pointer != pointer || _bendMoved || _bendWire == null) return;
+        if (!mounted || _pointer != pointer || _bendMoved || _bendWire == null || _bendCorner) return;
         _freeBend(mm);
         HapticFeedback.mediumImpact();
       });
@@ -603,7 +607,28 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     if (routeDistance(wirePath(WireRouter(doc).route(w, i)), mm) > tol) return false;
     _snapshot();
     _bendOrig = List.of(w.pts);
+    _bendDown = mm;
+    _bendCorner = false;
     final a = doc.termPos(w.a)!, b = doc.termPos(w.b)!;
+    // an existing corner under the finger: it follows the finger in any direction
+    var ck = -1;
+    var cd = math.max(3.0, tol * 1.5);
+    for (var k = 0; k < w.pts.length; k++) {
+      final d = (w.pts[k] - mm).distance;
+      if (d < cd) {
+        cd = d;
+        ck = k;
+      }
+    }
+    if (ck >= 0) {
+      _bendWire = i;
+      _bendSeg = ck;
+      _bendFree = true;
+      _bendCorner = true;
+      _bendMoved = false;
+      setState(() {});
+      return true;
+    }
     if (w.pts.isEmpty) {
       final vert = doc.termDir(w.a).dy != 0;
       w.pts = vert ? [Offset(a.dx, mm.dy), Offset(b.dx, mm.dy)] : [Offset(mm.dx, a.dy), Offset(mm.dx, b.dy)];
@@ -694,15 +719,36 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _bendWire = null;
     if (i == null || i >= doc.wires.length) return;
     final w = doc.wires[i];
-    if (!_bendMoved && !_bendFree) {
-      // a tap on the selected wire: nothing bent, drop the snapshot
-      w.pts = List.of(_bendOrig);
-      if (_undo.isNotEmpty) _undo.removeLast();
-      setState(() {});
+    final a = doc.termPos(w.a), b = doc.termPos(w.b);
+    if (!_bendMoved && _bendCorner) {
+      // a tap on a corner: take it out
+      w.pts.removeAt(_bendSeg);
+      AudioService.instance.sfx('ui_tap');
+      _changed();
       return;
     }
-    final a = doc.termPos(w.a), b = doc.termPos(w.b);
-    if (a != null && b != null) w.pts = _cleanBends(w.pts, a, b);
+    if (!_bendMoved && !_bendFree) {
+      // a tap on the selected wire: a new corner there, to drag into any shape
+      w.pts = List.of(_bendOrig);
+      if (a == null || b == null) return;
+      final r = [a, ...w.pts, b];
+      var best = 0;
+      var bd = double.infinity;
+      for (var k = 0; k < r.length - 1; k++) {
+        final d = _segDist(_bendDown, r[k], r[k + 1]);
+        if (d < bd) {
+          bd = d;
+          best = k;
+        }
+      }
+      w.pts.insert(best, _bendDown);
+      AudioService.instance.sfx('ui_tap');
+      HapticFeedback.selectionClick();
+      _changed();
+      return;
+    }
+    // square legs get tidied; corners the user placed by hand stay where they are
+    if (a != null && b != null && !_bendFree) w.pts = _cleanBends(w.pts, a, b);
     HapticFeedback.selectionClick();
     _changed();
   }
@@ -935,16 +981,19 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       return;
     }
     setState(() => dragId = null);
+    // the finger slid: it panned the view, which leaves a picked terminal picked
+    if ((e.position - _downScreen).distance > 10) return;
     // double tap: zoom onto the part, or back out
     final now = DateTime.now();
     if (now.difference(_lastTap) < const Duration(milliseconds: 450) && (mm - _lastTapMm).distance < 8) {
       _lastTap = DateTime(0);
-      setState(() => pending = null); // the first tap may have picked a terminal
+      setState(() => pending = _pendingBefore); // undo what the first tap did
       _zoomAt(mm);
       return;
     }
     _lastTap = now;
     _lastTapMm = mm;
+    _pendingBefore = pending;
     _tap(mm);
   }
 
@@ -1040,10 +1089,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _terminalTap(t);
       return;
     }
-    if (pending != null) {
-      setState(() => pending = null);
-      return;
-    }
+    // a picked terminal stays picked until it is tapped again (or a second one is)
+    if (pending != null) return;
     final w = _wireAt(mm);
     if (w != null) {
       AudioService.instance.sfx('ui_tap');
@@ -1053,7 +1100,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       });
       if (!_bendHinted) {
         _bendHinted = true;
-        _toast('اسحب السلك من أي حتة فيه لتعديل مساره بزوايا 90°، أو اضغط عليه مطوّلًا واسحب لثنيه في أي اتجاه.');
+        _toast('السلك المحدد: اسحبه لتعديل مساره بزوايا 90°، اضغط عليه ضغطة لإضافة نقطة ثني، واسحب أي نقطة في أي اتجاه. ضغطة على النقطة تشيلها.');
       }
       return;
     }
@@ -2036,6 +2083,53 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     );
   }
 
+  /// make the mounting plate longer or wider for more parts
+  void _plateSheet() {
+    if (!_editable()) return;
+    _snapshot();
+    var touched = false;
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
+        final m = doc.minPlate();
+        void size(double w, double h) {
+          touched = true;
+          doc.resizePlate(w, h);
+          _changed();
+          set(() {});
+        }
+
+        Widget row(String label, double v, double min, double max, void Function(double) on) => Row(children: [
+              SizedBox(width: 64, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
+              IconButton(onPressed: () => on(v - 100), icon: const Icon(Icons.remove_circle_outline_rounded)),
+              Expanded(
+                child: Slider(min: min, max: max, value: v.clamp(min, max).toDouble(), divisions: ((max - min) / 10).round(), onChanged: on),
+              ),
+              IconButton(onPressed: () => on(v + 100), icon: const Icon(Icons.add_circle_outline_rounded)),
+              SizedBox(width: 64, child: Text('${v.round()} مم', textAlign: TextAlign.center, style: const TextStyle(color: CC.text2))),
+            ]);
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text('مقاس لوحة التركيب', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              const Text('كبّر اللوحة عشان تركّب مكونات أكتر. مش هتقدر تصغّرها أقل من المكونات اللي عليها.',
+                  style: TextStyle(fontSize: 12.5, color: CC.muted, height: 1.5)),
+              const SizedBox(height: 8),
+              row('الطول', doc.plateH, math.min(m.height, 300), kMaxPlate, (v) => size(doc.plateW, v)),
+              row('العرض', doc.plateW, math.min(m.width, 300), kMaxPlate, (v) => size(v, doc.plateH)),
+            ]),
+          ),
+        );
+      }),
+    ).then((_) {
+      if (!touched && _undo.isNotEmpty) _undo.removeLast();
+      if (touched) _fit();
+    });
+  }
+
   void _moreSheet() {
     showModalBottomSheet<void>(
       context: context,
@@ -2665,7 +2759,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 Expanded(
                   child: Text(
                     pending != null
-                        ? 'اختر الطرف الثاني للسلك…'
+                        ? 'اختر الطرف الثاني للسلك (حرّك الشاشة براحتك) · اضغط نفس الطرف للإلغاء'
                         : running
                             ? (flash.isNotEmpty ? 'قصر كهربائي! افصل التغذية وصحّح التوصيل' : 'اللوحة تعمل · الشرطات المضيئة في الأسلاك هي مسار التيار')
                             : _wireFrom != null
@@ -2740,6 +2834,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 _tool(Icons.zoom_in_rounded, 'تكبير', () => _zoomBy(1.4)),
                 _tool(Icons.zoom_out_rounded, 'تصغير', () => _zoomBy(1 / 1.4)),
                 _tool(Icons.center_focus_strong_rounded, 'ملء الشاشة', _fit),
+                _tool(Icons.aspect_ratio_rounded, 'مقاس اللوحة', _plateSheet),
                 _tool(Icons.undo_rounded, 'تراجع', _undo.isEmpty ? null : _undoAct),
                 _tool(Icons.redo_rounded, 'إعادة', _redo.isEmpty ? null : _redoAct),
                 if (selP != null) _tool(Icons.tune_rounded, 'الخصائص', () => _propsSheet(selP)),
@@ -3015,7 +3110,7 @@ class _BendHandles extends CustomPainter {
       return;
     }
     for (var i = 1; i < route.length - 1; i++) {
-      grip(route[i], 6);
+      grip(route[i], 7.5);
     }
     for (var i = 0; i < route.length - 1; i++) {
       if ((route[i + 1] - route[i]).distance > 12) grip((route[i] + route[i + 1]) / 2, 8);

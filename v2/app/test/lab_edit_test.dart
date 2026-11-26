@@ -47,4 +47,26 @@ void main() {
     final e = LabDoc.fromJsonString(d.toJsonString());
     expect(e.wires.single.pts, [const Offset(120, 80), const Offset(220, 80)]);
   });
+
+  test('a longer, wider plate keeps the parts on it and slides the bench along', () {
+    final d = LabDoc()
+      ..plateW = 400
+      ..plateH = 300
+      ..benchW = 300;
+    final k = Placed('K1', 'kc', 100, 100), m = Placed('M1', 'motor', 450, 40);
+    d.parts.addAll([k, m]);
+    d.wires.add(LabWire('K1.A1', 'M1.U1', 'bk')..pts = [const Offset(120, 250), const Offset(460, 250)]);
+    d.resizePlate(600, 900);
+    expect(d.plateH, 900);
+    expect(k.x, 100, reason: 'parts on the plate stay put');
+    expect(m.x, 650, reason: 'the bench moved 200 mm right with its motor');
+    expect(d.wires.single.pts, [const Offset(120, 250), const Offset(660, 250)]);
+    d.resizePlate(50, 50);
+    expect(d.plateW, greaterThanOrEqualTo(k.rect.right));
+    expect(d.plateH, greaterThanOrEqualTo(k.rect.bottom));
+    expect(m.x, greaterThanOrEqualTo(d.plateW + LabDoc.benchGap), reason: 'the bench never lands on the plate');
+    final back = LabDoc.fromJsonString(d.toJsonString());
+    expect(back.plateW, d.plateW);
+    expect(back.plateH, d.plateH);
+  });
 }

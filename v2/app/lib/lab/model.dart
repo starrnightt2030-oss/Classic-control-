@@ -1,5 +1,6 @@
 // Panel Lab document: placed parts, DIN rails and hand-drawn wires (all in millimetres on the plate).
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import '../sim/engine.dart';
@@ -86,6 +87,9 @@ const kWireColors = [
 
 WireColor wireColor(String k) => kWireColors.firstWhere((c) => c.key == k, orElse: () => kWireColors.first);
 
+/// the largest plate side the lab offers (mm)
+const kMaxPlate = 3000.0;
+
 class LabDoc {
   final List<Placed> parts = [];
   final List<LabWire> wires = [];
@@ -153,6 +157,41 @@ class LabDoc {
   }
 
   /// what the part's tag shows: a clip-on block carries its contactor's name
+  /// the smallest plate that still holds every part and wire bend (mm)
+  Size minPlate() {
+    var w = 200.0, h = 200.0;
+    for (final p in parts) {
+      final r = p.rect;
+      if (r.left < plateW) w = math.max(w, r.right + 10);
+      h = math.max(h, r.bottom + 10);
+    }
+    for (final wr in wires) {
+      for (final q in wr.pts) {
+        if (q.dx < plateW) w = math.max(w, q.dx + 10);
+        h = math.max(h, q.dy + 10);
+      }
+    }
+    return Size(w, h);
+  }
+
+  /// a bigger (or smaller) plate; the bench beside it slides along with its parts
+  void resizePlate(double w, double h) {
+    final m = minPlate();
+    w = math.max(w, m.width);
+    h = math.max(h, m.height);
+    final dx = w - plateW;
+    if (dx != 0) {
+      for (final p in parts) {
+        if (p.x >= plateW) p.x += dx;
+      }
+      for (final wr in wires) {
+        wr.pts = [for (final q in wr.pts) q.dx >= plateW ? q.translate(dx, 0) : q];
+      }
+    }
+    plateW = w;
+    plateH = h;
+  }
+
   String label(Placed p) {
     if (p.attach != null && p.def == 'aux') return p.attach!;
     return p.id;

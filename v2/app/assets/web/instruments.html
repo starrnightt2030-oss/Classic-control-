@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>instruments</title>
+<style>
+@font-face{font-family:Cairo;src:url(/assets/fonts/Cairo-700.ttf);font-weight:700}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#16233F,#070C1A 75%);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:absolute;inset:0;outline:none}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93A3AF;font:700 13px Cairo,sans-serif;pointer-events:none}
+#pip{position:absolute;border:1.5px solid rgba(143,184,255,.55);border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.45);pointer-events:none;display:none}
+#pip b{position:absolute;top:-1px;right:10px;transform:translateY(-100%);font:700 11px Cairo,sans-serif;color:#C3D0EA;background:rgba(8,16,36,.8);padding:1px 8px;border-radius:8px 8px 0 0}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;transform:translate(-50%,-140%);font:700 11px Cairo,sans-serif;color:#EAF1FF;background:rgba(10,20,44,.82);border:1px solid rgba(79,216,255,.55);padding:0 6px;border-radius:7px;white-space:nowrap}
+.lb.hot{background:#2563EB;border-color:#8FB8FF;font-size:13px}
+.lb.part{transform:translate(-50%,-50%);font-size:13px;background:rgba(37,99,235,.92);border-color:#BFD6FF;box-shadow:0 0 18px rgba(61,139,255,.6)}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="msg">جاري تحميل الجهاز…</div>
+<div id="labels"></div>
+<div id="pip"><b>شاشة الجهاز</b></div>
+<script type="module" src="./instruments.js"></script>
+</body>
+</html>

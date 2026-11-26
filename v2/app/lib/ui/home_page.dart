@@ -10,6 +10,7 @@ import 'library_page.dart';
 import 'section_pages.dart';
 import 'sim_pages.dart';
 import '../lab/lab_page.dart';
+import '../meters/meters_page.dart';
 import '../schem/schem_page.dart';
 import '../services/export_service.dart';
 import 'theme.dart';
@@ -47,6 +48,8 @@ class _HomePageState extends State<HomePage> {
             CcIcons.lab, CC.cyan, (_) => const LabPage()),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر الخطية', 'ارسم الدائرة برموز IEC من المكتبة ووصّلها وحاكِها، ثم اطبعها PDF مع قائمة المكونات',
             CcIcons.diagram, CC.green, (_) => SchemPage(deliver: (b, n, m) => ExportService.deliverBytes(b, n, mime: m))),
+        _Section('assets/images/cards/meters.webp', 'أجهزة القياس', 'الأفوميتر والكلامب والميجر والواتميتر: أجزاء كل جهاز وتوصيله، وتجربة حية على لوحة توزيع ومحرك حقيقي',
+            CcIcons.meter, CC.gold, (_) => const SectionScaffold(title: 'أجهزة القياس', child: MetersPage())),
         _Section('assets/images/cards/quiz.webp', 'اختبر نفسك', 'اختبار سريع وامتحان شامل بوقت، والرموز والمخططات، مع شرح لكل إجابة',
             CcIcons.quiz, CC.red, (_) => const QuizHomePage()),
       ];

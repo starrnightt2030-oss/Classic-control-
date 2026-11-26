@@ -717,11 +717,17 @@ class _LiveLabState extends State<LiveLab> {
         scrollDirection: Axis.horizontal,
         child: Row(children: [
           for (final (k, t) in bench is BoardBench
-              ? const [('all', 'اللوحة كلها'), ('top', 'المفاتيح'), ('terminals', 'الترامل'), ('cable', 'كابل المحرك'), ('meter', 'الجهاز')]
-              : const [('all', 'الكل'), ('tbox', 'علبة الترامل'), ('iso', 'المفتاح المحلي'), ('meter', 'الجهاز')])
+              ? const [('work', 'الجهاز والقياس'), ('all', 'اللوحة كلها'), ('top', 'المفاتيح'), ('terminals', 'الترامل'), ('cable', 'كابل المحرك'), ('meter', 'الجهاز')]
+              : const [('work', 'الجهاز والقياس'), ('all', 'الكل'), ('tbox', 'علبة الترامل'), ('iso', 'المفتاح المحلي'), ('meter', 'الجهاز')])
             Pill(label: t, selected: false, onTap: () => cam.focus(k)),
         ]),
       ),
+      const SizedBox(height: 6),
+      const _Label('مكان الجهاز (أو اسحب الجهاز بصباعك لأي سطح)'),
+      Wrap(spacing: 0, children: [
+        Pill(label: 'قرّبه من القياس', selected: false, onTap: () => cam.place('near')),
+        Pill(label: 'مكانه الأصلي', selected: false, onTap: () => cam.place('home')),
+      ]),
       const SizedBox(height: 10),
       _taskCard(ts),
       const SizedBox(height: 10),

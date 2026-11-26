@@ -78,7 +78,10 @@ let protos = {};     // lead protos (probe_red, plug_red, croc_red …)
 let state = {};
 let lcd = null;      // { canvas, ctx, tex, key }
 let jawLocal = null; // jaw_center relative to the instrument root
-let restPose = null; // instrument resting matrix (from the mount)
+let restPose = null; // instrument resting matrix (from the mount, or where it was put down)
+let homePose = null; // the mount itself
+let faceLocal = null; // the face normal in the instrument's own frame
+let obstacles = [];  // bench meshes a cable or the instrument must not go through
 const leads = new Map();
 const markers = new Map();
 const sparks = [];
@@ -111,7 +114,7 @@ function clear() {
   markers.clear();
   labelsBox.textContent = '';
   instRoot = instModel = benchRoot = null;
-  N = {}; BN = {}; lcd = null; jawLocal = null; restPose = null; highlightKey = ''; partLabel = null;
+  N = {}; BN = {}; lcd = null; jawLocal = null; restPose = null; homePose = null; faceLocal = null; obstacles = []; highlightKey = ''; partLabel = null;
   for (const k of Object.keys(cur)) cur[k] = 0;
 }
 
@@ -160,8 +163,17 @@ async function load(spec) {
     if (N.jaw_center) {
       jawLocal = new THREE.Matrix4().copy(instRoot.matrixWorld).invert().multiply(N.jaw_center.matrixWorld);
     }
+    homePose = restPose.clone();
+    const fq = (N.view_face || instRoot).getWorldQuaternion(new THREE.Quaternion());
+    faceLocal = new THREE.Vector3(0, 1, 0).applyQuaternion(fq).applyQuaternion(instRoot.quaternion.clone().invert());
+    if (benchRoot) {
+      collectObstacles();
+    }
     fitLights();
     if (benchKey) focus('all', true); else fitInstrument(true);
+    camera.updateMatrixWorld(true);
+    // start next to the work, not across the room
+    if (benchRoot && spec.place !== 'home') placeNear(null, true);
     msg.style.display = 'none';
     layoutPip();
     apply(0, true);
@@ -195,6 +207,210 @@ function fitLights() {
   fillL.target.position.copy(c);
 }
 
+// ------------------------------------------------------------------ where the instrument stands
+// It starts on a free surface next to the work (the tray under the board, the motor's base…), and a
+// drag on it moves it to any other surface. Cables lie on what they cross instead of going through.
+const SUPPORTS = new Set(['room', 'crate', 'base', 'trolley', 'tray']);
+const placeRay = new THREE.Raycaster();
+const DOWN = new THREE.Vector3(0, -1, 0);
+
+function topName(o) {
+  while (o && o.parent && o.parent !== benchRoot) o = o.parent;
+  return o ? o.name.replace(/_mesh$/, '') : '';
+}
+
+function collectObstacles() {
+  obstacles = [];
+  benchRoot.updateMatrixWorld(true);
+  benchRoot.traverse((o) => {
+    if (!o.isMesh) return;
+    const t = topName(o);
+    if (t === 'room' || t.startsWith('cable')) return;
+    const box = new THREE.Box3().setFromObject(o);
+    if (box.isEmpty()) return;
+    obstacles.push({ box, o, top: t, solid: (SUPPORTS.has(t) && t !== 'room') || t === 'motor' || t === 'fins' });
+  });
+}
+
+function shown(o) { for (; o; o = o.parent) if (!o.visible) return false; return true; }
+
+// the first upward-facing surface below (x, top, z) that an instrument may stand on
+function surfaceAt(x, z, top) {
+  if (!benchRoot) return null;
+  placeRay.set(new THREE.Vector3(x, top, z), DOWN);
+  placeRay.far = top + 0.5;
+  const h = placeRay.intersectObject(benchRoot, true).find((h) => shown(h.object));
+  if (!h || !h.face || !SUPPORTS.has(topName(h.object))) return null;
+  const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+  return n.y > 0.8 ? h : null;
+}
+
+// the instrument standing at `point`, turned so that its face looks toward `toward`
+function poseOn(point, toward) {
+  const p0 = v3(), q0 = new THREE.Quaternion(), s0 = v3();
+  homePose.decompose(p0, q0, s0);
+  const n0 = faceLocal.clone().applyQuaternion(q0);
+  const d = toward.clone().sub(point);
+  let a0, a1;
+  if (Math.hypot(n0.x, n0.z) > 0.25) { a0 = Math.atan2(n0.x, n0.z); a1 = Math.atan2(d.x, d.z); }
+  else { const u = new THREE.Vector3(0, 0, -1).applyQuaternion(q0); a0 = Math.atan2(u.x, u.z); a1 = Math.atan2(-d.x, -d.z); }
+  const q = new THREE.Quaternion().setFromAxisAngle(Y, a1 - a0).multiply(q0);
+  const save = { p: instRoot.position.clone(), q: instRoot.quaternion.clone() };
+  instRoot.position.copy(point); instRoot.quaternion.copy(q);
+  instRoot.updateMatrixWorld(true);
+  const b = boxOf(instModel);
+  instRoot.position.copy(save.p); instRoot.quaternion.copy(save.q);
+  instRoot.updateMatrixWorld(true);
+  const c = b.getCenter(v3());
+  const shift = new THREE.Vector3(point.x - c.x, point.y - b.min.y + 0.001, point.z - c.z);
+  b.translate(shift);
+  return { m: new THREE.Matrix4().compose(point.clone().add(shift), q, s0), box: b };
+}
+
+function fits(box, under) {
+  const b = box.clone().expandByScalar(-0.004);
+  const t = topName(under);
+  for (const ob of obstacles) if (ob.top !== t && ob.box.intersectsBox(b)) return false;
+  return true;
+}
+
+function flatAround(h, r) {
+  for (const [dx, dz] of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
+    const g = surfaceAt(h.point.x + dx, h.point.z + dz, h.point.y + 0.05);
+    if (!g || Math.abs(g.point.y - h.point.y) > 0.006) return false;
+  }
+  return true;
+}
+
+// where the probes are going: the points they are on, else the bench's main view
+function workCenter() {
+  const ps = [];
+  for (const s of state.leads || []) { const pp = s.at && pointPose(s.at); if (pp) ps.push(pp.p); }
+  if (!ps.length && state.clampAt && BN[state.clampAt]) ps.push(BN[state.clampAt].getWorldPosition(v3()));
+  if (!ps.length) for (const k of ['view_tbox', 'view_terminals', 'view_all']) if (BN[k]) { ps.push(BN[k].getWorldPosition(v3())); break; }
+  if (!ps.length) return null;
+  return ps.reduce((a, p) => a.add(p), v3()).multiplyScalar(1 / ps.length);
+}
+
+function setRest(m, snap) {
+  restPose = m;
+  if (snap) { setMatrix(instRoot, m); instRoot.updateMatrixWorld(true); placeAnim = null; }
+  else placeAnim = { from: { p: instRoot.position.clone(), q: instRoot.quaternion.clone() }, t: 0 };
+  if (jawLocal && !snap) { cur.clampFrom = { p: instRoot.position.clone(), q: instRoot.quaternion.clone() }; cur.clampT = 0; }
+  wake(1200);
+}
+
+function placeNear(c, snap) {
+  if (!benchRoot || !homePose) return false;
+  c = c || workCenter();
+  if (!c) return false;
+  const eye = camera.position.clone();
+  const toCam = eye.clone().sub(c).setY(0).normalize();
+  let best = null;
+  for (let r = 0.14; r <= 0.85; r += 0.06) {
+    const n = Math.round(8 + r * 22);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const x = c.x + Math.cos(a) * r, z = c.z + Math.sin(a) * r;
+      const h = surfaceAt(x, z, c.y + 0.12);
+      if (!h || h.point.y < c.y - 0.95) continue;
+      const off = h.point.clone().sub(c);
+      const back = -off.clone().setY(0).normalize().dot(toCam);   // behind the work, away from the viewer
+      const score = off.length() + 0.35 * Math.max(0, back) + 0.25 * Math.max(0, -off.y - 0.35);
+      if (best && score >= best.score) continue;
+      if (!flatAround(h, 0.05)) continue;
+      const pose = poseOn(h.point, h.point.clone().lerp(eye, 0.5).setY(h.point.y + 0.3));
+      if (!fits(pose.box, h.object)) continue;
+      best = { score, pose };
+    }
+  }
+  if (!best) return false;
+  setRest(best.pose.m, snap);
+  return true;
+}
+
+function placeHome() { if (homePose) setRest(homePose.clone(), false); }
+
+// drag the instrument with a finger: it slides over the surfaces under the finger
+let drag = null;
+const pointers = new Set();
+function instHit(e) {
+  if (!instRoot || !benchRoot || (jawLocal && state.clampAt)) return null;
+  const ndc = new THREE.Vector2(e.clientX / window.innerWidth * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([instRoot, benchRoot], true);
+  return hits.length && instRoot.getObjectById(hits[0].object.id) ? hits[0] : null;
+}
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  pointers.add(e.pointerId);
+  if (pointers.size > 1) { if (drag) endDrag(); return; }
+  if (!instHit(e)) return;
+  // the instrument is under the finger: this gesture belongs to it, not to the camera
+  e.stopImmediatePropagation();
+  down = { x: e.clientX, y: e.clientY, t: performance.now() };
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moving: false, last: null };
+  renderer.domElement.setPointerCapture(e.pointerId);
+}, { capture: true });
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  e.stopImmediatePropagation();
+  if (!drag.moving && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 9) return;
+  drag.moving = true; dragging = true; down = null;
+  const ndc = new THREE.Vector2(e.clientX / window.innerWidth * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const save = instRoot.visible; instRoot.visible = false;
+  const hits = ray.intersectObject(benchRoot, true).filter((h) => shown(h.object));
+  instRoot.visible = save;
+  for (const h of hits) {
+    const g = surfaceAt(h.point.x, h.point.z, h.point.y + 0.02);
+    if (!g) continue;
+    const pose = poseOn(g.point, camera.position.clone().setY(g.point.y + 0.3));
+    if (!fits(pose.box, g.object)) break;
+    setRest(pose.m, true);
+    break;
+  }
+  wake(300);
+}, { capture: true });
+function endDrag() { if (drag) { try { renderer.domElement.releasePointerCapture(drag.id); } catch (e) { /* gone */ } } drag = null; dragging = false; wake(600); }
+const lift = (e) => {
+  pointers.delete(e.pointerId);
+  if (drag && e.pointerId === drag.id) { const moved = drag.moving; endDrag(); if (moved) { e.stopImmediatePropagation(); bridge('placed'); } }
+};
+renderer.domElement.addEventListener('pointerup', lift, { capture: true });
+renderer.domElement.addEventListener('pointercancel', lift, { capture: true });
+
+let placeAnim = null;
+function tickPlace(dt) {
+  if (!placeAnim || (jawLocal)) { placeAnim = null; return false; }
+  placeAnim.t = Math.min(1, placeAnim.t + dt / 0.8);
+  const e = placeAnim.t < 0.5 ? 2 * placeAnim.t ** 2 : 1 - (-2 * placeAnim.t + 2) ** 2 / 2;
+  const p = v3(), q = new THREE.Quaternion(), s = v3();
+  restPose.decompose(p, q, s);
+  instRoot.position.lerpVectors(placeAnim.from.p, p, e).add(new THREE.Vector3(0, Math.sin(Math.PI * e) * 0.08, 0));
+  instRoot.quaternion.slerpQuaternions(placeAnim.from.q, q, e);
+  instRoot.updateMatrixWorld(true);
+  if (placeAnim.t >= 1) placeAnim = null;
+  return true;
+}
+
+// a cable lies on what it crosses: lift every sample that ends up inside a solid
+function drape(curve) {
+  const pts = curve.getPoints(36);
+  const r = 0.0025;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i];
+    if (p.y < r) p.y = r;
+    for (const ob of obstacles) {
+      if (!ob.solid) continue;
+      const b = ob.box;
+      if (p.x > b.min.x && p.x < b.max.x && p.z > b.min.z && p.z < b.max.z && p.y < b.max.y + r) p.y = b.max.y + r;   // on it, never under it
+    }
+  }
+  // soften the steps a lift leaves behind
+  for (let k = 0; k < 2; k++) for (let i = 2; i < pts.length - 2; i++) pts[i].y = Math.max(pts[i].y, (pts[i - 1].y + pts[i + 1].y) / 2 - 0.004);
+  return new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+}
+
 // ------------------------------------------------------------------ camera
 let camAnim = null;
 function moveCamera(pos, target, snap) {
@@ -226,6 +442,18 @@ function faceFrame() {
 }
 
 function focus(name, snap) {
+  if (name === 'work' && instRoot && benchRoot) {
+    // the instrument and the points being measured, together
+    const b = boxOf(instModel);
+    const c = workCenter();
+    if (c) b.expandByPoint(c).expandByScalar(0.03);
+    const m = b.getCenter(v3()), r = Math.max(0.12, b.getSize(v3()).length() / 2);
+    const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.4 / camera.aspect : 1.3);
+    const dir = camera.position.clone().sub(controls.target).setY(0).normalize().multiplyScalar(0.85).add(new THREE.Vector3(0, 0.55, 0)).normalize();
+    controls.minDistance = 0.08; controls.maxDistance = Math.max(3, dist * 3);
+    moveCamera(m.clone().addScaledVector(dir, dist), m, snap);
+    return;
+  }
   if (name === 'meter' && instRoot) {
     const { p, n, size } = faceFrame();
     const up = new THREE.Vector3(0, 1, 0);
@@ -428,6 +656,7 @@ function updateLeads(dt, snap) {
     const plugged = !!(s.jack && jackPose(s.jack));
     const pp = plugged ? jackPose(s.jack) : restPlugPose(i);
     if (snap) { l.plugA.snap = true; l.tipA.snap = true; }
+    if (plugged && ((drag && drag.moving) || placeAnim || (jawLocal && cur.clampT < 1))) l.plugA.snap = true;
     moving = animTo(l.plug, l.plugA, pp, dt, plugged ? 0.05 : 0.0) || moving;
     l.plugA.snap = false;
     const on = s.at ? pointPose(s.at) : null;
@@ -441,7 +670,7 @@ function updateLeads(dt, snap) {
       if (key !== l.key) {
         l.key = key;
         l.cable.geometry.dispose();
-        l.cable.geometry = new THREE.TubeGeometry(cableCurve(l), LITE ? 40 : 72, 0.0019, 8, false);
+        l.cable.geometry = new THREE.TubeGeometry(drape(cableCurve(l)), LITE ? 40 : 72, 0.0019, 8, false);
       }
     }
   });
@@ -760,7 +989,7 @@ function frame(now) {
     controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
     if (camAnim.t >= 1) camAnim = null;
   }
-  wasMoving = apply(dt) || tickSparks(dt);
+  wasMoving = tickPlace(dt) || apply(dt) || tickSparks(dt);
   pulseHighlight(now);
   controls.update();
   placeLabels(now);
@@ -784,6 +1013,7 @@ window.inst = {
     wake(400);
   },
   focus(name) { focus(name); },
+  place(where) { if (where === 'home') placeHome(); else placeNear(null, false); },
   stats() { return { frames, ratio, lite: LITE, leads: leads.size, markers: markers.size }; },
 };
 

@@ -642,7 +642,7 @@ def board():
         C(rr + 0.004, (sx, -0.10, 0.605), (sx, -0.10, 0.575), P_["case_black"], "cables", verts=6)
     sx = -0.12
     wire("cables", [(sx, -0.10, 0.60), (sx, -0.10, 0.30), (sx + 0.05, -0.06, 0.05), (sx + 0.4, -0.04, 0.0)], 0.011, P_["sheath"])
-    point("clamp_CABLE", (sx, -0.10, 0.45), (0, 0, 1), xdir=(0, -1, -0.2))
+    point("clamp_CABLE", (sx, -0.10, 0.37), (0, 0, 1), xdir=(0, -1, -0.2))
     wire("cables", [(0.06, -0.10, 0.60), (0.06, -0.10, 0.30), (0.16, -0.05, 0.05), (0.6, -0.04, 0.0)], 0.008, P_["sheath"])
     # labels on the plate
     text("enclosure", "DB-1   400/230V  50Hz", (0.16, PY - 0.0005, 1.33), 0.016, P_["print_black"])
@@ -654,6 +654,14 @@ def board():
         for y in (ty0 + 0.02, ty1 - 0.02):
             C(0.012, (x, y, 0.05), (x, y, th - 0.025), P_["steel"], "trolley", verts=16)
             SPH(0.03, (x, y, 0.03), P_["rubber"], "trolley")
+    # a hook-on instrument tray under the cabinet, right in front of the terminals
+    ry0, ry1, rz = -D - 0.26, -D - 0.005, Z0 - 0.03
+    BX(-0.27, 0.19, ry0, ry1, rz - 0.012, rz, P_["case_grey"], "tray", bw=0.003)
+    BX(-0.27, 0.19, ry0, ry0 + 0.012, rz, rz + 0.025, P_["case_grey"], "tray", bw=0.002)   # front lip
+    for x in (-0.25, 0.17):
+        BX(x - 0.012, x + 0.012, -D - 0.008, -D + 0.004, rz - 0.012, Z0 + 0.03, P_["steel"], "tray", bw=0.002)   # hook strap
+        BX(x - 0.012, x + 0.012, -D - 0.008, -D + 0.03, Z0 + 0.024, Z0 + 0.03, P_["steel"], "tray", bw=0.001)
+        wire("tray", [(x, ry0 + 0.02, rz - 0.012), (x, -0.01, Z0 - 0.24)], 0.004, P_["steel"])               # brace to the wall
     # test points: every probe comes in from the front (-Y), a little from below
     out = (0, -1, 0.15)
     for k in ["IN_L1", "IN_L2", "IN_L3", "IN_N", "Q1_L1", "Q1_L2", "Q1_L3", "Q2_L", "Q3_L"]:
@@ -675,7 +683,7 @@ def board():
     for k, tgt, cam in (("all", (-0.08, -0.15, 1.0), (-0.65, -1.95, 1.35)),
                         ("top", (-0.15, -0.08, 1.20), (-0.25, -0.72, 1.32)),
                         ("terminals", (-0.05, -0.08, 0.88), (-0.12, -0.70, 1.0)),
-                        ("cable", (-0.15, -0.10, 0.55), (-0.45, -0.75, 0.75))):
+                        ("cable", (-0.12, -0.10, 0.42), (0.12, -0.78, 0.34))):
         point("view_" + k, tgt)
         point("cam_" + k, cam)
 

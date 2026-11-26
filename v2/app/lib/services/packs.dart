@@ -24,12 +24,17 @@ class PackStore {
   /// build of the content the packs came from (0: only what was bundled)
   int build = 0;
 
+  /// hash of the program this app was built from (tool/pack_manifest.py code_hash;
+  /// empty in dev builds): a release with the same hash needs no new APK or Windows build
+  String code = '';
+
   File get _manifest => File('${_dir!.path}${Platform.pathSeparator}manifest.json');
 
   Future<void> init() async {
     // what was bundled (written by tool/pack_manifest.py in CI; missing in dev builds)
     try {
       final j = jsonDecode(await rootBundle.loadString('assets/pack/manifest.json')) as Map<String, dynamic>;
+      code = j['code'] as String? ?? '';
       for (final e in (j['files'] as Map<String, dynamic>).entries) {
         have[e.key] = e.value as String;
       }

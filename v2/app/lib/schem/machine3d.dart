@@ -9,10 +9,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
+import '../lab/machine_sprites.dart';
 import '../services/asset_server.dart';
 import '../sim/plant.dart';
 import '../ui/perf.dart';
-import 'plant_paint.dart';
 
 /// what the 3D page needs to draw this machine now (see machine.js)
 Map<String, Object?> machineState(Plant p, PlantIo? io) {
@@ -143,7 +143,7 @@ class _Machine3DState extends State<Machine3D> {
 
   @override
   Widget build(BuildContext context) {
-    final flat = IgnorePointer(child: CustomPaint(painter: PlantPainter(widget.plant, widget.io, widget.frame), size: Size.infinite));
+    final flat = IgnorePointer(child: CustomPaint(painter: machineFlatPainter(widget.plant, widget.io, widget.frame), size: Size.infinite));
     if (!_mount) return flat;
     return Stack(fit: StackFit.expand, children: [
       _web3d(),

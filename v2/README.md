@@ -65,10 +65,13 @@ cd v2/models
 ../../bvenv/bin/python mcb.py multi              # 2 و3 و4 بول
 ../../bvenv/bin/python machines.py               # ماكينات المحاكي: عربية، ونش، أسانسير، فرز، مكبس، تعبئة
 ../../bvenv/bin/python publish.py machine_       # ينقلها لـ v2/assets/models
+SAMPLES=20 ../../bvenv/bin/python render_machines.py   # صور الماكينات بطبقاتها المتحركة لمعمل اللوحة -> app/assets/panel/mach_*.webp
+../../bvenv/bin/python intro3d.py                # فيلم المقدمة ثلاثي الأبعاد (Cycles) -> out/intro3d/
+python3 ../app/tool/intro_frames.py              # يجمّع الفريمات في app/assets/intro/intro3d.webp
 # الأسهم والأسماء على صورة التفكيك:
 ../../bvenv/bin/python -c "import callouts, overload; callouts.auto('overload', overload.PARTS, 'تفكيك أجزاء الأوفرلود', 'Overload — Exploded')"
 ```
-النتايج بتطلع في `v2/models/out/`، والفولدر ده مش بيترفع على Git. والملفات النهائية بتتنقل يدوي لـ `assets/`.
+النتايج بتطلع في `v2/models/out/`. لو الكمبيوتر من غير شاشة، الكومبوزيتور لازم يشتغل على الـ CPU (ده متظبط في `intro3d.py`). وفولدر `out/` ده مش بيترفع على Git. والملفات النهائية بتتنقل يدوي لـ `assets/`.
 
 ## قواعد العمل
 

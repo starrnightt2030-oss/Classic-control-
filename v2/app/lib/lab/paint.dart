@@ -11,6 +11,7 @@ import '../sim/engine.dart';
 import '../sim/plant.dart';
 import '../ui/perf.dart';
 import 'catalog.dart';
+import 'machine_sprites.dart';
 import 'model.dart';
 
 const double kPx = 4.0;
@@ -532,8 +533,33 @@ class MachinePainter extends CustomPainter {
   final Plant? plant;
   final PlantIo? io;
   final bool coil;
+
+  /// the machine rendered from its Blender model (lib/lab/machine_sprites.dart), when loaded
+  final MachineSprite? sprite;
   MachinePainter(this.kind,
-      {this.x = 0, this.sw = const [false, false, false, false], this.run = false, this.valve = true, this.motor = '', this.phase = 0, this.plant, this.io, this.coil = false});
+      {this.x = 0,
+      this.sw = const [false, false, false, false],
+      this.run = false,
+      this.valve = true,
+      this.motor = '',
+      this.phase = 0,
+      this.plant,
+      this.io,
+      this.coil = false,
+      this.sprite});
+
+  /// what the panel lab's own machines (cart, hoist, lift) show now
+  MachineLook _look() {
+    final pl = plant;
+    if (pl != null) return MachineLook.ofPlant(pl, io ?? _Idle(coil));
+    bool s(int i) => i < sw.length && sw[i];
+    return switch (kind) {
+      'cart' => MachineLook(x: x, lamps: {'LS1': s(0), 'LS2': s(1), 'RUN': run}),
+      'hoist' => MachineLook(z: x, lamps: {'B1': s(0), 'B2': s(1)}),
+      'lift' => MachineLook(z: x, door: !run && (s(0) || s(1) || s(2)) ? 1 : 0, lamps: {'B1': s(0), 'B2': s(1), 'B3': s(2), 'CAR': true}),
+      _ => const MachineLook(),
+    };
+  }
 
   static const _steel = Color(0xFF8C96A3), _dark = Color(0xFF151A22), _frame = Color(0xFF2B3442);
 
@@ -603,6 +629,20 @@ class MachinePainter extends CustomPainter {
       _text(c, 'A1  A2', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
     final area = Rect.fromLTRB(10 * s, 12 * s, size.width - 10 * s, strip.top - 12 * s);
+    final sp = sprite;
+    if (sp != null) {
+      if (kind != 'press') {
+        final what = plant != null ? 'السير يقوده المحرك' : 'يقودها المحرك';
+        _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : '$what $motor', Offset(area.left, 6.5 * s), 4.2 * s,
+            col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
+      }
+      final scene = Rect.fromLTRB(area.left, area.top + 2 * s, area.right, area.bottom + 8 * s);
+      c.save();
+      c.translate(scene.left, scene.top);
+      MachineSpritePainter(sp, _look(), 0).paint(c, scene.size);
+      c.restore();
+      return;
+    }
     final pl = plant;
     if (pl != null) {
       if (kind != 'press') {

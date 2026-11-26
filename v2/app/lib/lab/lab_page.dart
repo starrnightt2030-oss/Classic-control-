@@ -17,11 +17,11 @@ import '../ui/perf.dart';
 import '../ui/theme.dart';
 import '../schem/ladder.dart';
 import '../schem/machine3d.dart';
-import '../schem/plant_paint.dart';
 import '../schem/sheet_paint.dart';
 import '../schem/symbols.dart' show kG;
 import '../sim/circuits.dart';
 import 'catalog.dart';
+import 'machine_sprites.dart';
 import 'exercise.dart';
 import 'faults.dart';
 import 'model.dart';
@@ -33,7 +33,8 @@ const _prefKey = 'lab_doc_v3';
 const showUiBottom = 100.0;
 
 class LabPage extends StatefulWidget {
-  /// 0 normal · 1 DOL demo running · 2 library open · 3 short circuit · 4 burnt lamp (CI screenshots)
+  /// 0 normal · 1 DOL demo running · 2 library open · 3 short circuit · 4 burnt lamp · 5 bench
+  /// · 7 all the machines running (CI screenshots)
   final int demo;
 
   /// open one of the classic circuits as a wiring exercise (devices mounted, schematic beside)
@@ -113,6 +114,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _ticker = createTicker(_tick);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _load();
+    MachineSprites.loadAll().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -138,6 +142,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         3 => shortDemo(),
         4 => burnDemo(),
         5 => benchDemo(),
+        7 => machinesDemo(),
         _ => s == null || widget.demo > 0 ? emptyPanel() : LabDoc.fromJsonString(s),
       };
     } catch (_) {
@@ -169,7 +174,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.actuate('S1', 'press', false));
         });
       }
-      if (widget.demo == 3 || widget.demo == 4 || widget.demo == 5) Future<void>.delayed(const Duration(milliseconds: 600), _power);
+      if (widget.demo == 3 || widget.demo == 4 || widget.demo == 5 || widget.demo == 7) Future<void>.delayed(const Duration(milliseconds: 600), _power);
     });
   }
 
@@ -1641,7 +1646,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(12),
                 child: _web3d
                     ? Machine3D(plant: pl, io: sim?.machIo(id), frame: _frame3d)
-                    : CustomPaint(painter: PlantPainter(pl, sim?.machIo(id), _frame3d), size: Size(w - 20, h))),
+                    : CustomPaint(painter: machineFlatPainter(pl, sim?.machIo(id), _frame3d), size: Size(w - 20, h))),
           ),
           const SizedBox(height: 6),
           Text(running ? 'الماكينة شغالة مع دايرة اللوحة' : 'شغّل التغذية عشان الماكينة تتحرك مع دايرتك',
@@ -1684,6 +1689,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                   plant: kLabPlants.contains(mk) ? (sim?.plants[p.id] ?? (_idlePlants[p.id] ??= plantByKey(mk)!.make())) : null,
                   io: sim?.machIo(p.id),
                   coil: c != null && c.s.v > 230 * 0.6,
+                  sprite: MachineSprites.of(mk),
                   run: () {
                     final m = c == null ? null : sim?.byId((p.p['motor'] as String?) ?? '');
                     return m != null && m.s.spd > 0.05 && (m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run');
@@ -2216,7 +2222,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       thumb = const Icon(Icons.horizontal_rule_rounded, color: CC.text2);
     } else if (d.machine != null) {
       final f = d.frame;
-      thumb = FittedBox(child: SizedBox(width: f.width * kPx, height: f.height * kPx, child: CustomPaint(painter: MachinePainter(d.machine!))));
+      thumb = FittedBox(child: SizedBox(width: f.width * kPx, height: f.height * kPx, child: CustomPaint(painter: MachinePainter(d.machine!, sprite: MachineSprites.of(d.machine!)))));
     } else {
       thumb = Image.asset(d.info?.asset ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.memory_rounded, color: CC.muted));
     }

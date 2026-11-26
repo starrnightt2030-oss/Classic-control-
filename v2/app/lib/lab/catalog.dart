@@ -297,13 +297,14 @@ const double kLug = 13;
 /// switch n → Sn1 Sn2 (NC) · Sn3 Sn4 (NO).
 class MachineGeo {
   static Size size(String kind) => switch (kind) {
-        'cart' => const Size(330, 170),
-        'hoist' => const Size(220, 330),
-        'lift' => const Size(240, 390),
+        // the machines' frames follow their Blender sprites (assets/panel/machine_sprites.json)
+        'cart' => const Size(360, 210),
+        'hoist' => const Size(260, 280),
+        'lift' => const Size(240, 480),
         'tank' => const Size(240, 320),
-        'sort' => const Size(420, 250),
-        'press' => const Size(300, 280),
-        'fill' => const Size(380, 240),
+        'sort' => const Size(420, 300),
+        'press' => const Size(300, 400),
+        'fill' => const Size(400, 300),
         _ => const Size(300, 200),
       };
 

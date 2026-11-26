@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'lab/lab_page.dart';
 import 'schem/schem_page.dart';
+import 'ui/intro_page.dart';
 import 'ui/theme.dart';
 
 void main() {
@@ -18,7 +19,9 @@ void main() {
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
-    home: q['page'] == 'schem'
+    home: q['page'] == 'intro'
+        ? const IntroPage(next: Scaffold(body: SizedBox()))
+        : q['page'] == 'schem'
         ? SchemPage(demo: int.tryParse(q['demo'] ?? '') ?? 0)
         : LabPage(demo: int.tryParse(q['demo'] ?? '') ?? 0, exercise: q['ex']),
   ));

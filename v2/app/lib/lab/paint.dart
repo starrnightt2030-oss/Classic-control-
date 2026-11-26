@@ -32,7 +32,7 @@ class WireRouter {
 
   WireRoute route(LabWire w, int index) {
     final a = doc.termPos(w.a)!, b = doc.termPos(w.b)!;
-    return WireRoute([a, b], doc.termDir(w.a), doc.termDir(w.b), index);
+    return WireRoute([a, ...w.pts, b], doc.termDir(w.a), doc.termDir(w.b), index);
   }
 }
 

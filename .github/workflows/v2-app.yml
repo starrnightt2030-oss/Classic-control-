@@ -164,3 +164,15 @@ jobs:
             dist/ClassicControl-Windows-patch.zip
             dist/windows-files.json
             dist/update.json
+      # the same update.json under a fixed tag: the app reads it with one plain download
+      # instead of the releases API (60 calls an hour shared by a whole network)
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2-app-latest
+          name: "آخر نسخة (للتحديث التلقائي)"
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+          body: ملف يقرأه التطبيق ليعرف آخر نسخة. نزّل التطبيق نفسه من آخر نسخة تجريبية v2-app-build.
+          files: dist/update.json

@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/repository.dart';
 import 'services/asset_server.dart';
+import 'services/update_service.dart';
 import 'app_info.dart';
 import 'ui/intro_page.dart';
 import 'ui/theme.dart';
@@ -11,6 +12,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AssetServer.instance.start();
   await Repository.instance.load();
+  // look for a new build while the intro plays, so its screen is ready right after
+  UpdateService.instance.start();
   runApp(const ClassicControlApp());
 }
 

@@ -2258,6 +2258,17 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 for (final p in _drawOrder())
                   if (!p.structural) _partWidget(p),
                 if (doc.mech.isNotEmpty) Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: InterlockPainter(doc)))),
+                // the wires themselves: a layer of its own, repainted only when they change
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        isComplex: true,
+                        painter: WirePainter(doc: doc, selectedWire: selWire, nets: sim?.nets, still: true),
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
@@ -2467,7 +2478,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       child: Center(
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 2.2 * kPx, vertical: 0.2 * kPx),
-          decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx), boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 4, offset: Offset(0, 2))]),
+          decoration: BoxDecoration(color: const Color(0xFFF5D547), borderRadius: BorderRadius.circular(1.5 * kPx), boxShadow: const [BoxShadow(color: Color(0x40000000), offset: Offset(0, 1.5))]),
           child: Text('-${doc.label(p)}', textDirection: TextDirection.ltr, style: TextStyle(fontSize: 5.6 * kPx, fontWeight: FontWeight.w800, color: const Color(0xFF15181B), height: 1.2)),
         ),
       ),
@@ -2505,20 +2516,24 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       top: p.y * kPx,
       width: sz.width * k * kPx,
       height: sz.height * k * kPx,
+      // each part in a layer of its own: a running motor or machine repaints only
+      // itself, not every lamp glow and label on the plate with it
       child: IgnorePointer(
-        child: k == 1.0
-            ? body
-            : Transform.scale(
-                scale: k,
-                alignment: Alignment.topLeft,
-                child: OverflowBox(
-                    alignment: Alignment.topLeft,
-                    minWidth: sz.width * kPx,
-                    maxWidth: sz.width * kPx,
-                    minHeight: sz.height * kPx,
-                    maxHeight: sz.height * kPx,
-                    child: body),
-              ),
+        child: RepaintBoundary(
+          child: k == 1.0
+              ? body
+              : Transform.scale(
+                  scale: k,
+                  alignment: Alignment.topLeft,
+                  child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      minWidth: sz.width * kPx,
+                      maxWidth: sz.width * kPx,
+                      minHeight: sz.height * kPx,
+                      maxHeight: sz.height * kPx,
+                      child: body),
+                ),
+        ),
       ),
     );
   }

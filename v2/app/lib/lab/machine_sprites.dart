@@ -43,7 +43,7 @@ class MachineSprites {
 
   static Future<MachineSprite?> load(String kind) => _loading[kind] ??= _load(kind);
 
-  static Future<void> loadAll() => Future.wait([for (final k in const ['cart', 'hoist', 'lift', 'sort', 'press', 'fill']) load(k)]);
+  static Future<void> loadAll() => Future.wait([for (final k in const ['cart', 'hoist', 'lift', 'sort', 'press', 'fill', 'belt', 'fan', 'gate']) load(k)]);
 
   static Future<MachineSprite?> _load(String kind) async {
     try {
@@ -78,13 +78,14 @@ class MachineSprites {
 /// what a machine shows now, from a Plant or from the panel lab's own machines
 class MachineLook {
   final double x, z, door, ext;
+  final double angle; // fan blades, degrees
   final int part; // press: 0 none · 1 raw · 2 pressed
   final List<(double, bool)> boxes; // sort: position, metal
   final List<(double, double)> bottles; // fill: position, level
   final bool stream;
   final Map<String, bool> lamps;
   const MachineLook(
-      {this.x = 0, this.z = 0, this.door = 1, this.ext = 0, this.part = 0, this.boxes = const [], this.bottles = const [], this.stream = false, this.lamps = const {}});
+      {this.x = 0, this.z = 0, this.door = 1, this.ext = 0, this.angle = 0, this.part = 0, this.boxes = const [], this.bottles = const [], this.stream = false, this.lamps = const {}});
 
   static MachineLook ofPlant(Plant p, PlantIo? io) {
     bool on(String t) => io != null && io.has(t) && io.on(t);
@@ -104,6 +105,8 @@ class MachineLook {
           bottles: [for (final b in f.bottles) (b.s, b.fill)],
           stream: on('Y1') && f.bottles.any((b) => (b.s - FillPlant.nozzle).abs() < 0.03),
           lamps: lamps(['B1', 'B2'], v: ['Y1'], m: ['M1'])),
+      BeltPlant b => MachineLook(boxes: [for (final x in b.boxes) (x.s, false)], lamps: {...lamps(['B1']), 'M1': run('M1')}),
+      FanPlant f => MachineLook(angle: f.angle, lamps: {'RUN': run('M1')}),
       _ => const MachineLook(),
     };
   }
@@ -179,6 +182,20 @@ class MachineSpritePainter extends CustomPainter {
           if (p0 == null) continue;
           _layer(c, metal ? 'metal' : 'plastic', s.dpx(0.11 + pos * (3.2 - 0.22) - p0[0], 0, 0));
         }
+      case 'gate':
+        _layer(c, 'leaf', s.dpx(-l.x * 2.2, 0, 0));
+      case 'belt':
+        final p0 = s.points['proto_box'];
+        if (p0 != null) {
+          // far boxes first, so the nearer ones overlap them
+          for (final pos in [for (final b in l.boxes) b.$1]..sort()) {
+            _layer(c, 'box', s.dpx(0.25 + pos * 3.85 - p0[0], 0, 0));
+          }
+        }
+      case 'fan':
+        // four blades repeat every 90°: the nearest of the six rendered steps of 15°
+        final i = ((l.angle % 90) / 15).round() % 6;
+        _layer(c, 'blades$i', Offset.zero);
       case 'press':
         if (l.part == 1) _layer(c, 'part_raw', Offset.zero);
         if (l.part == 2) _layer(c, 'part_pressed', Offset.zero);

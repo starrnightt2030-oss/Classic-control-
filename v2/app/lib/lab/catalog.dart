@@ -127,7 +127,7 @@ const kLabCategories = [
   LabCategory('المرحلات والمؤقتات', 0xFF3D8BFF, ['relay', 'timer', 'tsd', 'phr']),
   LabCategory('الضواغط والإشارة', 0xFFB07CFF, ['pb_green', 'pb_red', 'pb_black', 'estop', 'selector', 'lamp_green', 'lamp_red', 'lamp_amber', 'siren']),
   LabCategory('المحركات', 0xFFC9A27E, ['motor', 'motor_d', 'motor_s', 'motor1']),
-  LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'mach_sort', 'mach_press', 'mach_fill', 'limit']),
+  LabCategory('الآلات والحساسات', 0xFF4FD8FF, ['mach_belt', 'mach_fan', 'mach_gate', 'mach_cart', 'mach_hoist', 'mach_lift', 'mach_tank', 'mach_sort', 'mach_press', 'mach_fill', 'limit']),
   LabCategory('التمديدات', 0xFFF5B83D, ['tb', 'din_rail']),
 ];
 
@@ -257,6 +257,15 @@ final Map<String, LabPartDef> kLabParts = {
         key: 'mach_fill', nameAr: 'خط تعبئة زجاجات (حساسين وصمام تعبئة)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
         params: {'kind': 'fill'}, mount: Mount.free),
     const LabPartDef(
+        key: 'mach_belt', nameAr: 'سير نقل كراتين (فوتوسل في الآخر)', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'belt'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_fan', nameAr: 'مروحة شفط في حيطة المصنع', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'fan'}, mount: Mount.free),
+    const LabPartDef(
+        key: 'mach_gate', nameAr: 'بوابة مصنع منزلقة بمفتاحي نهاية شوط', category: 'الآلات والحساسات', sprite: '', engine: 'mach', prefix: 'W',
+        params: {'kind': 'gate'}, mount: Mount.free),
+    const LabPartDef(
         key: 'limit', nameAr: 'مفتاح نهاية الشوط', category: 'المحركات والحساسات', sprite: 'limit_roller', engine: 'ls', prefix: 'B',
         terms: {'21': '11', '22': '12', '13': '23', '14': '24'}, mount: Mount.free),
     const LabPartDef(key: 'tb', nameAr: 'طرف توصيل', category: 'التمديدات', sprite: 'terminal_block', engine: 'tb', prefix: 'X', terms: {'X1_1': '1', 'X1_2': '2'}),
@@ -305,6 +314,9 @@ class MachineGeo {
         'sort' => const Size(420, 300),
         'press' => const Size(300, 400),
         'fill' => const Size(400, 300),
+        'belt' => const Size(440, 300),
+        'fan' => const Size(280, 340),
+        'gate' => const Size(400, 300),
         _ => const Size(300, 200),
       };
 

@@ -640,6 +640,7 @@ class MachinePainter extends CustomPainter {
     bool s(int i) => i < sw.length && sw[i];
     return switch (kind) {
       'cart' => MachineLook(x: x, lamps: {'LS1': s(0), 'LS2': s(1), 'RUN': run}),
+      'gate' => MachineLook(x: x, lamps: {'LS1': s(0), 'LS2': s(1), 'RUN': run}),
       'hoist' => MachineLook(z: x, lamps: {'B1': s(0), 'B2': s(1)}),
       'lift' => MachineLook(z: x, door: !run && (s(0) || s(1) || s(2)) ? 1 : 0, lamps: {'B1': s(0), 'B2': s(1), 'B3': s(2), 'CAR': true}),
       _ => const MachineLook(),
@@ -695,10 +696,12 @@ class MachinePainter extends CustomPainter {
       'sort' => ['آخر السير', 'معدن', 'بستم راجع', 'بستم طالع'],
       'press' => ['ذراع فوق', 'ذراع تحت', 'قطعة'],
       'fill' => ['زجاجة', 'اتملت'],
+      'belt' => ['كرتونة في الآخر'],
+      'gate' => ['مقفولة', 'مفتوحة'],
       _ => ['يسار', 'يمين'],
     };
     // the plant machines name their sensors B1…Bn, as in the schematic exercises
-    final pre = kLabPlants.contains(kind) ? 'B' : 'S';
+    final pre = kLabPlants.contains(kind) ? 'B' : (kind == 'gate' ? 'LS' : 'S');
     final terms = MachineGeo.terms(kind);
     for (var i = 1; i <= n; i++) {
       final a = terms['S${i}1']!, b = terms['S${i}4']!;
@@ -717,7 +720,7 @@ class MachinePainter extends CustomPainter {
     final sp = sprite;
     if (sp != null) {
       if (kind != 'press') {
-        final what = plant != null ? 'السير يقوده المحرك' : 'يقودها المحرك';
+        final what = kind == 'fan' ? 'المروحة يقودها المحرك' : (plant != null ? 'السير يقوده المحرك' : 'يقودها المحرك');
         _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : '$what $motor', Offset(area.left, 6.5 * s), 4.2 * s,
             col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
       }

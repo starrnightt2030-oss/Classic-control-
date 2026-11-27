@@ -313,6 +313,75 @@ const kPlants = <PlantDef>[
   ], FillPlant.new),
 ];
 
+/// conveyor of the production lines: M1 moves boxes from the feeder table to the
+/// roller table at the end; B1 (photo) sees a box waiting at the end
+class BeltPlant extends Plant {
+  @override
+  String get key => 'belt';
+  final boxes = <Box>[];
+  double _feed = 0.4, belt = 0;
+  static const endAt = 1.0;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = math.max(0.0, io.motor('M1'));
+    belt += v * 0.12 * dt;
+    _feed -= dt * (v > 0.05 ? 1 : 0);
+    if (_feed <= 0 && boxes.where((b) => b.s < 0.18).isEmpty && boxes.length < 6) {
+      boxes.add(Box(0));
+      _feed = 2.6;
+    }
+    // boxes queue: each keeps a gap behind the one in front
+    boxes.sort((a, b) => b.s.compareTo(a.s));
+    double front = endAt + 0.12;
+    for (final b in boxes) {
+      b.s = math.min(math.min(endAt, front - 0.12), b.s + v * 0.12 * dt);
+      front = b.s;
+      if (b.s >= endAt) b.dwell += dt;
+    }
+    // a worker takes a box off the roller table
+    final taken = boxes.where((b) => b.dwell > 2.0).toList();
+    for (final b in taken) {
+      boxes.remove(b);
+      bump('كراتين اتنقلت');
+    }
+    put(io, 'B1', boxes.any((b) => b.s >= endAt - 0.04));
+  }
+
+  @override
+  void tap(double x, double y) {
+    if (boxes.where((b) => b.s < 0.18).isEmpty) boxes.add(Box(0));
+  }
+}
+
+/// exhaust fan: M1 turns the blades (angle in degrees)
+class FanPlant extends Plant {
+  @override
+  String get key => 'fan';
+  double angle = 0, spd = 0;
+  double _on = 0;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = io.motor('M1');
+    spd = v;
+    angle = (angle + v * 900 * dt) % 360;
+    if (v.abs() > 0.5) {
+      _on += dt;
+      if (_on >= 60) {
+        _on = 0;
+        bump('دقايق شفط');
+      }
+    }
+  }
+}
+
+/// a machine of lib/sim/plant.dart for the panel lab (the schematic machines and the
+/// production-line machines that only run in the lab)
+Plant? makeLabPlant(String? k) => switch (k) {
+      'belt' => BeltPlant(),
+      'fan' => FanPlant(),
+      _ => plantByKey(k)?.make(),
+    };
+
 PlantDef? plantByKey(String? k) {
   for (final p in kPlants) {
     if (p.key == k) return p;

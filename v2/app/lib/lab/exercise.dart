@@ -111,6 +111,12 @@ LabExercise buildExercise(Circuit c) {
     mx += MotorPlate.w + 12;
   }
   by += MotorPlate.h + 14;
+  // the line's machine (production lines): below the motors
+  for (final m in comps.where((o) => o.type == 'mach')) {
+    final kind = m.p['kind'] as String;
+    add('mach_$kind', m.id, bx, by, p: {'kind': kind, if (m.p['motor'] != null) 'motor': m.p['motor']});
+    by += MachineGeo.size(kind).height + 14;
+  }
   final tr = c.track;
   if (tr != null) {
     add('mach_cart', 'W1', bx, by, p: {'kind': 'cart', 'motor': tr.$1, 'x0': c.trackStart});

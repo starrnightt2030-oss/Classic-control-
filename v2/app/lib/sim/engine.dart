@@ -306,6 +306,8 @@ class Comp {
     }
     if (type == 'mach') {
       s.mx = (this.p['x0'] as num?)?.toDouble() ?? switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
+      // the gate starts closed, on its LS1
+      if (this.p['kind'] == 'gate') s.ms[0] = s.mx <= 0.02;
     }
     if (type == 'motor1') this.p['In'] ??= 4.0;
     if (type == 'sup' && this.p['on0'] == true) s.on = true;
@@ -331,14 +333,19 @@ bool supLive(Comp c) => c.p['sw'] != true || c.s.on;
 int machSwitches(String? kind) => switch (kind) {
       'lift' || 'press' => 3,
       'sort' => 4,
+      'belt' => 1,
+      'fan' => 0,
       _ => 2,
     };
 
 /// machines of lib/sim/plant.dart that run in the panel lab (the others are drawn by the lab itself)
-const kLabPlants = {'sort', 'press', 'fill'};
+const kLabPlants = {'sort', 'press', 'fill', 'belt', 'fan'};
+
+/// the plant machines with a 3D view (assets/web/machine.js)
+const kPlants3d = {'sort', 'press', 'fill'};
 
 /// has a valve coil on A1-A2
-bool machValve(String? kind) => kLabPlants.contains(kind);
+bool machValve(String? kind) => const {'sort', 'press', 'fill'}.contains(kind);
 
 /// The machine of lib/sim/plant.dart inside a panel lab: its motor is the one the
 /// machine is set to (or the first in the panel), its valve the coil on A1-A2, and
@@ -965,7 +972,7 @@ class Lab {
   bool _machTick(Comp c, double dt) {
     final kind = c.p['kind'] as String?;
     if (kLabPlants.contains(kind)) {
-      final pl = plants[c.id] ??= plantByKey(kind)!.make();
+      final pl = plants[c.id] ??= makeLabPlant(kind)!;
       final io = _machIo[c.id] ??= _MachIo(this, c);
       io.changed = false;
       pl.tick(dt, io);

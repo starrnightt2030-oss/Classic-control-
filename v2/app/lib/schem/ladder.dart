@@ -587,6 +587,46 @@ final List<ReadyCircuit> kReady = [
               [no('KA1', '13-14'), floatNc('B2'), valve('Y1')],
             ]),
           ]), plant: 'fill'),
+  // ---- production lines (lib/lines/lines.dart): the sheets beside their panel-lab exercises
+  ReadyCircuit('l_belt', 'خطوط الإنتاج', 'سير نقل كراتين: تشغيل وإيقاف مع حماية الأوفرلود', 'تشغيل مباشر بإمساك ذاتي، ولمبات شغال وواقف وعطل.',
+      () => _make('سير نقل كراتين', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            Par([
+              [
+                olnc('F2'),
+                Par([
+                  [stop('S0'), ..._latch('S1', 'K1'), coil('K1')],
+                  [no('K1', '53-54'), lamp('H1', 'g')],
+                  [nc('K1', '21-22'), lamp('H2', 'r')],
+                ])
+              ],
+              [olno('F2'), lamp('H3', 'y')],
+            ])
+          ])),
+  ReadyCircuit('l_fan', 'خطوط الإنتاج', 'مروحة شفط بتشتغل من مكانين', 'الإيقاف على التوالي والتشغيل على التوازي، ولمبة في كل مكان.',
+      () => _make('مروحة شفط من مكانين', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S01'),
+            stop('S02'),
+            Par([[start('S11')], [start('S12')], [no('K1', '13-14')]]),
+            Par([[coil('K1')], [lamp('H1', 'g')], [lamp('H2', 'g')]]),
+          ])),
+  ReadyCircuit('l_press2h', 'خطوط الإنتاج', 'مكبس آمن بالإيدين الاتنين', 'S1 وS2 والفوتوسل B3 على التوالي قبل KA1، وKA1 بيشغّل صمام المكبس Y1.',
+      () => _make('مكبس بالإيدين الاتنين', (l) => 2, [
+            stop('S0'),
+            Par([
+              [start('S1'), start('S2'), photo('B3'), relay('KA1')],
+              [no('KA1', '11-14'), Par([[valve('Y1')], [lamp('H1', 'y')]])],
+            ]),
+          ]), plant: 'press'),
+  ReadyCircuit('l_gate', 'خطوط الإنتاج', 'بوابة مصنع: فتح وقفل ومفاتيح نهاية شوط', 'K1 فتح وK2 قفل، بإمساك ذاتي وانترلوك، وكل مفتاح نهاية بيوقف اتجاهه.',
+      () => _make('بوابة مصنع', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [..._latch('S1', 'K1'), lsNc('LS2'), nc('K2', '21-22'), Par([[coil('K1')], [lamp('H1', 'y')]])],
+              [..._latch('S2', 'K2'), lsNc('LS1'), nc('K1', '21-22'), Par([[coil('K2')], [lamp('H2', 'y')]])],
+            ]),
+          ], mech: [['K1', 'K2']])),
 ];
 
 ReadyCircuit? readyById(String id) {

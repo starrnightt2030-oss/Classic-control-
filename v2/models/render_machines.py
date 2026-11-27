@@ -39,6 +39,9 @@ LAYERS = {
     "sort": {"rod": ["rod"], "metal": ["proto_metal"], "plastic": ["proto_plastic"]},
     "press": {"ram": ["ram"], "part_raw": ["part_raw"], "part_pressed": ["part_pressed"]},
     "fill": {"bottle": ["proto_bottle"], "bottle_full": ["proto_bottle"], "stream": ["stream"]},
+    "belt": {"box": ["proto_box"]},
+    "fan": {"blades%d" % i: ["blades"] for i in range(6)},   # 0°, 15° … 75°
+    "gate": {"leaf": ["leaf"]},
 }
 # never in the still layer (moving, or drawn by the lab: ropes)
 MOVING = {
@@ -48,6 +51,9 @@ MOVING = {
     "sort": ["rod", "proto_metal", "proto_plastic"],
     "press": ["ram", "part_raw", "part_pressed"],
     "fill": ["proto_bottle", "stream"],
+    "belt": ["proto_box"],
+    "fan": ["blades"],
+    "gate": ["leaf"],
 }
 
 
@@ -235,6 +241,8 @@ def render_machine(kind):
         if layer == "car_open":
             N["door_l"].location.x -= 0.38
             N["door_r"].location.x += 0.38
+        if layer.startswith("blades"):
+            N["blades"].rotation_euler.y = math.radians(15 * int(layer[6:]))
         if layer == "bottle":
             for o in tree(N["proto_liquid"]):
                 o.hide_render = True
@@ -242,6 +250,9 @@ def render_machine(kind):
         png = os.path.join(TMP, f"{kind}_{layer}.png")
         render(S, png)
         out["layers"][layer] = webp(png, os.path.join(OUT, f"mach_{kind}_{layer}.webp"), W, H)
+        if layer.startswith("blades"):
+            N["blades"].rotation_euler.y = 0
+            bpy.context.view_layer.update()
         if layer == "car_open":
             N["door_l"].location.x += 0.38
             N["door_r"].location.x -= 0.38
@@ -249,7 +260,7 @@ def render_machine(kind):
     for n, o in N.items():
         if n.startswith("lamp_"):
             out["lamps"][n[5:]] = px(o.matrix_world @ Vector(o.bound_box[0]).lerp(Vector(o.bound_box[6]), 0.5))
-        if n in ("cart", "hook", "rope", "rope_car", "car", "cw", "rod", "ram", "proto_metal", "proto_plastic", "proto_bottle", "proto_liquid", "stream", "drum", "sheave"):
+        if n in ("cart", "hook", "rope", "rope_car", "car", "cw", "rod", "ram", "proto_metal", "proto_plastic", "proto_bottle", "proto_liquid", "stream", "drum", "sheave", "proto_box", "leaf", "blades"):
             out["points"][n] = [round(v, 4) for v in o.matrix_world.translation]
     if "proto_liquid" in N:
         llo, lhi = world_bounds(tree(N["proto_liquid"]))

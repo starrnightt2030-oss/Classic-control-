@@ -588,7 +588,185 @@ def fill():
     made["proto_bottle"].location = (0.4, 0.0, 0.82)
 
 
-MACHINES = dict(cart=cart, hoist=hoist, lift=lift, sort=sort, press=press, fill=fill)
+# ----------------------------------------------------------------- production lines
+def belt():
+    """packing conveyor: boxes come from a feeder table, ride the belt and stop on a
+    roller table at the end; photo eye B1 sees a box waiting at the end"""
+    L, w = 3.6, 0.5
+    plinth(-0.7, L + 1.0, -1.1, 1.1)
+    belt_machine(L, w)
+    # feeder table with boxes waiting at the start
+    BX(-0.6, 0.0, -0.3, 0.3, 0.8, 0.84, P_["steel"])
+    for x in (-0.56, -0.04):
+        for y in (-0.26, 0.26):
+            BX(x - 0.02, x + 0.02, y - 0.02, y + 0.02, 0.0, 0.8, P_["alu"])
+    crate(-0.3, 0.0, 0.84, 0.3, 0.3, 0.22, P_["cardboard"], "frame")
+    crate(-0.3, 0.0, 1.06, 0.28, 0.28, 0.2, P_["cardboard"], "frame")
+    # side guides
+    for s in (-1, 1):
+        BX(0.1, L - 0.1, s * (w / 2 - 0.01) - 0.01, s * (w / 2 - 0.01) + 0.01, 0.86, 0.9, P_["yellow"])
+    # roller table at the end with an end stop
+    BX(L, L + 0.8, -0.3, -0.27, 0.72, 0.8, P_["alu"])
+    BX(L, L + 0.8, 0.27, 0.3, 0.72, 0.8, P_["alu"])
+    for i in range(9):
+        x = L + 0.05 + i * 0.085
+        C(0.022, (x, -0.27, 0.79), (x, 0.27, 0.79), P_["chrome"], verts=16)
+    for x in (L + 0.06, L + 0.74):
+        for y in (-0.285, 0.285):
+            BX(x - 0.02, x + 0.02, y - 0.02, y + 0.02, 0.0, 0.72, P_["alu"])
+    BX(L + 0.78, L + 0.82, -0.3, 0.3, 0.72, 0.98, P_["yellow"])
+    # photo eye (B1) across the roller table, and its reflector
+    xe = L + 0.55
+    BX(xe - 0.02, xe + 0.02, -0.42, -0.38, 0.0, 0.92, P_["alu"])
+    photo_eye(xe, -0.36, 0.92, "B1")
+    BX(xe - 0.02, xe + 0.02, 0.36, 0.38, 0.8, 0.98, P_["red"])
+    BX(xe - 0.02, xe + 0.02, 0.38, 0.42, 0.0, 0.8, P_["alu"])
+    label("B1", (xe, -0.43, 1.02), 0.06, P_["white"])
+    label("M1", (L - 0.15, -(w / 2 + 0.17), 0.5), 0.06, P_["white"])
+    # the box to clone (bottom centre at the origin)
+    crate(0, 0, 0, 0.3, 0.3, 0.22, P_["cardboard"], "proto_box")
+    BX(-0.152, 0.152, -0.04, 0.04, 0.0, 0.222, P_["yellow"], "proto_box", bw=0)
+    made = nodes({"proto_box": (0, 0, 0)})
+    made["proto_box"].location = (0.4, 0.0, 0.82)
+
+
+FAN_FRAMES = 6   # blade layers 0°, 15° … 75° (four blades repeat every 90°)
+
+
+def fan():
+    """axial exhaust fan in a factory wall, its motor on the hub; the blades turn"""
+    plinth(-1.4, 1.4, -0.9, 0.6)
+    # wall with a square opening
+    for (x0, x1, z0, z1) in ((-1.3, -0.62, 0.0, 2.6), (0.62, 1.3, 0.0, 2.6), (-0.62, 0.62, 0.0, 0.68), (-0.62, 0.62, 1.92, 2.6)):
+        BX(x0, x1, 0.0, 0.24, z0, z1, P_["concrete"], bw=0.006)
+    for i in range(13):
+        BX(-1.3, 1.3, -0.002, 0.0, i * 0.2, i * 0.2 + 0.006, P_["grey"], bw=0)
+    # square housing, round venturi and the guard rings
+    cz = 1.3
+    for (x0, x1, z0, z1) in ((-0.62, -0.56, 0.68, 1.92), (0.56, 0.62, 0.68, 1.92), (-0.62, 0.62, 0.68, 0.74), (-0.62, 0.62, 1.86, 1.92)):
+        BX(x0, x1, -0.12, 0.06, z0, z1, P_["steel"])
+    # dark duct behind, the open venturi tube with rolled lips, the guard ring
+    C(0.6, (0, 0.2, cz), (0, 0.24, cz), P_["dark"], verts=64)
+    for (x0, x1, z0, z1) in ((-0.56, 0.56, 0.74, 0.79), (-0.56, 0.56, 1.81, 1.86), (-0.56, -0.51, 0.74, 1.86), (0.51, 0.56, 0.74, 1.86)):
+        BX(x0, x1, -0.1, 0.06, z0, z1, P_["grey"], bw=0)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.53, depth=0.3, vertices=72, end_fill_type="NOTHING", location=(0, 0.05, cz), rotation=(math.pi / 2, 0, 0))
+    t = bpy.context.object
+    bpy.ops.object.transform_apply(rotation=True)
+    lib.finish(t, 0, mats=[P_["grey"]])
+    G["frame"].append(t)
+    for y, mr in ((-0.1, 0.022), (0.2, 0.015)):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.53, minor_radius=mr, location=(0, y, cz), rotation=(math.pi / 2, 0, 0), major_segments=72)
+        t = bpy.context.object
+        lib.finish(t, 0, mats=[P_["steel"]])
+        G["frame"].append(t)
+    for r in (0.53, 0.36):
+        bpy.ops.mesh.primitive_torus_add(major_radius=r, minor_radius=0.006, location=(0, -0.17, cz), rotation=(math.pi / 2, 0, 0), major_segments=72)
+        t = bpy.context.object
+        lib.finish(t, 0, mats=[P_["chrome"]])
+        G["frame"].append(t)
+    for a in (0, 90):
+        r = math.radians(a)
+        C(0.006, (-0.53 * math.cos(r), -0.17, cz - 0.53 * math.sin(r)), (0.53 * math.cos(r), -0.17, cz + 0.53 * math.sin(r)), P_["chrome"], verts=8, bw=0)
+    # motor behind the hub on a cross bracket
+    C(0.13, (0, 0.06, cz), (0, 0.36, cz), P_["blue"], verts=40)
+    C(0.135, (0, 0.36, cz), (0, 0.42, cz), P_["dark"], verts=40)
+    BX(-0.05, 0.05, 0.12, 0.22, cz + 0.12, cz + 0.2, P_["blue"])
+    for a in (45, 135):
+        r = math.radians(a)
+        C(0.012, (-0.55 * math.cos(r), 0.1, cz - 0.55 * math.sin(r)), (0.55 * math.cos(r), 0.1, cz + 0.55 * math.sin(r)), P_["steel"], verts=8)
+    label("M1", (0.0, -0.121, 0.705), 0.06, P_["dark"])
+    label("EXHAUST", (0.0, -0.002, 2.1), 0.09, P_["yellow"])
+    # local control station on the wall with its run lamp
+    BX(0.8, 1.05, -0.08, 0.0, 1.2, 1.55, P_["grey"])
+    for i, m in enumerate((P_["green"], P_["red"])):
+        C(0.025, (0.86 + i * 0.13, -0.08, 1.33), (0.86 + i * 0.13, -0.1, 1.33), m, verts=20)
+    lamp("RUN", (0.925, -0.09, 1.48), (0.1, 1.0, 0.3), r=0.02, base=False)
+    # blades: hub and four twisted blades, turning about Y (centre at the pivot)
+    g = "blades"
+    C(0.09, (0, -0.15, cz), (0, -0.04, cz), P_["dark"], g, verts=32)
+    C(0.09, (0, -0.15, cz), (0, -0.19, cz), P_["dark"], g, verts=32, r2=0.03)
+    for k in range(4):
+        # a paddle blade, wider at the tip, pitched 28°
+        bm = bpy.data.meshes.new("blade")
+        r0, r1, w0, w1, t = 0.08, 0.5, 0.07, 0.2, 0.006
+        v = [(r0, -t, -w0 / 2), (r1, -t, -w1 / 2), (r1, -t, w1 / 2), (r0, -t, w0 / 2), (r0, t, -w0 / 2), (r1, t, -w1 / 2), (r1, t, w1 / 2), (r0, t, w0 / 2)]
+        f = [(0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)]
+        bm.from_pydata(v, [], f)
+        o = bpy.data.objects.new("blade", bm)
+        bpy.context.collection.objects.link(o)
+        bpy.context.view_layer.objects.active = o
+        for x in bpy.context.selected_objects:
+            x.select_set(False)
+        o.select_set(True)
+        o.location = (0, -0.1, 0)
+        bpy.ops.object.transform_apply(location=True)
+        o.rotation_euler = (math.radians(28), 0, 0)
+        bpy.ops.object.transform_apply(rotation=True)
+        o.rotation_euler = (0, math.radians(k * 90), 0)
+        bpy.ops.object.transform_apply(rotation=True)
+        o.location = (0, 0, cz)
+        bpy.ops.object.transform_apply(location=True)
+        lib.finish(o, 0.004, mats=[P_["alu"]])
+        G[g].append(o)
+    nodes({"blades": (0, -0.1, cz)})
+
+
+GATE_TRAVEL = 2.2
+
+
+def gate():
+    """sliding factory gate on a ground rail with its gear motor, two limit switches
+    (LS1 closed, LS2 open) and an amber beacon that flashes while it moves"""
+    plinth(-2.8, 3.1, -1.0, 1.0)
+    # posts and the fence section the gate slides behind
+    for x in (0.0, 2.3):
+        BX(x - 0.1, x + 0.1, -0.1, 0.1, 0.0, 2.0, P_["grey"], bw=0.008)
+        BX(x - 0.12, x + 0.12, -0.12, 0.12, 2.0, 2.06, P_["dark"])
+    for x in (-2.4,):
+        BX(x - 0.06, x + 0.06, 0.18, 0.3, 0.0, 1.9, P_["grey"])
+    BX(-2.4, 0.0, 0.2, 0.28, 1.8, 1.86, P_["grey"])
+    for i in range(12):
+        x = -2.35 + i * 0.2
+        C(0.012, (x, 0.24, 0.05), (x, 0.24, 1.8), P_["grey"], verts=8, bw=0)
+    BX(-2.4, 0.0, 0.2, 0.28, 0.05, 0.1, P_["grey"])
+    # ground rail
+    BX(-2.6, 2.4, -0.03, 0.03, 0.0, 0.03, P_["steel"])
+    # gear motor operator beside the post, with its limit switches
+    # (right of the opening, in front: the leaf never passes over it)
+    BX(2.5, 2.9, -0.42, -0.14, 0.0, 0.42, P_["grey"], bw=0.01)
+    BX(2.49, 2.91, -0.43, -0.13, 0.42, 0.45, P_["dark"])
+    label("M1", (2.7, -0.43, 0.3), 0.07, P_["white"])
+    C(0.03, (2.55, -0.14, 0.16), (2.55, -0.06, 0.16), P_["steel"], verts=16)
+    BX(2.3, 2.55, -0.08, -0.05, 0.12, 0.16, P_["dark"])
+    for xs, tag in ((2.57, "LS1"), (2.83, "LS2")):
+        BX(xs - 0.025, xs + 0.025, -0.47, -0.43, 0.16, 0.26, P_["yellow"])
+        lamp(tag, (xs, -0.48, 0.3), (1.0, 0.25, 0.05), r=0.012, base=False)
+        label(tag, (xs, -0.48, 0.07), 0.045, P_["white"])
+    # beacon on the post
+    C(0.05, (2.3, 0, 2.06), (2.3, 0, 2.1), P_["dark"], verts=24)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.07, location=(2.3, 0, 2.15), segments=24, ring_count=12)
+    o = bpy.context.object
+    o.name = "lamp_RUN"
+    o.data.materials.append(lamp_mat("RUN", (1.0, 0.55, 0.0)))
+    bpy.ops.object.shade_smooth()
+    # the gate leaf (closed: spans the opening 0 … 2.3), moved along X
+    g = "leaf"
+    BX(0.0, 2.3, -0.05, 0.05, 0.1, 0.18, P_["yellow"], g, bw=0.006)
+    BX(0.0, 2.3, -0.05, 0.05, 1.72, 1.8, P_["yellow"], g, bw=0.006)
+    for x in (0.0, 2.24):
+        BX(x, x + 0.06, -0.05, 0.05, 0.1, 1.8, P_["yellow"], g, bw=0.006)
+    for i in range(1, 15):
+        x = i * 2.3 / 15
+        C(0.014, (x, 0, 0.18), (x, 0, 1.72), P_["yellow"], g, verts=10, bw=0)
+    BX(0.0, 2.3, -0.06, -0.04, 0.12, 0.16, P_["dark"], g, bw=0)
+    for x in (0.3, 2.0):
+        C(0.06, (x, -0.025, 0.07), (x, 0.025, 0.07), P_["steel"], g, verts=24)
+    BX(0.9, 1.4, -0.06, -0.055, 0.9, 1.1, P_["red"], g, bw=0)
+    label("STOP", (1.15, -0.062, 0.97), 0.07, P_["white"], g=g)
+    nodes({"leaf": (0, 0, 0)})
+
+
+MACHINES = dict(cart=cart, hoist=hoist, lift=lift, sort=sort, press=press, fill=fill, belt=belt, fan=fan, gate=gate)
 
 
 def main(keys):

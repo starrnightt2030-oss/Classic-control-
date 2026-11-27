@@ -42,7 +42,17 @@ LAYERS = {
     "belt": {"box": ["proto_box"]},
     "fan": {"blades%d" % i: ["blades"] for i in range(6)},   # 0°, 15° … 75°
     "gate": {"leaf": ["leaf"]},
+    "crusher": {"fly%d" % i: ["fly"] for i in range(6)},     # 0°, 10° … 50° (six spokes)
+    "crane": {"bridge": ["bridge"], "trolley": ["trolley"], "hook": ["hook"]},
+    "oven": {"glow": ["glow"], **{"fan%d" % i: ["fan"] for i in range(6)}},   # 0°, 15° … 75°
+    "mixer": {"hook%d" % i: ["hook"] for i in range(6)},     # 0°, 30° … 150° (two arms)
+    "tank2": {"water": ["water"]},
+    "washer": {"wash": ["wash"], "rinse": ["rinse"], "air": ["air"]},
+    "hpress": {"ram": ["ram"]},
+    "line3": {"box": ["proto_box"]},
 }
+# layers that are one node turned: prefix → (node, axis, degrees per frame)
+ROT = {"blades": ("blades", 1, 15), "fly": ("fly", 1, 10), "fan": ("fan", 2, 15), "hook": ("hook", 2, 30)}
 # never in the still layer (moving, or drawn by the lab: ropes)
 MOVING = {
     "cart": ["cart"],
@@ -54,6 +64,14 @@ MOVING = {
     "belt": ["proto_box"],
     "fan": ["blades"],
     "gate": ["leaf"],
+    "crusher": ["fly"],
+    "crane": ["bridge", "trolley", "hook"],
+    "oven": ["glow", "fan"],
+    "mixer": ["hook"],
+    "tank2": ["water"],
+    "washer": ["wash", "rinse", "air"],
+    "hpress": ["ram"],
+    "line3": ["proto_box"],
 }
 
 
@@ -241,8 +259,10 @@ def render_machine(kind):
         if layer == "car_open":
             N["door_l"].location.x -= 0.38
             N["door_r"].location.x += 0.38
-        if layer.startswith("blades"):
-            N["blades"].rotation_euler.y = math.radians(15 * int(layer[6:]))
+        rot = next(((p, r) for p, r in ROT.items() if layer.startswith(p) and layer[len(p):].isdigit()), None)
+        if rot:
+            node, axis, step = rot[1]
+            N[node].rotation_euler[axis] = math.radians(step * int(layer[len(rot[0]):]))
         if layer == "bottle":
             for o in tree(N["proto_liquid"]):
                 o.hide_render = True
@@ -250,8 +270,8 @@ def render_machine(kind):
         png = os.path.join(TMP, f"{kind}_{layer}.png")
         render(S, png)
         out["layers"][layer] = webp(png, os.path.join(OUT, f"mach_{kind}_{layer}.webp"), W, H)
-        if layer.startswith("blades"):
-            N["blades"].rotation_euler.y = 0
+        if rot:
+            N[rot[1][0]].rotation_euler[rot[1][1]] = 0
             bpy.context.view_layer.update()
         if layer == "car_open":
             N["door_l"].location.x += 0.38
@@ -260,8 +280,12 @@ def render_machine(kind):
     for n, o in N.items():
         if n.startswith("lamp_"):
             out["lamps"][n[5:]] = px(o.matrix_world @ Vector(o.bound_box[0]).lerp(Vector(o.bound_box[6]), 0.5))
-        if n in ("cart", "hook", "rope", "rope_car", "car", "cw", "rod", "ram", "proto_metal", "proto_plastic", "proto_bottle", "proto_liquid", "stream", "drum", "sheave", "proto_box", "leaf", "blades"):
+        if n in ("cart", "hook", "rope", "rope_car", "car", "cw", "rod", "ram", "proto_metal", "proto_plastic", "proto_bottle", "proto_liquid", "stream", "drum", "sheave", "proto_box", "leaf", "blades", "bridge", "trolley", "water", "fly", "fan", "glow"):
             out["points"][n] = [round(v, 4) for v in o.matrix_world.translation]
+    if "water" in N:
+        wlo, whi = world_bounds(tree(N["water"]))
+        out["points"]["water_lo"] = [round(v, 4) for v in wlo]
+        out["points"]["water_hi"] = [round(v, 4) for v in whi]
     if "proto_liquid" in N:
         llo, lhi = world_bounds(tree(N["proto_liquid"]))
         out["points"]["liquid_lo"] = [round(v, 4) for v in llo]

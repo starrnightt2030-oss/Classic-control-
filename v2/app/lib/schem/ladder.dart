@@ -210,6 +210,22 @@ class _Lay {
     return 20;
   }
 
+  /// reversing drives side by side: (forward K, reverse K, overload, motor) each
+  double reversingN(List<(String, String, String, String)> d) {
+    supply();
+    var x = 2.0;
+    for (final (k1, k2, f, m) in d) {
+      final a = mains(k1, x), b = mains(k2, x + 8);
+      final o = ol(f, a, y: 20);
+      wk('${b.id}.2', '${o.id}.5', 17.0);
+      wk('${b.id}.4', '${o.id}.3', 17.5);
+      wk('${b.id}.6', '${o.id}.1', 18.0);
+      motor(m, o, y: 27);
+      x += 18;
+    }
+    return x;
+  }
+
   /// star-delta: main KM1 (or the reversing pair before it), delta and star contactors
   double starDelta(String km, String f, String kd, String ks, String m) {
     supply();
@@ -627,6 +643,192 @@ final List<ReadyCircuit> kReady = [
               [..._latch('S2', 'K2'), lsNc('LS1'), nc('K1', '21-22'), Par([[coil('K2')], [lamp('H2', 'y')]])],
             ]),
           ], mech: [['K1', 'K2']])),
+  ReadyCircuit('l_crusher', 'خطوط الإنتاج', 'كسارة حجارة: ستار دلتا بتايمر', 'KM1 وKM2 بيبدأوا ستار، والتايمر KT1 بيفصل الستار ويشغّل الدلتا KM3.',
+      () => _make('كسارة حجارة', (l) => l.starDelta('KM1', 'F2', 'KM3', 'KM2', 'M1'), [
+            olnc('F2'),
+            stop('S0'),
+            ..._latch('S1', 'KM1'),
+            Par([
+              [coil('KM1')],
+              [timer('KT1', 'on', 5)],
+              [tnc('KT1'), nc('KM3', '21-22'), Par([[coil('KM2')], [lamp('H1', 'y')]])],
+              [tno('KT1'), nc('KM2', '21-22'), Par([[coil('KM3')], [lamp('H2', 'g')]])],
+            ]),
+          ], mech: [['KM2', 'KM3']])),
+  ReadyCircuit('l_crane', 'خطوط الإنتاج', 'ونش علوي بتلات حركات', 'تلات دواير عكس حركة بضغط مستمر، ومفتاح حد وانترلوك قبل كل ملف.',
+      () => _make('ونش علوي', (l) => l.reversingN([('K1', 'K2', 'F2', 'M1'), ('K3', 'K4', 'F3', 'M2'), ('K5', 'K6', 'F4', 'M3')]), [
+            olnc('F2'),
+            olnc('F3'),
+            olnc('F4'),
+            stop('S0'),
+            Par([
+              [start('S1'), lsNc('B1'), nc('K2', '21-22'), coil('K1')],
+              [start('S2'), lsNc('B2'), nc('K1', '21-22'), coil('K2')],
+              [start('S3'), lsNc('B4'), nc('K4', '21-22'), coil('K3')],
+              [start('S4'), lsNc('B3'), nc('K3', '21-22'), coil('K4')],
+              [start('S5'), lsNc('B6'), nc('K6', '21-22'), coil('K5')],
+              [start('S6'), lsNc('B5'), nc('K5', '21-22'), coil('K6')],
+            ]),
+          ], mech: [['K1', 'K2'], ['K3', 'K4'], ['K5', 'K6']])),
+  ReadyCircuit('l_oven', 'خطوط الإنتاج', 'فرن تجفيف بثرموستات ومروحة تأخير فصل', 'KA1 بيشغّل التايمر KT1 (تأخير فصل) والمروحة K1، والسخانات من KA1 بشرط المروحة والثرموستات.',
+      () => _make('فرن تجفيف', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            Par([
+              [
+                stop('S0'),
+                Par([
+                  [Par([[start('S1')], [no('KA1', '11-14')]]), relay('KA1')],
+                  [
+                    no('KA1', '21-24'),
+                    Par([
+                      [timer('KT1', 'off', 8)],
+                      [no('K1', '13-14'), const E('thermo_nc', 'B1'), Par([[const E('heat', 'E1')], [lamp('H1', 'y')]])],
+                    ])
+                  ],
+                ])
+              ],
+              [tno('KT1'), Par([[coil('K1')], [lamp('H2', 'g')]])],
+            ]),
+          ])),
+  ReadyCircuit('l_mixer', 'خطوط الإنتاج', 'خلاط عجين بعكس اتجاه تلقائي', 'KA2 ذاكرة الاتجاه: KT1 بيشغّله فيلف شمال، وKT2 بيفكّه فيرجع يمين. وغطا الأمان B1 قبل KA1.',
+      () => _make('خلاط عجين', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('KA1', '11-14')]]), lsNo('B1'), relay('KA1')],
+              [
+                no('KA1', '21-24'),
+                Par([
+                  [nc('KA2', '11-12'), nc('K2', '21-22'), Par([[coil('K1')], [lamp('H1', 'g')]])],
+                  [no('KA2', '11-14'), nc('K1', '21-22'), Par([[coil('K2')], [lamp('H2', 'b')]])],
+                  [no('K1', '13-14'), timer('KT1', 'on', 4)],
+                  [Par([[tno('KT1')], [no('KA2', '21-24'), tnc('KT2')]]), relay('KA2')],
+                  [no('K2', '13-14'), timer('KT2', 'on', 4)],
+                ])
+              ],
+            ]),
+          ], mech: [['K1', 'K2']])),
+  ReadyCircuit('l_fill', 'خطوط الإنتاج', 'خط تعبئة زجاجات', 'KA0 بيمسك الخط. الفوتوسل B1 بيشغّل KA1: السير يقف والصمام Y1 يفتح لحد حساس المستوى B2.',
+      () => _make('خط تعبئة زجاجات', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('KA0', '11-14')]]), relay('KA0')],
+              [no('KA0', '21-24'), Par([[nc('KA1', '11-12')], [floatNo('B2')]]), Par([[coil('K1')], [lamp('H1', 'g')]])],
+              [photo('B1'), relay('KA1')],
+              [no('KA1', '21-24'), floatNc('B2'), valve('Y1')],
+            ]),
+          ]), plant: 'fill'),
+  ReadyCircuit('l_sort', 'خطوط الإنتاج', 'فرز كراتين ببستم نيوماتيك', 'السير بإمساك ذاتي، ومن نقطة K1 53-54 والحساس الحثي B2 بيتغذى صمام البستم Y1.',
+      () => _make('فرز كراتين', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('K1', '13-14')]]), Par([[coil('K1')], [lamp('H1', 'g')]])],
+              [no('K1', '53-54'), prox('B2'), valve('Y1')],
+            ]),
+          ]), plant: 'sort'),
+  ReadyCircuit('l_tank2', 'خطوط الإنتاج', 'تانك مية بطلمبة أساسية واحتياطي', 'العوامة الواطية بتشغّل KA1 والعالية بتفصله. KA1 بيشغّل K1 من نقطة F2 95-96، ولو F2 فصل نقطته 97-98 تشغّل K2.',
+      () => _make('تانك بطلمبتين', (l) => l.dol([('K1', 'F2', 'M1'), ('K2', 'F3', 'M2')]), [
+            stop('S0'),
+            Par([
+              [Par([[floatNc('B1')], [no('KA1', '11-14')]]), floatNc('B2'), relay('KA1')],
+              [
+                no('KA1', '21-24'),
+                Par([
+                  [olnc('F2'), Par([[coil('K1')], [lamp('H1', 'g')]])],
+                  [olno('F2'), Par([[olnc('F3'), Par([[coil('K2')], [lamp('H2', 'g')]])], [lamp('H3', 'y')]])],
+                ])
+              ],
+            ]),
+          ])),
+  ReadyCircuit('l_washer', 'خطوط الإنتاج', 'غسالة زجاجات بتلات خطوات', 'كل تايمر بيتغذى من نقطة اللي قبله 15-18، ونقطته 15-16 بتشغّل خطوته. وKT3 بيفك إمساك KA1 في الآخر.',
+      () => _make('غسالة زجاجات', (l) => 2, [
+            stop('S0'),
+            Par([
+              [tnc('KT3'), Par([[start('S1')], [no('KA1', '11-14')]]), lsNo('B1'), Par([[relay('KA1')], [lamp('H1', 'g')]])],
+              [
+                no('KA1', '21-24'),
+                Par([
+                  [timer('KT1', 'on', 4)],
+                  [tnc('KT1'), valve('Y1')],
+                  [
+                    tno('KT1'),
+                    Par([
+                      [timer('KT2', 'on', 4)],
+                      [tnc('KT2'), valve('Y2')],
+                      [tno('KT2'), Par([[timer('KT3', 'on', 4)], [valve('Y3')]])],
+                    ])
+                  ],
+                ])
+              ],
+            ]),
+          ])),
+  ReadyCircuit('l_lift', 'خطوط الإنتاج', 'أسانسير بضاعة 3 أدوار', 'ريليه طلب لكل دور بيتفصل بحساس دوره، والاتجاه من مكان الكابينة، ونقطة الكونتاكتور بتمسك الاتجاه.',
+      () => _make('أسانسير بضاعة', (l) => l.reversing('K1', 'K2', 'F2', 'M1'), [
+            olnc('F2'),
+            stop('S0'),
+            Par([
+              [Par([[start('S1')], [no('KA1', '11-14')]]), lsNc('B1'), relay('KA1')],
+              [Par([[start('S2')], [no('KA2', '11-14')]]), lsNc('B2'), relay('KA2')],
+              [Par([[start('S3')], [no('KA3', '11-14')]]), lsNc('B3'), relay('KA3')],
+              [
+                Par([[no('KA3', '21-24')], [no('KA2', '21-24'), Par([[lsNo('B1')], [no('K1', '13-14')]])]]),
+                nc('K2', '21-22'),
+                Par([[coil('K1')], [lamp('H1', 'g')]])
+              ],
+              [
+                Par([[no('KA1', '21-24')], [no('KA2', '21-24'), Par([[lsNo('B3')], [no('K2', '13-14')]])]]),
+                nc('K1', '21-22'),
+                Par([[coil('K2')], [lamp('H2', 'b')]])
+              ],
+            ]),
+          ], mech: [['K1', 'K2']]), plant: 'lift'),
+  ReadyCircuit('l_hpress', 'خطوط الإنتاج', 'مكبس هيدروليك بطلمبة وسولونويدين', 'الطلمبة K1 بتغذي دايرة الكبس. KA1 نزول لحد البريشر سويتش B2، وKA2 طلوع لحد مفتاح الحد B1.',
+      () => _make('مكبس هيدروليك', (l) => l.dol([('K1', 'F2', 'M1')]), [
+            olnc('F2'),
+            stop('S0'),
+            ..._latch('S1', 'K1'),
+            Par([
+              [Par([[coil('K1')], [lamp('H1', 'g')]])],
+              [Par([[start('S2')], [no('KA1', '11-14')]]), lsNc('B2'), relay('KA1')],
+              [no('KA1', '21-24'), valve('Y1')],
+              [Par([[const E('press_no', 'B2')], [no('KA2', '11-14')]]), lsNc('B1'), relay('KA2')],
+              [const E('press_no', 'B2'), no('KA2', '21-24'), valve('Y2')],
+            ]),
+          ])),
+  ReadyCircuit('l_line3', 'خطوط الإنتاج', 'خط تغليف: تشغيل بالتتابع وإيقاف بالعكس', 'K3 على طول، وK2 بعد KT1، وK1 بعد KT2. وفي الإيقاف KT3 وKT4 (تأخير فصل) بيوقفوا K2 ثم K3.',
+      () => _make('خط تغليف كامل', (l) => l.dol([('K1', 'F2', 'M1'), ('K2', 'F3', 'M2'), ('K3', 'F4', 'M3')]), [
+            Par([
+              [
+                stop('S00'),
+                olnc('F2'),
+                olnc('F3'),
+                olnc('F4'),
+                Par([
+                  [
+                    stop('S0'),
+                    Par([
+                      [Par([[start('S1')], [no('KA0', '11-14')]]), relay('KA0')],
+                      [
+                        no('KA0', '21-24'),
+                        Par([
+                          [timer('KT1', 'on', 3)],
+                          [timer('KT2', 'on', 6)],
+                          [timer('KT3', 'off', 3)],
+                          [timer('KT4', 'off', 6)],
+                          [tno('KT2'), Par([[coil('K1')], [lamp('H1', 'g')]])],
+                        ])
+                      ],
+                    ])
+                  ],
+                  [tno('KT4'), Par([[coil('K3')], [lamp('H2', 'y')]])],
+                  [tno('KT3'), Par([[tno('KT1')], [no('K2', '13-14')]]), coil('K2')],
+                ])
+              ],
+              [Par([[olno('F2')], [olno('F3')], [olno('F4')]]), lamp('H3', 'r')],
+            ]),
+          ])),
 ];
 
 ReadyCircuit? readyById(String id) {

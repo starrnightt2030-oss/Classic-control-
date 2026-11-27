@@ -10,10 +10,11 @@ import '../ui/widgets.dart';
 import 'lines.dart';
 
 /// machines with a Blender sprite in assets/panel (mach_<kind>_base.webp)
-const _sprites = {'belt', 'fan', 'gate', 'press', 'fill', 'sort', 'lift', 'hoist', 'cart'};
+const _sprites = {'belt', 'fan', 'gate', 'press', 'fill', 'sort', 'lift', 'hoist', 'cart', 'crusher', 'crane', 'oven', 'mixer', 'tank2', 'washer', 'hpress', 'line3'};
 
 String? lineImage(ProdLine l) {
   final k = l.machine.substring(5);
+  if (k == 'crane') return 'assets/images/cards/line_crane.webp'; // the base alone is just the columns
   return _sprites.contains(k) ? 'assets/panel/mach_${k}_base.webp' : null;
 }
 
@@ -34,7 +35,7 @@ class LinesPage extends StatelessWidget {
             decoration: panelBox(color: CC.cyanBg, border: CC.cyanLine, radius: 14),
             child: Text(
               '${kLines.length} مشروع تحكم كلاسيك من مصانع حقيقية، من غير PLC. كل خط ماكينة مجسمة جنب اللوحة: '
-              'توصّل الدايرة بإيدك، تشغّل، وتشوف الماكينة بتتحرك بدايرتك. جاهز منهم $ready، والباقي بيتبني.',
+              'توصّل الدايرة بإيدك، تشغّل، وتشوف الماكينة بتتحرك بدايرتك.${ready < kLines.length ? ' جاهز منهم $ready، والباقي بيتبني.' : ''}',
               style: const TextStyle(fontSize: 13.5, height: 1.7, color: Color(0xFFCDF3F8)),
             ),
           ),

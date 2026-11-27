@@ -766,7 +766,372 @@ def gate():
     nodes({"leaf": (0, 0, 0)})
 
 
-MACHINES = dict(cart=cart, hoist=hoist, lift=lift, sort=sort, press=press, fill=fill, belt=belt, fan=fan, gate=gate)
+def spinner(g, c, axis, r, spokes, m, width=0.05, thick=0.03, hub=0.06):
+    """a wheel / blade set of [spokes] arms around centre c, turning about axis X / Y / Z"""
+    c = Vector(c)
+    ax = {"X": Vector((1, 0, 0)), "Y": Vector((0, 1, 0)), "Z": Vector((0, 0, 1))}[axis]
+    u = Vector((0, 0, 1)) if axis != "Z" else Vector((1, 0, 0))
+    v = ax.cross(u)
+    C(hub, c - ax * thick, c + ax * thick, P_["dark"], g, verts=24)
+    for k in range(spokes):
+        a = 2 * math.pi * k / spokes
+        d = u * math.cos(a) + v * math.sin(a)
+        C(width / 2, c + d * hub * 0.8, c + d * r, m, g, verts=10)
+
+
+def crusher():
+    """jaw crusher in a quarry: hopper, jaw body, a big flywheel on each side, V-belt
+    drive from the motor (M1, started star-delta) and the conveyor taking the gravel"""
+    plinth(-1.6, 2.6, -1.3, 1.3)
+    # concrete base and the steel body
+    BX(-0.9, 0.9, -0.7, 0.7, 0.0, 0.5, P_["concrete"], bw=0.01)
+    BX(-0.7, 0.7, -0.5, 0.5, 0.5, 1.6, P_["yellow"], bw=0.012)
+    for sy in (-1, 1):
+        for x in (-0.55, -0.2, 0.2, 0.55):
+            BX(x - 0.03, x + 0.03, sy * 0.5 - 0.02, sy * 0.5 + 0.02, 0.5, 1.6, P_["yellow"], bw=0.004)
+    # hopper with rocks
+    for (a, b) in ((-1, 1), (1, -1)):
+        pass
+    BX(-0.75, 0.75, -0.55, 0.55, 1.6, 1.68, P_["dark"])
+    for sx in (-1, 1):
+        BX(sx * 0.75 - 0.03, sx * 0.75 + 0.03, -0.55, 0.55, 1.68, 2.1, P_["grey"])
+    for sy in (-1, 1):
+        BX(-0.75, 0.75, sy * 0.55 - 0.03, sy * 0.55 + 0.03, 1.68, 2.1, P_["grey"])
+    import random
+    rnd = random.Random(4)
+    for i in range(16):
+        x, y = rnd.uniform(-0.6, 0.6), rnd.uniform(-0.42, 0.42)
+        SPH(rnd.uniform(0.07, 0.13), (x, y, 1.75 + rnd.uniform(0, 0.15)), P_["concrete"])
+    label("CRUSHER", (0, -0.505, 1.25), 0.11, P_["dark"])
+    # bearings and the shaft through the body
+    for sy in (-1, 1):
+        BX(-0.15, 0.15, sy * 0.5, sy * 0.62, 1.05, 1.35, P_["dark"])
+    C(0.06, (0, -0.85, 1.2), (0, 0.85, 1.2), P_["steel"], verts=24)
+    # gravel conveyor under the outlet
+    BX(0.8, 2.5, -0.25, 0.25, 0.35, 0.42, P_["belt"])
+    for x in (0.9, 2.4):
+        for sy in (-1, 1):
+            BX(x - 0.03, x + 0.03, sy * 0.25 - 0.03, sy * 0.25 + 0.03, 0.0, 0.35, P_["alu"])
+    for i in range(10):
+        SPH(0.04, (1.0 + i * 0.14, (i % 3 - 1) * 0.08, 0.44), P_["concrete"])
+    # motor on its slide rail, V-belt to the near flywheel
+    BX(-1.5, -0.95, -1.1, -0.7, 0.0, 0.12, P_["dark"])
+    motor(-1.22, -0.98, 0.32, axis="Y", length=0.3, r=0.15)
+    label("M1", (-1.22, -1.14, 0.55), 0.08, P_["white"])
+    C(0.1, (-1.22, -1.0, 0.32), (-1.22, -0.92, 0.32), P_["steel"], verts=32)
+    for dz in (-0.1, 0.1):
+        C(0.012, (-1.22, -0.96, 0.32 + dz), (0.0, -0.96, 1.2 + dz * 6), P_["rubber"], verts=8, bw=0)
+    # far flywheel (still), near flywheel turns (frames rendered by render_machines.py)
+    C(0.62, (0, 0.85, 1.2), (0, 0.93, 1.2), P_["dark"], verts=64)
+    spinner("fly", (0, -0.92, 1.2), "Y", 0.6, 6, P_["red"], width=0.07, thick=0.05, hub=0.1)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.6, minor_radius=0.05, location=(0, -0.92, 1.2), rotation=(math.pi / 2, 0, 0), major_segments=64)
+    t = bpy.context.object
+    lib.finish(t, 0, mats=[P_["red"]])
+    G["fly"].append(t)
+    # a white mark on the rim so the turning shows
+    BX(-0.05, 0.05, -0.99, -0.95, 1.77, 1.82, P_["white"], "fly", bw=0)
+    nodes({"fly": (0, -0.92, 1.2)})
+
+
+CRANE_X, CRANE_Y, CRANE_Z = 2.4, 1.6, 1.6   # travel of trolley (x), bridge (y), hook (z)
+
+
+def crane():
+    """overhead travelling crane in a bay: runway on columns, the bridge travels along Y
+    (M3), the trolley along the bridge in X (M2) and the hook up / down (M1); a roller
+    limit switch at each end of each travel"""
+    plinth(-0.6, 3.6, -1.5, 2.2)
+    H = 3.0
+    for x in (-0.3, 3.3):
+        for y in (-1.2, 0.6, 1.9):
+            BX(x - 0.07, x + 0.07, y - 0.07, y + 0.07, 0.0, H, P_["grey"])
+        BX(x - 0.1, x + 0.1, -1.3, 2.0, H, H + 0.18, P_["yellow"])
+        BX(x - 0.02, x + 0.02, -1.3, 2.0, H + 0.18, H + 0.21, P_["steel"])
+    # load to lift and its pallet
+    BX(0.9, 1.7, -0.35, 0.25, 0.0, 0.1, P_["wood"])
+    crate(1.3, -0.05, 0.1, 0.7, 0.5, 0.45, P_["blue"], "frame")
+    # pendant-free limit switches with lamps: B1/B2 hook top/bottom are on the trolley,
+    # B3/B4 trolley ends on the bridge girder, B5/B6 bridge ends on the runway
+    for (x, y, z, tag) in ((3.3, -1.25, H + 0.25, "B5"), (3.3, 1.95, H + 0.25, "B6")):
+        BX(x - 0.03, x + 0.03, y - 0.03, y + 0.03, z - 0.05, z + 0.03, P_["dark"])
+        lamp(tag, (x, y, z + 0.05), (1.0, 0.3, 0.05), r=0.02, base=False)
+        label(tag, (x + 0.12, y, z), 0.07, P_["white"], rot=(90, 0, 90))
+    # bridge girder (at bridge y = 0) with its end trucks, along X
+    g = "bridge"
+    BX(-0.4, 3.4, -0.12, 0.12, H + 0.21, H + 0.55, P_["yellow"], g, bw=0.01)
+    for x in (-0.3, 3.3):
+        BX(x - 0.12, x + 0.12, -0.35, 0.35, H + 0.21, H + 0.4, P_["yellow"], g)
+    label("5 TON", (1.5, -0.125, H + 0.35), 0.11, P_["dark"], g=g)
+    for (x, tag) in ((0.15, "B3"), (2.85, "B4")):
+        BX(x - 0.03, x + 0.03, -0.17, -0.12, H + 0.3, H + 0.4, P_["dark"], g)
+        lamp(tag, (x, -0.18, H + 0.44), (1.0, 0.3, 0.05), r=0.018, base=False, g=g)
+    motor(3.3, -0.4, H + 0.3, axis="Y", length=0.18, r=0.06, g=g)
+    # trolley (at trolley x = 0 → world x 0.3) running on the girder, with the hoist
+    g = "trolley"
+    BX(0.05, 0.55, -0.3, 0.3, H + 0.55, H + 0.75, P_["blue"], g, bw=0.01)
+    C(0.12, (0.15, -0.2, H + 0.86), (0.45, -0.2, H + 0.86), P_["blue"], g, verts=32)
+    C(0.1, (0.15, 0.15, H + 0.86), (0.45, 0.15, H + 0.86), P_["steel"], g, verts=32)
+    for (x, tag) in ((0.3, "B1"),):
+        BX(x - 0.03, x + 0.03, -0.33, -0.3, H + 0.6, H + 0.7, P_["dark"], g)
+        lamp(tag, (x, -0.34, H + 0.72), (1.0, 0.3, 0.05), r=0.016, base=False, g=g)
+    # hook block (top of block at z = 0 relative, world hung at 1.4)
+    g = "hook"
+    BX(0.2, 0.4, -0.06, 0.06, 1.3, 1.55, P_["yellow"], g, bw=0.01)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.07, minor_radius=0.018, location=(0.3, 0, 1.2), rotation=(math.pi / 2, 0, 0))
+    t = bpy.context.object
+    lib.finish(t, 0, mats=[P_["steel"]])
+    G[g].append(t)
+    lamp("B2", (0.3, -0.07, 1.5), (1.0, 0.3, 0.05), r=0.014, base=False, g=g)
+    nodes({"bridge": (0, 0, 0), "trolley": (0, 0, 0), "hook": (0.3, 0, 1.55)})
+
+
+def oven():
+    """paint-drying oven: insulated cabinet, glass door, three heater elements inside
+    (they glow with the temperature), thermostat B1 and the cooling fan on the roof (M1)"""
+    plinth(-0.4, 2.2, -1.0, 1.0)
+    BX(0.0, 1.8, -0.6, 0.6, 0.0, 0.1, P_["dark"])
+    BX(0.0, 1.8, -0.6, 0.6, 0.1, 1.9, P_["white"], bw=0.015)
+    # dark inside behind the glass door
+    BX(0.15, 1.65, -0.61, -0.59, 0.3, 1.65, P_["dark"], bw=0)
+    BX(0.12, 1.68, -0.63, -0.61, 0.27, 0.32, P_["steel"], bw=0)
+    BX(0.12, 1.68, -0.63, -0.61, 1.63, 1.68, P_["steel"], bw=0)
+    for x in (0.12, 1.63):
+        BX(x, x + 0.05, -0.63, -0.61, 0.27, 1.68, P_["steel"], bw=0)
+    C(0.015, (1.5, -0.66, 0.8), (1.5, -0.66, 1.15), P_["chrome"], verts=12)
+    # racks with painted panels
+    for z in (0.55, 1.0, 1.4):
+        BX(0.2, 1.6, -0.6, -0.55, z, z + 0.02, P_["steel"], bw=0)
+    for x in (0.4, 0.9, 1.3):
+        BX(x, x + 0.25, -0.58, -0.57, 1.02, 1.35, P_["red"], bw=0)
+    # heater rods (cold), the glowing copy is the layer "glow"
+    for z in (0.4, 0.75, 1.55):
+        C(0.02, (0.2, -0.59, z), (1.6, -0.59, z), P_["steel"], verts=12)
+        C(0.024, (0.2, -0.6, z), (1.6, -0.6, z), P_["orange"], "glow", verts=12, bw=0)
+    label("DRYING OVEN", (0.9, -0.615, 1.78), 0.08, P_["dark"])
+    # control box with the thermostat dial and its lamp
+    BX(1.82, 2.1, -0.3, 0.1, 0.8, 1.4, P_["grey"])
+    C(0.06, (1.96, -0.3, 1.2), (1.96, -0.32, 1.2), P_["white"], verts=32)
+    C(0.008, (1.96, -0.33, 1.2), (1.99, -0.33, 1.24), P_["red"], verts=8, bw=0)
+    lamp("B1", (1.96, -0.31, 1.02), (1.0, 0.3, 0.05), r=0.02, base=False)
+    lamp("E1", (1.96, -0.31, 0.92), (1.0, 0.6, 0.1), r=0.02, base=False)
+    label("B1", (1.96, -0.305, 1.32), 0.05, P_["white"])
+    # cooling fan housing on the roof, its blades turn about Z
+    C(0.3, (0.9, 0.0, 1.9), (0.9, 0.0, 2.15), P_["grey"], verts=48)
+    C(0.27, (0.9, 0.0, 2.15), (0.9, 0.0, 2.152), P_["dark"], verts=48)
+    label("M1", (0.9, -0.31, 2.0), 0.07, P_["white"])
+    spinner("fan", (0.9, 0.0, 2.17), "Z", 0.25, 4, P_["alu"], width=0.09, thick=0.01, hub=0.05)
+    for a in (0, 60, 120):
+        r = math.radians(a)
+        C(0.004, (0.9 - 0.3 * math.cos(r), -0.3 * math.sin(r), 2.2), (0.9 + 0.3 * math.cos(r), 0.3 * math.sin(r), 2.2), P_["chrome"], verts=6, bw=0)
+    nodes({"glow": (0.9, -0.6, 1.0), "fan": (0.9, 0.0, 2.17)})
+
+
+def mixer():
+    """spiral dough mixer: bowl on a pedestal, a two-arm hook turning about Z (M1, both
+    directions), and a safety guard with its switch B1 (closed = guard down)"""
+    plinth(-1.0, 1.2, -1.0, 1.0)
+    BX(-0.55, 0.55, -0.45, 0.45, 0.0, 0.7, P_["white"], bw=0.02)
+    BX(0.2, 0.55, -0.35, 0.35, 0.7, 1.75, P_["white"], bw=0.02)
+    BX(-0.55, 0.55, -0.35, 0.35, 1.6, 1.85, P_["white"], bw=0.02)
+    label("DOUGH MIXER", (0.0, -0.455, 0.5), 0.07, P_["dark"])
+    # control panel on the column
+    BX(0.25, 0.5, -0.37, -0.35, 1.0, 1.4, P_["grey"], bw=0)
+    for i, m in enumerate((P_["green"], P_["blue"], P_["red"])):
+        C(0.02, (0.31 + i * 0.07, -0.37, 1.2), (0.31 + i * 0.07, -0.39, 1.2), m, verts=16)
+    lamp("RUN", (0.38, -0.38, 1.33), (0.1, 1.0, 0.3), r=0.018, base=False)
+    # bowl with dough
+    C(0.4, (-0.2, 0.0, 0.7), (-0.2, 0.0, 1.15), P_["stainless"], verts=64)
+    C(0.37, (-0.2, 0.0, 1.0), (-0.2, 0.0, 1.151), P_["cardboard"], verts=64)
+    # guard grid over the bowl and its switch
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.42, minor_radius=0.012, location=(-0.2, 0, 1.22), major_segments=64)
+    t = bpy.context.object
+    lib.finish(t, 0, mats=[P_["chrome"]])
+    G["frame"].append(t)
+    for a in range(0, 180, 30):
+        r = math.radians(a)
+        C(0.006, (-0.2 - 0.42 * math.cos(r), -0.42 * math.sin(r), 1.22), (-0.2 + 0.42 * math.cos(r), 0.42 * math.sin(r), 1.22), P_["chrome"], verts=6, bw=0)
+    BX(0.18, 0.24, -0.45, -0.38, 1.18, 1.26, P_["yellow"])
+    lamp("B1", (0.21, -0.46, 1.29), (1.0, 0.3, 0.05), r=0.012, base=False)
+    # the hook: two spiral arms down into the dough, turning about Z
+    g = "hook"
+    C(0.03, (-0.2, 0, 1.6), (-0.2, 0, 1.05), P_["chrome"], g, verts=16)
+    for k in (0, 1):
+        pts = []
+        for i in range(9):
+            a = k * math.pi + i * 0.35
+            rr = 0.05 + i * 0.022
+            pts.append(Vector((-0.2 + rr * math.cos(a), rr * math.sin(a), 1.32 - i * 0.04)))
+        for p0, p1 in zip(pts, pts[1:]):
+            C(0.018, p0, p1, P_["chrome"], g, verts=10, bw=0)
+    nodes({"hook": (-0.2, 0, 1.3)})
+
+
+def tank2():
+    """water tank with two pumps (M1, M2) and two floats (B1 low, B2 high); the water
+    level is a layer the lab clips to the level"""
+    plinth(-1.2, 1.6, -1.1, 1.1)
+    # tank on legs, glass front so the level shows
+    for x in (-0.5, 0.5):
+        for y in (-0.4, 0.4):
+            BX(x - 0.04, x + 0.04, y - 0.04, y + 0.04, 0.0, 0.6, P_["steel"])
+    C(0.62, (0, 0, 0.6), (0, 0, 0.65), P_["steel"], verts=64)
+    C(0.6, (0, 0, 0.65), (0, 0, 2.05), P_["glass"], verts=64, bw=0)
+    C(0.62, (0, 0, 2.05), (0, 0, 2.1), P_["steel"], verts=64)
+    for z in (1.0, 1.5):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.605, minor_radius=0.012, location=(0, 0, z), major_segments=64)
+        t = bpy.context.object
+        lib.finish(t, 0, mats=[P_["steel"]])
+        G["frame"].append(t)
+    label("WATER", (0, -0.63, 1.85), 0.1, P_["blue"])
+    # float switches on rods: B1 low, B2 high
+    for (z, tag) in ((0.95, "B1"), (1.8, "B2")):
+        C(0.006, (0.35, 0.0, 2.1), (0.35, 0.0, z), P_["chrome"], verts=8, bw=0)
+        SPH(0.05, (0.35, 0.0, z), P_["orange"])
+        lamp(tag, (0.35, -0.2, 2.13), (0.1, 1.0, 0.3) if tag == "B2" else (1.0, 0.3, 0.05), r=0.02, base=False)
+        label(tag, (0.35, -0.21, 2.25), 0.06, P_["white"])
+    # outlet pipe to the factory
+    C(0.04, (0.6, 0.0, 0.75), (1.5, 0.0, 0.75), P_["blue"], verts=20)
+    # two pumps on the floor, pipes up into the tank top
+    for (x, tag) in ((-0.9, "M1"), (0.9, "M2")):
+        y = -0.75
+        BX(x - 0.25, x + 0.25, y - 0.15, y + 0.15, 0.0, 0.08, P_["dark"])
+        motor(x - 0.05, y, 0.22, axis="X", length=0.25, r=0.1)
+        C(0.11, (x - 0.15, y, 0.22), (x - 0.27, y, 0.22), P_["blue"], verts=32)
+        C(0.035, (x - 0.21, y, 0.33), (x - 0.21, y, 2.2), P_["blue"], verts=16)
+        C(0.035, (x - 0.21, y, 2.2), (x * 0.25, 0, 2.2), P_["blue"], verts=16)
+        lamp(tag, (x + 0.05, y - 0.12, 0.42), (0.1, 1.0, 0.3), r=0.02, base=False)
+        label(tag, (x + 0.05, y - 0.16, 0.5), 0.07, P_["white"])
+    # the water (full); the lab clips it to the level
+    C(0.59, (0, 0, 0.66), (0, 0, 2.04), P_["water"], "water", verts=64, bw=0)
+    nodes({"water": (0, 0, 0.66)})
+
+
+def washer():
+    """bottle washer: a tunnel cabinet over a chain conveyor with three zones,
+    wash (Y1), rinse (Y2) and hot-air dry (Y3), each with its spray / air layer; the door
+    switch B1 is closed while the doors are shut"""
+    L = 3.0
+    plinth(-0.6, L + 0.6, -1.0, 1.0)
+    conveyor(L + 0.4, 0.4, 0.8, legs=4)
+    for (i, (x0, name, col)) in enumerate(((0.3, "WASH", P_["blue"]), (1.2, "RINSE", P_["green"]), (2.1, "DRY", P_["orange"]))):
+        x1 = x0 + 0.8
+        BX(x0, x1, -0.32, 0.32, 0.82, 0.86, P_["stainless"])
+        BX(x0, x1, 0.3, 0.34, 0.86, 1.7, P_["stainless"])
+        BX(x0, x1, -0.32, 0.34, 1.7, 1.78, P_["stainless"])
+        BX(x0, x0 + 0.04, -0.34, 0.34, 0.86, 1.78, P_["stainless"])
+        BX(x1 - 0.04, x1, -0.34, 0.34, 0.86, 1.78, P_["stainless"])
+        BX(x0 + 0.04, x1 - 0.04, -0.34, -0.32, 1.25, 1.7, P_["glass"], bw=0)
+        BX(x0 + 0.1, x1 - 0.1, -0.345, -0.33, 1.6, 1.68, col, bw=0)
+        label(name, ((x0 + x1) / 2, -0.35, 1.61), 0.05, P_["white"])
+        tag = "Y%d" % (i + 1)
+        lamp(tag, ((x0 + x1) / 2, 0.0, 1.82), (1.0, 0.75, 0.05), r=0.025)
+        label(tag, ((x0 + x1) / 2 + 0.12, -0.0, 1.85), 0.06, P_["white"], rot=(90, 0, 0))
+        # nozzles
+        for k in range(3):
+            C(0.012, (x0 + 0.2 + k * 0.2, 0.0, 1.7), (x0 + 0.2 + k * 0.2, 0.0, 1.62), P_["chrome"], verts=10)
+        g = ("wash", "rinse", "air")[i]
+        for k in range(3):
+            xx = x0 + 0.2 + k * 0.2
+            C(0.012, (xx, 0.0, 1.62), (xx, 0.0, 0.9), P_["water"] if i < 2 else P_["glass"], g, verts=12, bw=0, r2=0.07)
+    # bottles standing in the zones (crate on the chain)
+    for x in (0.55, 0.75, 1.45, 1.65, 2.35, 2.55):
+        C(0.035, (x, 0, 0.86), (x, 0, 1.05), P_["glass"], verts=24, bw=0)
+        C(0.014, (x, 0, 1.05), (x, 0, 1.12), P_["glass"], verts=16, bw=0)
+    # door switch B1 and the control box
+    BX(L + 0.15, L + 0.45, -0.55, -0.4, 0.9, 1.4, P_["grey"])
+    lamp("B1", (L + 0.3, -0.56, 1.3), (0.1, 1.0, 0.3), r=0.02, base=False)
+    lamp("DONE", (L + 0.3, -0.56, 1.18), (0.1, 0.5, 1.0), r=0.02, base=False)
+    label("B1", (L + 0.3, -0.56, 1.02), 0.05, P_["white"])
+    nodes({"wash": (0, 0, 0), "rinse": (0, 0, 0), "air": (0, 0, 0)})
+
+
+def hpress():
+    """hydraulic press: oil tank with the pump motor (M1), directional valve with two
+    coils (Y1 down, Y2 up), pressure switch B2 and the top limit switch B1"""
+    plinth(-1.2, 1.4, -1.0, 1.0)
+    BX(-0.6, 0.6, -0.4, 0.4, 0.0, 0.9, P_["green"], bw=0.012)
+    BX(-0.65, 0.65, -0.45, 0.45, 0.9, 0.98, P_["steel"])
+    for sx in (-1, 1):
+        BX(sx * 0.5 - 0.1, sx * 0.5 + 0.1, -0.3, 0.3, 0.98, 2.4, P_["green"], bw=0.01)
+    BX(-0.65, 0.65, -0.4, 0.4, 2.4, 2.75, P_["green"], bw=0.012)
+    label("HYDRAULIC 40T", (0, -0.405, 2.55), 0.08, P_["white"])
+    C(0.2, (0, 0, 2.75), (0, 0, 3.25), P_["steel"], verts=48)
+    C(0.22, (0, 0, 3.25), (0, 0, 3.3), P_["dark"], verts=48)
+    BX(-0.25, 0.25, -0.2, 0.2, 0.98, 1.06, P_["dark"])
+    BX(-0.18, 0.18, -0.14, 0.14, 1.06, 1.1, P_["copper"], bw=0.004)
+    # top limit switch B1 on the frame, pressure switch B2 on the valve block
+    BX(0.38, 0.4, -0.32, -0.3, 2.0, 2.35, P_["steel"], bw=0)
+    BX(0.36, 0.42, -0.36, -0.3, 2.25, 2.35, P_["yellow"])
+    lamp("B1", (0.39, -0.37, 2.38), (1.0, 0.3, 0.05), r=0.015, base=False)
+    label("B1", (0.39, -0.37, 2.18), 0.05, P_["white"])
+    # power pack at the side: oil tank, pump motor, valve with two coils, gauge
+    BX(0.8, 1.3, -0.4, 0.4, 0.0, 0.6, P_["blue"], bw=0.01)
+    motor(1.05, 0.0, 0.85, axis="Y", length=0.3, r=0.12)
+    label("M1", (1.05, -0.41, 0.4), 0.08, P_["white"])
+    BX(0.82, 1.0, -0.45, -0.25, 0.6, 0.78, P_["dark"])
+    for (y, tag) in ((-0.47, "Y1"), (-0.23, "Y2")):
+        pass
+    BX(0.75, 0.82, -0.42, -0.28, 0.63, 0.75, P_["red"])
+    BX(1.0, 1.07, -0.42, -0.28, 0.63, 0.75, P_["blue"])
+    lamp("Y1", (0.785, -0.43, 0.79), (1.0, 0.75, 0.05), r=0.014, base=False)
+    lamp("Y2", (1.035, -0.43, 0.79), (1.0, 0.75, 0.05), r=0.014, base=False)
+    label("Y1", (0.72, -0.43, 0.69), 0.04, P_["white"])
+    label("Y2", (1.12, -0.43, 0.69), 0.04, P_["white"])
+    C(0.05, (0.91, -0.47, 0.95), (0.91, -0.45, 0.95), P_["white"], verts=32)
+    BX(0.89, 0.93, -0.46, -0.44, 0.78, 0.9, P_["dark"])
+    lamp("B2", (0.91, -0.48, 1.04), (1.0, 0.3, 0.05), r=0.013, base=False)
+    label("B2", (0.98, -0.48, 1.04), 0.04, P_["white"])
+    for dz in (0.0, 0.05):
+        C(0.012, (0.9, -0.35, 0.78 + dz), (0.2, -0.2, 2.8 + dz), P_["dark"], verts=8, bw=0)
+    # ram: rod and platen (up), moved down along Z
+    g = "ram"
+    C(0.08, (0, 0, 1.95), (0, 0, 2.8), P_["chrome"], g, verts=32)
+    BX(-0.38, 0.38, -0.28, 0.28, 1.85, 1.97, P_["steel"], g, bw=0.008)
+    BX(-0.16, 0.16, -0.12, 0.12, 1.75, 1.85, P_["dark"], g)
+    nodes({"ram": (0, 0, 0)})
+
+
+def line3():
+    """packing line: three conveyors in a row (M1 → M2 → M3), the last one into a
+    wrapping station; photo eye B1 counts the boxes leaving the line"""
+    seg = 1.6
+    plinth(-0.4, 3 * seg + 1.2, -1.1, 1.1)
+    for i in range(3):
+        x0 = i * seg
+        for s in (-1, 1):
+            BX(x0, x0 + seg - 0.04, s * 0.27, s * 0.3, 0.68, 0.8, P_["alu"])
+            for x in (x0 + 0.15, x0 + seg - 0.2):
+                BX(x - 0.025, x + 0.025, s * 0.27, s * 0.3, 0.0, 0.68, P_["alu"])
+        BX(x0 + 0.02, x0 + seg - 0.06, -0.26, 0.26, 0.79, 0.81, P_["belt"], bw=0.002)
+        BX(x0 + 0.1, x0 + 0.3, -0.31, -0.27, 0.69, 0.79, (P_["blue"], P_["green"], P_["red"])[i])
+        motor(x0 + seg - 0.2, -0.42, 0.58, axis="Y", length=0.16, r=0.05)
+        tag = "M%d" % (i + 1)
+        lamp(tag, (x0 + seg - 0.2, -0.45, 0.72), (0.1, 1.0, 0.3), r=0.018, base=False)
+        label(tag, (x0 + 0.5, -0.31, 0.72), 0.06, P_["white"])
+    # wrapping station over the end
+    X = 3 * seg
+    for s in (-1, 1):
+        BX(X - 0.2, X + 0.5, s * 0.42, s * 0.48, 0.0, 1.5, P_["blue"])
+    BX(X - 0.2, X + 0.5, -0.48, 0.48, 1.5, 1.6, P_["blue"])
+    label("WRAP", (X + 0.15, -0.485, 1.53), 0.07, P_["white"])
+    BX(X + 0.5, X + 1.1, -0.3, 0.3, 0.7, 0.78, P_["steel"])
+    # photo eye B1 at the exit and the stack light
+    BX(X + 0.55, X + 0.59, -0.42, -0.38, 0.0, 0.9, P_["alu"])
+    photo_eye(X + 0.57, -0.36, 0.9, "B1")
+    BX(X + 0.55, X + 0.59, 0.36, 0.38, 0.78, 0.96, P_["red"])
+    C(0.015, (X + 0.9, -0.5, 0.0), (X + 0.9, -0.5, 1.6), P_["dark"], verts=12)
+    for k, (tag, col) in enumerate((("H3", (1.0, 0.1, 0.1)), ("H2", (1.0, 0.7, 0.05)), ("H1", (0.1, 1.0, 0.3)))):
+        C(0.05, (X + 0.9, -0.5, 1.6 + k * 0.12), (X + 0.9, -0.5, 1.71 + k * 0.12), P_["glass"], verts=24, bw=0)
+        lamp(tag, (X + 0.9, -0.5, 1.655 + k * 0.12), col, r=0.045, base=False)
+    # the box to clone
+    crate(0, 0, 0, 0.3, 0.3, 0.22, P_["cardboard"], "proto_box")
+    BX(-0.152, 0.152, -0.04, 0.04, 0.0, 0.222, P_["yellow"], "proto_box", bw=0)
+    made = nodes({"proto_box": (0, 0, 0)})
+    made["proto_box"].location = (0.3, 0.0, 0.8)
+
+
+MACHINES = dict(cart=cart, hoist=hoist, lift=lift, sort=sort, press=press, fill=fill, belt=belt, fan=fan, gate=gate,
+                crusher=crusher, crane=crane, oven=oven, mixer=mixer, tank2=tank2, washer=washer, hpress=hpress, line3=line3)
 
 
 def main(keys):

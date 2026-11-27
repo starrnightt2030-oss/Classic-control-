@@ -698,6 +698,13 @@ class MachinePainter extends CustomPainter {
       'fill' => ['زجاجة', 'اتملت'],
       'belt' => ['كرتونة في الآخر'],
       'gate' => ['مقفولة', 'مفتوحة'],
+      'crane' => ['هوك فوق', 'هوك تحت', 'ترولي شمال', 'ترولي يمين', 'كوبري ورا', 'كوبري قدام'],
+      'oven' => ['ترموستات'],
+      'mixer' => ['الغطا مقفول'],
+      'tank2' => ['عوامة سفلى', 'عوامة عليا'],
+      'washer' => ['الباب مقفول'],
+      'hpress' => ['ذراع فوق', 'ضغط وصل'],
+      'line3' => ['كرتونة خرجت'],
       _ => ['يسار', 'يمين'],
     };
     // the plant machines name their sensors B1…Bn, as in the schematic exercises
@@ -711,10 +718,20 @@ class MachinePainter extends CustomPainter {
       _text(c, 'NC', Offset(((terms['S${i}1']!.$1 + terms['S${i}2']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
       _text(c, 'NO', Offset(((terms['S${i}3']!.$1 + terms['S${i}4']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
-    final a1 = terms['A1'], a2 = terms['A2'];
-    if (a1 != null && a2 != null) {
-      _text(c, 'Y1 صمام', Offset((a1.$1 + a2.$1) / 2 * s, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: coil ? const Color(0xFFFFC14D) : const Color(0xFFDDE6F5));
-      _text(c, 'A1  A2', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
+    for (final (tag, ta, tb) in machCoils(kind)) {
+      final a1 = terms[ta]!, a2 = terms[tb]!;
+      final what = switch (tag) {
+        'E1' => 'سخانات',
+        'Y1' when kind == 'hpress' => 'نزول',
+        'Y2' when kind == 'hpress' => 'طلوع',
+        'Y1' when kind == 'washer' => 'غسيل',
+        'Y2' when kind == 'washer' => 'شطف',
+        'Y3' when kind == 'washer' => 'تنشيف',
+        _ => 'صمام',
+      };
+      final lit = io != null ? io!.on(tag) : (tag == 'Y1' || tag == 'E1') && coil;
+      _text(c, '$tag $what', Offset((a1.$1 + a2.$1) / 2 * s, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: lit ? const Color(0xFFFFC14D) : const Color(0xFFDDE6F5));
+      _text(c, '$ta  $tb', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
     final area = Rect.fromLTRB(10 * s, 12 * s, size.width - 10 * s, strip.top - 12 * s);
     final sp = sprite;

@@ -28,6 +28,7 @@ import 'faults.dart';
 import 'model.dart';
 import 'paint.dart';
 import 'projects.dart';
+import 'tidy.dart';
 import 'templates.dart';
 
 const _prefKey = 'lab_doc_v3';
@@ -1585,6 +1586,53 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     _changed();
   }
 
+  /// take every wire off the board (the parts stay) so the wiring can start over
+  Future<void> _clearWires() async {
+    if (!_editable()) return;
+    if (doc.wires.isEmpty) return _toast('مفيش أسلاك على اللوحة.');
+    if (fault != null) return _toast('خلّص العطل الأول أو اقفله، وبعدين امسح الأسلاك.');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('مسح كل الأسلاك؟'),
+        content: Text('هيتشال ${doc.wires.length} سلك من اللوحة، والمكونات هتفضل مكانها. تقدر ترجعهم بزر «تراجع».'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('لا')),
+          FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: CC.red),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('امسح الأسلاك')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted || !_editable()) return;
+    _snapshot();
+    doc.wires.clear();
+    selWire = null;
+    pending = null;
+    AudioService.instance.sfx('ui_whoosh');
+    _changed();
+    _toast('اتمسحت الأسلاك. ابدأ التوصيل من جديد.');
+  }
+
+  /// lay every wire neatly: square legs round the parts, runs side by side
+  void _tidyWires() {
+    if (!_editable()) return;
+    if (doc.wires.isEmpty) return _toast('وصّل الأول، وبعدين نسّق الأسلاك.');
+    _snapshot();
+    final n = tidyWires(doc);
+    if (n == 0) {
+      _undo.removeLast();
+      return _toast('معرفتش ألاقي طريق مرتب للأسلاك. جرّب تبعد المكونات عن بعض شوية.');
+    }
+    AudioService.instance.sfx('ui_whoosh');
+    _changed();
+    final left = doc.wires.length - n;
+    _toast(left == 0
+        ? 'اتنسقت الأسلاك ($n سلك). لو عايز ترجع زي ما كانت دوس «تراجع».'
+        : 'اتنسق $n سلك، و$left سلك ملقتلوش طريق فساب زي ما هو.');
+  }
+
   // --------------------------------------------------------------- simulation
   void _power() {
     if (running) {
@@ -2175,6 +2223,22 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                 fault = null;
                 _changed();
                 _fit();
+              }),
+          ListTile(
+              leading: const Icon(Icons.auto_fix_high_rounded, color: CC.accentSoft),
+              title: const Text('تنسيق الأسلاك'),
+              subtitle: const Text('يرتب كل الأسلاك بزوايا قايمة حوالين المكونات وجنب بعض زي اللوحة الحقيقية', style: TextStyle(color: CC.muted)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _tidyWires();
+              }),
+          ListTile(
+              leading: const Icon(Icons.layers_clear_rounded, color: CC.red),
+              title: const Text('مسح كل الأسلاك'),
+              subtitle: const Text('المكونات تفضل مكانها وتبدأ التوصيل من الأول', style: TextStyle(color: CC.muted)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _clearWires();
               }),
           ListTile(
               leading: const CcIcon(CcIcons.warning, color: CC.gold),
@@ -2860,6 +2924,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                     _changed();
                   }),
                 if (selP != null || selWire != null) _tool(Icons.delete_outline_rounded, 'حذف', _deleteSel, danger: true),
+                if (doc.wires.isNotEmpty) _tool(Icons.auto_fix_high_rounded, 'تنسيق الأسلاك', _tidyWires),
+                if (doc.wires.isNotEmpty) _tool(Icons.layers_clear_rounded, 'مسح كل الأسلاك', _clearWires, danger: true),
                 _tool(Icons.more_horiz_rounded, 'المزيد', _moreSheet),
               ]),
             ),

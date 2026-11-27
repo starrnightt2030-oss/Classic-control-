@@ -679,7 +679,7 @@ function updateLeads(dt, snap) {
 
 // ------------------------------------------------------------------ markers (test points, clamp places, jacks)
 const ringGeo = new THREE.TorusGeometry(0.0075, 0.0013, 8, 32);
-const hitGeo = new THREE.SphereGeometry(0.016, 10, 8);
+const hitGeo = new THREE.SphereGeometry(0.022, 10, 8); // generous: a finger is not a mouse
 const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
 function markerMat(hot) {
   return new THREE.MeshBasicMaterial({ color: hot ? 0x3d8bff : 0x4fd8ff, transparent: true, opacity: 0.95, depthTest: false });
@@ -704,8 +704,10 @@ function updateMarkers() {
     g.add(ring, hit);
     scene.add(g);
     const el = document.createElement('div');
-    el.className = 'lb' + (p.hot ? ' hot' : '');
-    el.textContent = p.label || '';
+    el.className = 'lb tap' + (p.hot ? ' hot' : '') + (p.probe ? ' p-' + p.probe : '');
+    el.textContent = (p.probe ? '● ' : '') + (p.label || '');
+    // the label is a big target too
+    el.addEventListener('pointerup', (e) => { e.stopPropagation(); bridge('tap', id); wake(); });
     if (!p.label) el.style.display = 'none';
     labelsBox.appendChild(el);
     markers.set(id, { g, ring, el, key: JSON.stringify(p) });

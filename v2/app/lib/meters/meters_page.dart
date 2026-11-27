@@ -312,6 +312,8 @@ class _LiveLabState extends State<LiveLab> {
   Reading r = const Reading();
   TaskRun? run;
   String? active; // the lead the next probe tap moves
+  bool _autoJacks = true; // leads go into the right jack for the knob by themselves (until one is plugged by hand)
+  bool _manual = false; // the manual connection list (jacks one by one) is open
   String? _danger;
   String _dangerKey = '';
   int _sparkN = 0;
@@ -414,7 +416,8 @@ class _LiveLabState extends State<LiveLab> {
     final usesLeads = s.leads.any((l) => l.jack != null);
     if (inst.key != 'clamp' || usesLeads) {
       for (final t in bench.points) {
-        pts.add({'id': t.id, 'label': t.label, 'hot': s.leads.any((l) => l.at == t.id)});
+        final on = s.leads.where((l) => l.at == t.id && l.jack != null).firstOrNull;
+        pts.add({'id': t.id, 'label': t.label, 'hot': on != null, if (on != null) 'probe': on.def.cable ?? on.def.color});
       }
     }
     if (inst.key == 'clamp') {
@@ -459,6 +462,7 @@ class _LiveLabState extends State<LiveLab> {
 
   void _jackTap(String jack) {
     if (!widget.inst.jacks.any((j) => j.id == jack)) return;
+    _autoJacks = false;
     final there = s.inJack(jack);
     if (there != null) {
       there.jack = null;
@@ -480,24 +484,113 @@ class _LiveLabState extends State<LiveLab> {
     _recompute();
   }
 
+  /// a tap on a test point in 3D: a probe already there comes off; otherwise the next
+  /// probe goes there (plugged into the right jack first if it was not), and the tap
+  /// after moves the other one
   void _pointTap(String id) {
-    final lead = s.leads.where((l) => l.def.id == active).firstOrNull;
-    if (lead == null) return;
-    if (lead.jack == null) {
-      _toast('ركّب ${lead.def.nameAr} في الجهاز الأول (دوس على المدخل في الجهاز أو من "التوصيل").');
+    final there = s.leads.where((l) => l.at == id).firstOrNull;
+    if (there != null) {
+      there.at = null;
+      active = there.def.id;
+      AudioService.instance.sfx('screw_tighten', volume: 0.25);
+      _recompute();
       return;
     }
-    if (lead.at == id) {
-      lead.at = null;
-    } else {
-      lead.at = id;
-      s.shorted = false;
-      // the next tap moves the other lead
-      final next = s.leads.where((l) => l != lead && l.jack != null && l.at == null).firstOrNull;
-      if (next != null) active = next.def.id;
+    var lead = s.leads.where((l) => l.def.id == active).firstOrNull ?? s.leads.first;
+    if (lead.at != null) lead = s.leads.where((l) => l.at == null).firstOrNull ?? lead;
+    _put(lead, id);
+  }
+
+  /// the right jack for a lead with the knob where it is now
+  String _rightJack(LeadState l) {
+    final k = widget.inst.key;
+    if (k == 'watt') return l.def.id;
+    if (k == 'megger') return l.def.color == 'red' ? 'line' : 'earth';
+    if (l.def.color != 'red') return 'com';
+    final m = s.pos?.mode;
+    final has = widget.inst.jacks.map((j) => j.id).toSet();
+    if (m == Mode.a && has.contains('10a')) return '10a';
+    if (m == Mode.ma && has.contains('ma')) return 'ma';
+    return 'v';
+  }
+
+  /// put a lead's probe on a point (null: take it off)
+  void _put(LeadState lead, String? id, {bool quiet = false}) {
+    if (id != null && lead.jack == null) {
+      final j = _rightJack(lead);
+      final other = s.inJack(j);
+      if (other != null && other != lead) {
+        other.jack = null;
+        other.at = null;
+      }
+      lead.jack = j;
     }
-    AudioService.instance.sfx('screw_tighten', volume: 0.25);
+    if (id != null) {
+      // one probe per point
+      for (final l in s.leads) {
+        if (l != lead && l.at == id) l.at = null;
+      }
+      s.shorted = false;
+    }
+    lead.at = id;
+    if (id != null) {
+      final i = s.leads.indexOf(lead);
+      active = s.leads[(i + 1) % s.leads.length].def.id;
+    } else {
+      active = lead.def.id;
+    }
+    if (!quiet) AudioService.instance.sfx('screw_tighten', volume: 0.25);
     _recompute();
+  }
+
+  /// ready-made measurements for this bench and instrument: label, lead id -> point
+  List<(String, Map<String, String>)> get _presets {
+    final k = widget.inst.key;
+    if (k == 'watt') {
+      return const [
+        ('على السخان (توصيل صح)', {'ia': 'pt_X2_L', 'i5': 'pt_X2_Lo', 'vc': 'pt_X2_Lo', 'v300': 'pt_X2_N'}),
+        ('ملف التيار معكوس', {'ia': 'pt_X2_Lo', 'i5': 'pt_X2_L', 'vc': 'pt_X2_Lo', 'v300': 'pt_X2_N'}),
+      ];
+    }
+    if (k == 'clamp') return const [];
+    (String, Map<String, String>) p(String a, String b, [String? label]) =>
+        (label ?? '${bench.label(a)} ↔ ${bench.label(b)}', {'red': a, 'black': b});
+    if (bench is MotorBench) {
+      return [
+        p('pt_U1', 'pt_V1'), p('pt_V1', 'pt_W1'), p('pt_W1', 'pt_U1'),
+        p('pt_U1', 'pt_U2', 'ملف U1–U2'), p('pt_V1', 'pt_V2', 'ملف V1–V2'), p('pt_W1', 'pt_W2', 'ملف W1–W2'),
+        p('pt_U1', 'pt_PE'), p('pt_V1', 'pt_PE'), p('pt_W1', 'pt_PE'), p('pt_U1', 'pt_BODY', 'U1 ↔ الجسم'),
+      ];
+    }
+    if (k == 'dmm') {
+      return [
+        p('pt_IN_L1', 'pt_N', 'L1 ↔ N'), p('pt_IN_L1', 'pt_IN_L2', 'L1 ↔ L2'), p('pt_N', 'pt_PE', 'N ↔ PE'),
+        p('pt_PE', 'pt_X1_PE', 'استمرارية الأرضي'), p('pt_X2_L', 'pt_X2_Lo', 'توالي مع السخان'),
+      ];
+    }
+    return [
+      p('pt_IN_L1', 'pt_N', 'L1 ↔ N'), p('pt_IN_L2', 'pt_N', 'L2 ↔ N'), p('pt_IN_L3', 'pt_N', 'L3 ↔ N'),
+      p('pt_IN_L1', 'pt_IN_L2', 'L1 ↔ L2'), p('pt_IN_L2', 'pt_IN_L3', 'L2 ↔ L3'), p('pt_IN_L3', 'pt_IN_L1', 'L3 ↔ L1'),
+      p('pt_N', 'pt_PE', 'N ↔ PE'), p('pt_X1_L1', 'pt_X1_L2', 'ملف المحرك من X1'), p('pt_PE', 'pt_X1_PE', 'استمرارية الأرضي'),
+    ];
+  }
+
+  bool _presetOn(Map<String, String> m) => m.entries.every((e) => s.leads.any((l) => l.def.id == e.key && l.at == e.value && l.jack != null));
+
+  void _usePreset(Map<String, String> m) {
+    for (final e in m.entries) {
+      final l = s.leads.where((l) => l.def.id == e.key).firstOrNull;
+      if (l != null) _put(l, e.value, quiet: true);
+    }
+    AudioService.instance.sfx('din_rail_click', volume: 0.6);
+    final b = bench;
+    if (widget.inst.key == 'watt' && b is BoardBench && b.linkX2) {
+      _toast('ملف التيار لازم يبقى توالي: فك الكوبري X2 (والقاطع Q3 مقفول) عشان التيار يعدي في الجهاز.');
+    }
+    if (widget.inst.key == 'dmm' && m['red'] == 'pt_X2_L' && b is BoardBench && b.linkX2) {
+      _toast('عشان تقيس التيار توالي: اختار A في المفتاح، وفك الكوبري X2 (والقاطع Q3 مقفول).');
+    }
+    cam.focus('work');
   }
 
   void _clampTap(String id) {
@@ -542,6 +635,11 @@ class _LiveLabState extends State<LiveLab> {
     if (now?.mode != Mode.ins) {
       s.test = false;
       s.testLock = false;
+    }
+    if (_autoJacks) {
+      for (final l in s.leads) {
+        if (l.jack != null) l.jack = _rightJack(l);
+      }
     }
     AudioService.instance.sfx('selector_detent', volume: 0.6);
     _recompute();
@@ -667,6 +765,7 @@ class _LiveLabState extends State<LiveLab> {
     s.clampAt = null;
     s.test = false;
     s.shorted = false;
+    _autoJacks = true;
     active = s.leads.first.def.id;
     _recompute();
   }
@@ -712,6 +811,19 @@ class _LiveLabState extends State<LiveLab> {
         ]),
         const SizedBox(height: 8),
       ],
+      const SizedBox(height: 10),
+      _taskCard(ts),
+      const SizedBox(height: 10),
+      if (inst.knob.isNotEmpty) ...[
+        _Label(inst.key == 'megger' ? 'مفتاح الوظيفة وجهد الاختبار' : 'مفتاح الوظيفة والرينج'),
+        Wrap(spacing: 0, runSpacing: 6, children: [
+          for (var i = 0; i < inst.knob.length; i++) Pill(label: inst.knob[i].label, selected: s.knob == i, onTap: () => _setKnob(i)),
+        ]),
+        const SizedBox(height: 10),
+      ],
+      _connectCard(),
+      const SizedBox(height: 10),
+      _instrumentButtons(),
       const _Label('الكاميرا'),
       SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -729,22 +841,20 @@ class _LiveLabState extends State<LiveLab> {
         Pill(label: 'مكانه الأصلي', selected: false, onTap: () => cam.place('home')),
       ]),
       const SizedBox(height: 10),
-      _taskCard(ts),
-      const SizedBox(height: 10),
-      if (inst.knob.isNotEmpty) ...[
-        _Label(inst.key == 'megger' ? 'مفتاح الوظيفة وجهد الاختبار' : 'مفتاح الوظيفة والرينج'),
-        Wrap(spacing: 0, runSpacing: 6, children: [
-          for (var i = 0; i < inst.knob.length; i++) Pill(label: inst.knob[i].label, selected: s.knob == i, onTap: () => _setKnob(i)),
-        ]),
-        const SizedBox(height: 10),
-      ],
-      _instrumentButtons(),
-      const _Label('التوصيل (دوس على المدخل في الجهاز أو هنا)'),
-      for (final l in s.leads) _leadRow(l),
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: TextButton.icon(onPressed: _resetLeads, icon: const CcIcon(CcIcons.reset, size: 18), label: const Text('فك كل الكابلات')),
+      InkWell(
+        onTap: () => setState(() => _manual = !_manual),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(children: [
+            Expanded(child: _Label(_manual ? 'التوصيل بالمداخل واحد واحد (للتدريب على الأخطاء)' : 'التوصيل بالمداخل واحد واحد…')),
+            Icon(_manual ? Icons.expand_less : Icons.expand_more, size: 20, color: CC.muted),
+          ]),
+        ),
       ),
+      if (_manual) ...[
+        for (final l in s.leads) _leadRow(l),
+      ],
+      const SizedBox(height: 6),
       const SizedBox(height: 6),
       _benchControls(),
     ]);
@@ -813,6 +923,72 @@ class _LiveLabState extends State<LiveLab> {
               child: Text('✓ ممتاز! ${run!.task.success}', style: const TextStyle(fontSize: 13.5, height: 1.5)),
             ),
         ],
+      ]),
+    );
+  }
+
+  // ---------------------------------------------------------------- one-tap connecting
+  Widget _connectCard() {
+    final inst = widget.inst;
+    final presets = _presets;
+    Widget chipRow(List<Widget> chips) => SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: chips));
+    Color dot(LeadState l) => l.def.cable == 'yellow'
+        ? const Color(0xFFE0B000)
+        : l.def.cable == 'blue'
+            ? const Color(0xFF3D6BFF)
+            : (l.def.color == 'red' ? const Color(0xFFE5484D) : const Color(0xFF2A2F3A));
+    final rows = <Widget>[];
+    if (inst.key == 'clamp') {
+      rows.add(const _Label('اختار السلك اللي هتقفل عليه الكلامب'));
+      rows.add(chipRow([
+        for (final e in bench.clamps.entries)
+          Pill(label: e.value, selected: s.clampAt == e.key, onTap: () {
+            _clampTap(e.key);
+            if (s.clampAt != null) cam.focus('work');
+          }),
+      ]));
+    } else {
+      if (presets.isNotEmpty) {
+        rows.add(const _Label('قياسات جاهزة (دوسة واحدة توصّل المجسات)'));
+        rows.add(Wrap(runSpacing: 6, children: [
+          for (final (t, m) in presets) Pill(label: t, selected: _presetOn(m), onTap: () => _usePreset(m)),
+        ]));
+        rows.add(const SizedBox(height: 10));
+      }
+      rows.add(const _Label('أو اختار مكان كل مجس'));
+      for (final l in s.leads) {
+        rows.add(Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(children: [
+            Container(width: 14, height: 14, decoration: BoxDecoration(color: dot(l), shape: BoxShape.circle, border: Border.all(color: CC.line2))),
+            const SizedBox(width: 6),
+            SizedBox(width: 74, child: Text(l.def.nameAr.replaceFirst('المجس ', ''), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700), maxLines: 2)),
+            Expanded(
+              child: chipRow([
+                for (final t in bench.points) Pill(label: t.label, selected: l.at == t.id && l.jack != null, onTap: () => _put(l, l.at == t.id ? null : t.id)),
+              ]),
+            ),
+          ]),
+        ));
+      }
+    }
+    final any = s.leads.any((l) => l.jack != null) || s.clampAt != null;
+    return Container(
+      decoration: BoxDecoration(color: const Color(0x143D8BFF), borderRadius: BorderRadius.circular(16), border: Border.all(color: CC.line2)),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Expanded(child: Text('وصّل الجهاز', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800))),
+          if (any) TextButton.icon(onPressed: _resetLeads, icon: const CcIcon(CcIcons.reset, size: 16), label: const Text('فك الكل')),
+        ]),
+        Text(
+          inst.key == 'clamp'
+              ? 'أو دوس على الدواير الزرقا حوالين الأسلاك في المجسم.'
+              : 'الكابلات بتتركب في المدخل الصح لوحدها حسب المفتاح. وفي المجسم: دوسة على نقطة تحط المجس عليها، ودوسة تانية تشيله.',
+          style: const TextStyle(fontSize: 11.5, color: CC.muted),
+        ),
+        const SizedBox(height: 8),
+        ...rows,
       ]),
     );
   }
@@ -913,6 +1089,7 @@ class _LiveLabState extends State<LiveLab> {
                       other.at = null;
                     }
                     l.jack = j.id;
+                    _autoJacks = false;
                     active = l.def.id;
                     AudioService.instance.sfx('din_rail_click', volume: 0.6);
                     _recompute();

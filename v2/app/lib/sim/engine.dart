@@ -164,7 +164,7 @@ final Map<String, CompType> kTypes = {
               Term('S${i}3', 0, 0, 'b'),
               Term('S${i}4', 0, 0, 'b'),
             ],
-            if (machValve(c.p['kind'] as String?)) ...const [Term('A1', 0, 0, 'b'), Term('A2', 0, 0, 'b')],
+            for (final (_, a, b) in machCoils(c.p['kind'] as String?)) ...[Term(a, 0, 0, 'b'), Term(b, 0, 0, 'b')],
           ]),
       links: (c) => [
             for (var i = 1; i <= machSwitches(c.p['kind'] as String?); i++) c.s.ms[i - 1] ? ['S${i}3', 'S${i}4'] : ['S${i}1', 'S${i}2'],
@@ -261,7 +261,9 @@ class CompState {
   double k = 0;
   // machine: position / level 0…1 and its switches
   double mx = 0;
-  List<bool> ms = [false, false, false, false];
+  List<bool> ms = List.filled(8, false);
+  // machine coils (valves, heaters): voltage by tag
+  final Map<String, double> cv = {};
   bool valve = true; // tank outlet open
   // injected fault (free lab): coil_open · weld · nc_open · no_close · lamp_dead · phase_loss
   String? fault;
@@ -306,6 +308,11 @@ class Comp {
     }
     if (type == 'mach') {
       s.mx = (this.p['x0'] as num?)?.toDouble() ?? switch (this.p['kind']) { 'cart' => 0.5, 'tank' => 0.1, _ => 0.0 };
+      // the gate starts closed, on its LS1
+      if (this.p['kind'] == 'gate') s.ms[0] = s.mx <= 0.02;
+      // the two-pump tank starts half full, over its low float B1; guards and doors start shut
+      if (const {'tank2', 'mixer', 'washer'}.contains(this.p['kind'])) s.ms[0] = true;
+      if (this.p['kind'] == 'hpress') s.ms[0] = true; // ram at the top
     }
     if (type == 'motor1') this.p['In'] ??= 4.0;
     if (type == 'sup' && this.p['on0'] == true) s.on = true;
@@ -331,14 +338,29 @@ bool supLive(Comp c) => c.p['sw'] != true || c.s.on;
 int machSwitches(String? kind) => switch (kind) {
       'lift' || 'press' => 3,
       'sort' => 4,
+      'crane' => 6,
+      'belt' || 'oven' || 'mixer' || 'washer' || 'line3' => 1,
+      'fan' || 'crusher' => 0,
       _ => 2,
     };
 
 /// machines of lib/sim/plant.dart that run in the panel lab (the others are drawn by the lab itself)
-const kLabPlants = {'sort', 'press', 'fill'};
+const kLabPlants = {'sort', 'press', 'fill', 'belt', 'fan', 'crusher', 'crane', 'oven', 'mixer', 'tank2', 'washer', 'hpress', 'line3'};
+
+/// the machine's coils (valves, heater contactor): tag and its two terminals
+List<(String, String, String)> machCoils(String? kind) => switch (kind) {
+      'sort' || 'press' || 'fill' => const [('Y1', 'A1', 'A2')],
+      'oven' => const [('E1', 'A1', 'A2')],
+      'hpress' => const [('Y1', 'A1', 'A2'), ('Y2', 'A3', 'A4')],
+      'washer' => const [('Y1', 'A1', 'A2'), ('Y2', 'A3', 'A4'), ('Y3', 'A5', 'A6')],
+      _ => const [],
+    };
+
+/// the plant machines with a 3D view (assets/web/machine.js)
+const kPlants3d = {'sort', 'press', 'fill'};
 
 /// has a valve coil on A1-A2
-bool machValve(String? kind) => kLabPlants.contains(kind);
+bool machValve(String? kind) => machCoils(kind).isNotEmpty;
 
 /// The machine of lib/sim/plant.dart inside a panel lab: its motor is the one the
 /// machine is set to (or the first in the panel), its valve the coil on A1-A2, and
@@ -351,15 +373,16 @@ class _MachIo implements PlantIo {
 
   @override
   double motor(String tag) {
-    Comp? m = c.p['motor'] == null ? null : l.byId(c.p['motor'] as String);
-    m ??= l.comps.where((o) => o.type == 'motor' || o.type == 'motor1').firstOrNull;
+    // M1 is the motor the machine is set to (or the first one); M2, M3… by their names
+    Comp? m = tag != 'M1' ? l.byId(tag) : (c.p['motor'] == null ? null : l.byId(c.p['motor'] as String));
+    if (tag == 'M1') m ??= l.comps.where((o) => o.type == 'motor' || o.type == 'motor1').firstOrNull;
     if (m == null) return 0;
     final run = m.s.mode == 'star' || m.s.mode == 'delta' || m.s.mode == 'run';
     return run ? m.s.spd * (m.s.dir == 0 ? 1 : m.s.dir) : 0;
   }
 
   @override
-  bool on(String tag) => !c.s.dead && c.s.v > 230 * 0.6;
+  bool on(String tag) => !c.s.dead && (c.s.cv[tag] ?? (tag == 'Y1' ? c.s.v : 0)) > 230 * 0.6;
 
   @override
   void sense(String tag, bool active) {
@@ -773,13 +796,17 @@ class Lab {
       if (c.type == 'motor') _motor(n, c);
       if (c.type == 'motor1') _motor1(n, c);
       if (c.type == 'mach' && machValve(c.p['kind'] as String?)) {
-        final v = n.vAcross('${c.id}.A1', '${c.id}.A2');
-        c.s.v = c.s.dead ? 0 : v;
-        if (!c.s.dead && v > 230 * 1.4) {
-          c.s.dead = true; // a 230 V coil on 400 V
-          c.s.v = 0;
-          emit(SimEvent('burn', c.id));
+        final coils = machCoils(c.p['kind'] as String?);
+        for (final (tag, a, b) in coils) {
+          final v = n.vAcross('${c.id}.$a', '${c.id}.$b');
+          c.s.cv[tag] = c.s.dead ? 0 : v;
+          if (!c.s.dead && v > 230 * 1.4) {
+            c.s.dead = true; // a 230 V coil on 400 V
+            emit(SimEvent('burn', c.id));
+          }
         }
+        if (c.s.dead) c.s.cv.updateAll((k, v) => 0);
+        c.s.v = c.s.cv[coils.first.$1] ?? 0;
       }
     }
   }
@@ -965,7 +992,7 @@ class Lab {
   bool _machTick(Comp c, double dt) {
     final kind = c.p['kind'] as String?;
     if (kLabPlants.contains(kind)) {
-      final pl = plants[c.id] ??= plantByKey(kind)!.make();
+      final pl = plants[c.id] ??= makeLabPlant(kind)!;
       final io = _machIo[c.id] ??= _MachIo(this, c);
       io.changed = false;
       pl.tick(dt, io);
@@ -1193,7 +1220,11 @@ class Lab {
       final coil = c.t.coil;
       if (coil != null && c.s.v > 15 && c.s.fault != 'coil_open') loads.add(('${c.id}.${coil[0]}', '${c.id}.${coil[1]}'));
       if (c.type == 'lamp' && c.s.v > 5) loads.add(('${c.id}.X1', '${c.id}.X2'));
-      if (c.type == 'mach' && c.s.v > 15 && machValve(c.p['kind'] as String?)) loads.add(('${c.id}.A1', '${c.id}.A2'));
+      if (c.type == 'mach') {
+        for (final (tag, a, b) in machCoils(c.p['kind'] as String?)) {
+          if ((c.s.cv[tag] ?? 0) > 15) loads.add(('${c.id}.$a', '${c.id}.$b'));
+        }
+      }
       if (c.type == 'psu' && c.s.k > 0.05) loads.add(('${c.id}.L', '${c.id}.N'));
       if (c.type == 'trafo' && c.s.k > 0.05) {
         final hi = n.vAcross('${c.id}.P0', '${c.id}.P380') > 1 ? 'P380' : 'P220';

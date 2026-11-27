@@ -640,6 +640,7 @@ class MachinePainter extends CustomPainter {
     bool s(int i) => i < sw.length && sw[i];
     return switch (kind) {
       'cart' => MachineLook(x: x, lamps: {'LS1': s(0), 'LS2': s(1), 'RUN': run}),
+      'gate' => MachineLook(x: x, lamps: {'LS1': s(0), 'LS2': s(1), 'RUN': run}),
       'hoist' => MachineLook(z: x, lamps: {'B1': s(0), 'B2': s(1)}),
       'lift' => MachineLook(z: x, door: !run && (s(0) || s(1) || s(2)) ? 1 : 0, lamps: {'B1': s(0), 'B2': s(1), 'B3': s(2), 'CAR': true}),
       _ => const MachineLook(),
@@ -695,10 +696,19 @@ class MachinePainter extends CustomPainter {
       'sort' => ['آخر السير', 'معدن', 'بستم راجع', 'بستم طالع'],
       'press' => ['ذراع فوق', 'ذراع تحت', 'قطعة'],
       'fill' => ['زجاجة', 'اتملت'],
+      'belt' => ['كرتونة في الآخر'],
+      'gate' => ['مقفولة', 'مفتوحة'],
+      'crane' => ['هوك فوق', 'هوك تحت', 'ترولي شمال', 'ترولي يمين', 'كوبري ورا', 'كوبري قدام'],
+      'oven' => ['ترموستات'],
+      'mixer' => ['الغطا مقفول'],
+      'tank2' => ['عوامة سفلى', 'عوامة عليا'],
+      'washer' => ['الباب مقفول'],
+      'hpress' => ['ذراع فوق', 'ضغط وصل'],
+      'line3' => ['كرتونة خرجت'],
       _ => ['يسار', 'يمين'],
     };
     // the plant machines name their sensors B1…Bn, as in the schematic exercises
-    final pre = kLabPlants.contains(kind) ? 'B' : 'S';
+    final pre = kLabPlants.contains(kind) ? 'B' : (kind == 'gate' ? 'LS' : 'S');
     final terms = MachineGeo.terms(kind);
     for (var i = 1; i <= n; i++) {
       final a = terms['S${i}1']!, b = terms['S${i}4']!;
@@ -708,16 +718,26 @@ class MachinePainter extends CustomPainter {
       _text(c, 'NC', Offset(((terms['S${i}1']!.$1 + terms['S${i}2']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
       _text(c, 'NO', Offset(((terms['S${i}3']!.$1 + terms['S${i}4']!.$1) / 2) * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
-    final a1 = terms['A1'], a2 = terms['A2'];
-    if (a1 != null && a2 != null) {
-      _text(c, 'Y1 صمام', Offset((a1.$1 + a2.$1) / 2 * s, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: coil ? const Color(0xFFFFC14D) : const Color(0xFFDDE6F5));
-      _text(c, 'A1  A2', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
+    for (final (tag, ta, tb) in machCoils(kind)) {
+      final a1 = terms[ta]!, a2 = terms[tb]!;
+      final what = switch (tag) {
+        'E1' => 'سخانات',
+        'Y1' when kind == 'hpress' => 'نزول',
+        'Y2' when kind == 'hpress' => 'طلوع',
+        'Y1' when kind == 'washer' => 'غسيل',
+        'Y2' when kind == 'washer' => 'شطف',
+        'Y3' when kind == 'washer' => 'تنشيف',
+        _ => 'صمام',
+      };
+      final lit = io != null ? io!.on(tag) : (tag == 'Y1' || tag == 'E1') && coil;
+      _text(c, '$tag $what', Offset((a1.$1 + a2.$1) / 2 * s, strip.top - 4.5 * s), 4.2 * s, dir: TextDirection.rtl, col: lit ? const Color(0xFFFFC14D) : const Color(0xFFDDE6F5));
+      _text(c, '$ta  $tb', Offset((a1.$1 + a2.$1) / 2 * s, strip.bottom + 2.2 * s), 3.2 * s, col: const Color(0xFF8EA0B8));
     }
     final area = Rect.fromLTRB(10 * s, 12 * s, size.width - 10 * s, strip.top - 12 * s);
     final sp = sprite;
     if (sp != null) {
       if (kind != 'press') {
-        final what = plant != null ? 'السير يقوده المحرك' : 'يقودها المحرك';
+        final what = kind == 'fan' ? 'المروحة يقودها المحرك' : (plant != null ? 'السير يقوده المحرك' : 'يقودها المحرك');
         _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : '$what $motor', Offset(area.left, 6.5 * s), 4.2 * s,
             col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
       }

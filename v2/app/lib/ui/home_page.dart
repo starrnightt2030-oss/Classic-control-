@@ -10,6 +10,7 @@ import 'library_page.dart';
 import 'section_pages.dart';
 import 'sim_pages.dart';
 import '../lab/lab_page.dart';
+import '../lines/lines_page.dart';
 import '../meters/meters_page.dart';
 import '../schem/schem_page.dart';
 import '../services/export_service.dart';
@@ -44,6 +45,8 @@ class _HomePageState extends State<HomePage> {
             CcIcons.diagram, CC.cyan, (_) => const SectionScaffold(title: 'المخططات الجاهزة', child: ReadyDiagramsPage())),
         _Section('assets/images/cards/diagrams.webp', 'تمارين الدوائر', '17 دائرة على لوحة حقيقية: المكونات مركّبة والمخطط بجانبك، توصّل وتفحص وتشغّل وتنفّذ المهام',
             CcIcons.bolt, CC.green, (_) => const CircuitListPage()),
+        _Section('assets/images/cards/lines.webp', 'خطوط الإنتاج', '15 مشروع من المصانع: سير، بوابة، مكبس، أسانسير... ماكينة مجسمة جنب اللوحة، توصّلها بإيدك وتشغّلها',
+            CcIcons.bolt, CC.cyan, (_) => const LinesPage()),
         _Section('assets/images/cards/lab.webp', 'معمل اللوحة', 'ورقة عمل فارغة: أدخل المكونات الحقيقية من المكتبة، ووصّل كل سلك بيدك، وشغّل. الخطأ يعطي شرارة أو يحرق المكوّن',
             CcIcons.lab, CC.cyan, (_) => const LabPage()),
         _Section('assets/images/cards/diagrams.webp', 'محاكي الدوائر الخطية', 'ارسم الدائرة برموز IEC من المكتبة ووصّلها وحاكِها، ثم اطبعها PDF مع قائمة المكونات',

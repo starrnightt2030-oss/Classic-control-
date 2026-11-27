@@ -2049,10 +2049,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                     'tank' => 'الطلمبة تملأ الخزان والمحبس يفرّغه. العوامة S1 تعمل عند 20% والعوامة S2 عند 85%. اضغط على الخزان أثناء التشغيل لفتح المحبس أو غلقه.',
                     'lift' => 'المصعد يتحرك بين ثلاثة أدوار، وفي كل دور مفتاح يعمل عند وصول الكابينة. اتجاه دوران المحرك يحدد الصعود أو النزول.',
                     'hoist' => 'الونش يرفع وينزل الحمل. S1 مفتاح الحد الأسفل وS2 مفتاح الحد الأعلى.',
+                    'belt' => 'المحرك بيدوّر السير، والكراتين بتيجي من ترابيزة التغذية وبتقف على ترابيزة الرولات في الآخر. B1 فوتوسل بيشوف كرتونة مستنية في آخر السير. اضغط على السير وهو شغال عشان تحط كرتونة.',
+                    'fan' => 'مروحة شفط في حيطة المصنع، والمحرك بيدوّر الريش. مفيهاش حساسات: التحكم كله من الضواغط.',
+                    'gate' => 'البوابة بتتزق على قضيب أرضي. اتجاه المحرك الأمامي بيفتحها. S1 مفتاح نهاية الشوط وهي مقفولة، وS2 وهي مفتوحة. والكشاف البرتقالي بينور وهي بتتحرك.',
                     _ => 'العربة تتحرك يمينًا ويسارًا حسب اتجاه دوران المحرك. S1 عند النهاية اليسرى وS2 عند النهاية اليمنى.',
                   },
                   style: const TextStyle(color: CC.muted, height: 1.6)),
-              if (p.p['kind'] == 'sort' || p.p['kind'] == 'press' || p.p['kind'] == 'fill') ...[
+              if (kPlants3d.contains(p.p['kind'])) ...[
                 const SizedBox(height: 10),
                 FilledButton.tonalIcon(
                   onPressed: () {
@@ -2412,13 +2415,13 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     final id = _view3d!;
     final p = doc.byId(id);
     final kind = p?.d.machine;
-    if (p == null || kind == null || !kLabPlants.contains(kind)) {
+    if (p == null || kind == null || !kPlants3d.contains(kind)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _view3d = null);
       });
       return const SizedBox.shrink();
     }
-    final pl = sim?.plants[id] ?? (_idlePlants[id] ??= plantByKey(kind)!.make());
+    final pl = sim?.plants[id] ?? (_idlePlants[id] ??= makeLabPlant(kind)!);
     final mq = MediaQuery.of(context);
     final sz = mq.size;
     final w = math.min(420.0, sz.width - 24), h = w * 0.62;
@@ -2490,7 +2493,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
               painter: MachinePainter(mk,
                   x: c?.s.mx ?? (mk == 'cart' ? 0.5 : (mk == 'tank' ? 0.1 : 0.0)),
                   sw: c?.s.ms ?? const [false, false, false, false],
-                  plant: kLabPlants.contains(mk) ? (sim?.plants[p.id] ?? (_idlePlants[p.id] ??= plantByKey(mk)!.make())) : null,
+                  plant: kLabPlants.contains(mk) ? (sim?.plants[p.id] ?? (_idlePlants[p.id] ??= makeLabPlant(mk)!)) : null,
                   io: sim?.machIo(p.id),
                   coil: c != null && c.s.v > 230 * 0.6,
                   sprite: MachineSprites.of(mk),

@@ -43,7 +43,7 @@ class MachineSprites {
 
   static Future<MachineSprite?> load(String kind) => _loading[kind] ??= _load(kind);
 
-  static Future<void> loadAll() => Future.wait([for (final k in const ['cart', 'hoist', 'lift', 'sort', 'press', 'fill']) load(k)]);
+  static Future<void> loadAll() => Future.wait([for (final k in const ['cart', 'hoist', 'lift', 'sort', 'press', 'fill', 'belt', 'fan', 'gate', 'crusher', 'crane', 'oven', 'mixer', 'tank2', 'washer', 'hpress', 'line3']) load(k)]);
 
   static Future<MachineSprite?> _load(String kind) async {
     try {
@@ -78,13 +78,15 @@ class MachineSprites {
 /// what a machine shows now, from a Plant or from the panel lab's own machines
 class MachineLook {
   final double x, z, door, ext;
+  final double angle; // fan blades, flywheel, mixer hook: degrees
+  final double y, heat; // crane bridge · oven temperature
   final int part; // press: 0 none · 1 raw · 2 pressed
   final List<(double, bool)> boxes; // sort: position, metal
   final List<(double, double)> bottles; // fill: position, level
   final bool stream;
   final Map<String, bool> lamps;
   const MachineLook(
-      {this.x = 0, this.z = 0, this.door = 1, this.ext = 0, this.part = 0, this.boxes = const [], this.bottles = const [], this.stream = false, this.lamps = const {}});
+      {this.x = 0, this.z = 0, this.door = 1, this.ext = 0, this.angle = 0, this.y = 0, this.heat = 0, this.part = 0, this.boxes = const [], this.bottles = const [], this.stream = false, this.lamps = const {}});
 
   static MachineLook ofPlant(Plant p, PlantIo? io) {
     bool on(String t) => io != null && io.has(t) && io.on(t);
@@ -104,6 +106,16 @@ class MachineLook {
           bottles: [for (final b in f.bottles) (b.s, b.fill)],
           stream: on('Y1') && f.bottles.any((b) => (b.s - FillPlant.nozzle).abs() < 0.03),
           lamps: lamps(['B1', 'B2'], v: ['Y1'], m: ['M1'])),
+      BeltPlant b => MachineLook(boxes: [for (final x in b.boxes) (x.s, false)], lamps: {...lamps(['B1']), 'M1': run('M1')}),
+      FanPlant f => MachineLook(angle: f.angle, lamps: {'RUN': run('M1')}),
+      CrusherPlant k => MachineLook(angle: k.angle),
+      CranePlant k => MachineLook(x: k.x, y: k.y, z: k.z, lamps: lamps(['B1', 'B2', 'B3', 'B4', 'B5', 'B6'])),
+      OvenPlant k => MachineLook(angle: k.angle, heat: k.temp, lamps: lamps(['B1'], v: ['E1'])),
+      MixerPlant k => MachineLook(angle: k.angle, lamps: {...lamps(['B1']), 'RUN': run('M1')}),
+      Tank2Plant k => MachineLook(z: k.level, lamps: lamps(['B1', 'B2'], m: ['M1', 'M2'])),
+      WasherPlant _ => MachineLook(lamps: lamps(['B1'], v: ['Y1', 'Y2', 'Y3'])),
+      HPressPlant k => MachineLook(z: k.z, lamps: lamps(['B1', 'B2'], v: ['Y1', 'Y2'])),
+      Line3Plant k => MachineLook(boxes: [for (final b in k.boxes) (b.s, false)], lamps: lamps(['B1'], m: ['M1', 'M2', 'M3'])),
       _ => const MachineLook(),
     };
   }
@@ -179,6 +191,56 @@ class MachineSpritePainter extends CustomPainter {
           if (p0 == null) continue;
           _layer(c, metal ? 'metal' : 'plastic', s.dpx(0.11 + pos * (3.2 - 0.22) - p0[0], 0, 0));
         }
+      case 'gate':
+        _layer(c, 'leaf', s.dpx(-l.x * 2.2, 0, 0));
+      case 'belt':
+        final p0 = s.points['proto_box'];
+        if (p0 != null) {
+          // far boxes first, so the nearer ones overlap them
+          for (final pos in [for (final b in l.boxes) b.$1]..sort()) {
+            _layer(c, 'box', s.dpx(0.25 + pos * 3.85 - p0[0], 0, 0));
+          }
+        }
+      case 'fan':
+        // four blades repeat every 90°: the nearest of the six rendered steps of 15°
+        final i = ((l.angle % 90) / 15).round() % 6;
+        _layer(c, 'blades$i', Offset.zero);
+      case 'crusher':
+        _layer(c, 'fly${((l.angle % 60) / 10).round() % 6}', Offset.zero);
+      case 'crane':
+        final by = s.dpx(0, -0.8 + l.y * 1.6, 0), tx = s.dpx(l.x * 2.4, 0, 0), dz = s.dpx(0, 0, l.z * 1.4);
+        _layer(c, 'bridge', by);
+        final tp = s.px(0.3, 0, 3.55) + by + tx, hp = s.px(0.3, 0, 1.55) + by + tx + dz;
+        _rope(c, tp, hp, 4);
+        _layer(c, 'trolley', by + tx);
+        _layer(c, 'hook', by + tx + dz);
+      case 'oven':
+        if (l.heat > 0.15) _layer(c, 'glow', Offset.zero, opacity: ((l.heat - 0.15) / 0.65).clamp(0.0, 1.0));
+        _layer(c, 'fan${((l.angle % 90) / 15).round() % 6}', Offset.zero);
+      case 'mixer':
+        _layer(c, 'hook${((l.angle % 180) / 30).round() % 6}', Offset.zero);
+      case 'tank2':
+        final lo = s.points['water_lo'], hi = s.points['water_hi'], w = s.layers['water'];
+        if (lo != null && hi != null && w != null && l.z > 0.01) {
+          final y = s.px(0, 0, lo[2] + (hi[2] - lo[2]) * l.z.clamp(0.0, 1.0)).dy;
+          c.save();
+          c.clipRect(Rect.fromLTRB(w.$1.left - 4, y - 8, w.$1.right + 4, w.$1.bottom + 4));
+          _layer(c, 'water', Offset.zero);
+          c.restore();
+        }
+      case 'washer':
+        if (l.lamps['Y1'] ?? false) _layer(c, 'wash', Offset.zero);
+        if (l.lamps['Y2'] ?? false) _layer(c, 'rinse', Offset.zero);
+        if (l.lamps['Y3'] ?? false) _layer(c, 'air', Offset.zero);
+      case 'hpress':
+        _layer(c, 'ram', s.dpx(0, 0, -l.z * 0.62));
+      case 'line3':
+        final p0 = s.points['proto_box'];
+        if (p0 != null) {
+          for (final pos in [for (final b in l.boxes) b.$1]..sort()) {
+            _layer(c, 'box', s.dpx(0.3 + pos * 1.6 - p0[0], 0, 0));
+          }
+        }
       case 'press':
         if (l.part == 1) _layer(c, 'part_raw', Offset.zero);
         if (l.part == 2) _layer(c, 'part_pressed', Offset.zero);
@@ -212,6 +274,11 @@ class MachineSpritePainter extends CustomPainter {
       if (at == null) continue;
       var p = at;
       if (s.kind == 'lift' && e.key == 'CAR') p = at + s.dpx(0, 0, l.z * 5.2);
+      if (s.kind == 'crane') {
+        final by = s.dpx(0, -0.8 + l.y * 1.6, 0), tx = s.dpx(l.x * 2.4, 0, 0);
+        p = at + switch (e.key) { 'B1' => by + tx, 'B2' => by + tx + s.dpx(0, 0, l.z * 1.4), 'B3' || 'B4' => by, _ => Offset.zero };
+      }
+      if (s.kind == 'hpress' && e.key == 'B1') p = at;
       final col = e.key.startsWith('Y') || e.key == 'RUN' || e.key == 'M1' ? const Color(0xFFFFB13D) : const Color(0xFF3DFF8A);
       c.drawCircle(p, 22, Paint()
         ..color = col.withValues(alpha: 0.45)

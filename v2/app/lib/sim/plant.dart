@@ -313,6 +313,279 @@ const kPlants = <PlantDef>[
   ], FillPlant.new),
 ];
 
+/// conveyor of the production lines: M1 moves boxes from the feeder table to the
+/// roller table at the end; B1 (photo) sees a box waiting at the end
+class BeltPlant extends Plant {
+  @override
+  String get key => 'belt';
+  final boxes = <Box>[];
+  double _feed = 0.4, belt = 0;
+  static const endAt = 1.0;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = math.max(0.0, io.motor('M1'));
+    belt += v * 0.12 * dt;
+    _feed -= dt * (v > 0.05 ? 1 : 0);
+    if (_feed <= 0 && boxes.where((b) => b.s < 0.18).isEmpty && boxes.length < 6) {
+      boxes.add(Box(0));
+      _feed = 2.6;
+    }
+    // boxes queue: each keeps a gap behind the one in front
+    boxes.sort((a, b) => b.s.compareTo(a.s));
+    double front = endAt + 0.12;
+    for (final b in boxes) {
+      b.s = math.min(math.min(endAt, front - 0.12), b.s + v * 0.12 * dt);
+      front = b.s;
+      if (b.s >= endAt) b.dwell += dt;
+    }
+    // a worker takes a box off the roller table
+    final taken = boxes.where((b) => b.dwell > 2.0).toList();
+    for (final b in taken) {
+      boxes.remove(b);
+      bump('كراتين اتنقلت');
+    }
+    put(io, 'B1', boxes.any((b) => b.s >= endAt - 0.04));
+  }
+
+  @override
+  void tap(double x, double y) {
+    if (boxes.where((b) => b.s < 0.18).isEmpty) boxes.add(Box(0));
+  }
+}
+
+/// exhaust fan: M1 turns the blades (angle in degrees)
+class FanPlant extends Plant {
+  @override
+  String get key => 'fan';
+  double angle = 0, spd = 0;
+  double _on = 0;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = io.motor('M1');
+    spd = v;
+    angle = (angle + v * 900 * dt) % 360;
+    if (v.abs() > 0.5) {
+      _on += dt;
+      if (_on >= 60) {
+        _on = 0;
+        bump('دقايق شفط');
+      }
+    }
+  }
+}
+
+/// jaw crusher: M1 turns the flywheel (degrees); gravel counted while it runs at speed
+class CrusherPlant extends Plant {
+  @override
+  String get key => 'crusher';
+  double angle = 0, _t = 0;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = io.motor('M1');
+    angle = (angle + v * 420 * dt) % 360;
+    if (v.abs() > 0.8) {
+      _t += dt;
+      if (_t >= 12) {
+        _t = 0;
+        bump('طن زلط');
+      }
+    }
+  }
+}
+
+/// overhead crane: M1 hook up (+), M2 trolley right (+), M3 bridge forward (+);
+/// B1 hook top, B2 hook bottom, B3/B4 trolley left / right, B5/B6 bridge back / front
+class CranePlant extends Plant {
+  @override
+  String get key => 'crane';
+  double x = 0.5, y = 0.5, z = 0.6;
+  @override
+  void step(double dt, PlantIo io) {
+    final wz = z;
+    z = (z + io.motor('M1') * 0.12 * dt).clamp(0.0, 1.0).toDouble();
+    x = (x + io.motor('M2') * 0.12 * dt).clamp(0.0, 1.0).toDouble();
+    y = (y + io.motor('M3') * 0.09 * dt).clamp(0.0, 1.0).toDouble();
+    if (wz < 0.98 && z >= 0.98) bump('رفعات');
+    put(io, 'B1', z >= 0.98);
+    put(io, 'B2', z <= 0.02);
+    put(io, 'B3', x <= 0.02);
+    put(io, 'B4', x >= 0.98);
+    put(io, 'B5', y <= 0.02);
+    put(io, 'B6', y >= 0.98);
+  }
+}
+
+/// drying oven: heaters E1 warm it, the fan M1 cools it; thermostat B1 trips at 80 %
+/// and resets at 70 %. Heaters on with the fan stopped overheat the elements.
+class OvenPlant extends Plant {
+  @override
+  String get key => 'oven';
+  double temp = 0.1, angle = 0, _dry = 0, _hot = 0;
+  bool _stat = false;
+  @override
+  void step(double dt, PlantIo io) {
+    final fan = io.motor('M1').abs();
+    final heat = io.on('E1');
+    angle = (angle + fan * 900 * dt) % 360;
+    temp += ((heat ? 0.06 : 0) - fan * 0.012 - (temp - 0.1) * 0.012) * dt;
+    temp = temp.clamp(0.0, 1.0).toDouble();
+    if (_stat ? temp < 0.7 : temp >= 0.8) _stat = !_stat;
+    put(io, 'B1', _stat);
+    if (temp >= 0.6) {
+      _dry += dt;
+      if (_dry >= 10) {
+        _dry = 0;
+        bump('ألواح نشفت');
+      }
+    }
+    _hot = heat && fan < 0.3 ? _hot + dt : 0;
+    if (_hot > 6) {
+      _hot = 0;
+      bump('سخونية من غير مروحة');
+    }
+  }
+}
+
+/// dough mixer: M1 turns the hook either way; B1 the guard is down (a tap lifts it)
+class MixerPlant extends Plant {
+  @override
+  String get key => 'mixer';
+  double angle = 0, _t = 0;
+  bool guard = true;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = io.motor('M1');
+    angle = (angle + v * 540 * dt) % 360;
+    if (v.abs() > 0.5) {
+      _t += dt;
+      if (_t >= 15) {
+        _t = 0;
+        bump('عجنات');
+      }
+    }
+    put(io, 'B1', guard);
+  }
+
+  @override
+  void tap(double x, double y) => guard = !guard;
+}
+
+/// water tank with two pumps M1, M2 and a steady draw; floats B1 (25 %) and B2 (85 %)
+class Tank2Plant extends Plant {
+  @override
+  String get key => 'tank2';
+  double level = 0.5;
+  @override
+  void step(double dt, PlantIo io) {
+    final fill = (io.motor('M1').abs() + io.motor('M2').abs()) * 0.07;
+    final was = level;
+    level = (level + (fill - 0.025) * dt).clamp(0.0, 1.0).toDouble();
+    if (was < 0.85 && level >= 0.85) bump('مرات اتملا');
+    put(io, 'B1', level >= 0.25);
+    put(io, 'B2', level >= 0.85);
+  }
+}
+
+/// bottle washer: wash Y1, rinse Y2, dry Y3; B1 the doors are shut (a tap opens them).
+/// A full cycle is the three in order.
+class WasherPlant extends Plant {
+  @override
+  String get key => 'washer';
+  bool door = true;
+  int _stage = 0;
+  @override
+  void step(double dt, PlantIo io) {
+    final on = [io.on('Y1'), io.on('Y2'), io.on('Y3')];
+    if (_stage < 3 && on[_stage]) _stage++;
+    if (_stage == 3 && !on.any((x) => x)) {
+      _stage = 0;
+      bump('دورات غسيل');
+    }
+    if (on[0] && _stage > 1) _stage = 1; // started over
+    put(io, 'B1', door);
+  }
+
+  @override
+  void tap(double x, double y) => door = !door;
+}
+
+/// hydraulic press: the pump M1 gives pressure, Y1 drives the ram down, Y2 up;
+/// B1 ram at the top, B2 pressure switch (ram down on the part, still pushed)
+class HPressPlant extends Plant {
+  @override
+  String get key => 'hpress';
+  double z = 0;
+  @override
+  void step(double dt, PlantIo io) {
+    final p = io.motor('M1').abs() > 0.3;
+    final dn = io.on('Y1'), up = io.on('Y2');
+    final was = z;
+    if (p && dn && !up) z += 0.28 * dt;
+    if (p && up && !dn) z -= 0.4 * dt;
+    z = z.clamp(0.0, 1.0).toDouble();
+    if (was < 0.98 && z >= 0.98) bump('قطع اتكبست');
+    put(io, 'B1', z <= 0.02);
+    put(io, 'B2', z >= 0.98 && dn && p);
+  }
+}
+
+/// packing line: three belts in a row (M1 → M2 → M3, each 1 unit long); a box waits at
+/// the end of a belt while the next one stands, and piles up; B1 sees boxes leaving
+class Line3Plant extends Plant {
+  @override
+  String get key => 'line3';
+  final boxes = <Box>[];
+  double _feed = 0.3;
+  static const end = 3.25;
+  @override
+  void step(double dt, PlantIo io) {
+    final v = [for (final m in const ['M1', 'M2', 'M3']) math.max(0.0, io.motor(m))];
+    _feed -= dt * (v[0] > 0.05 ? 1 : 0);
+    if (_feed <= 0 && boxes.where((b) => b.s < 0.25).isEmpty) {
+      boxes.add(Box(0));
+      _feed = 2.4;
+    }
+    boxes.sort((a, b) => b.s.compareTo(a.s));
+    double front = 99;
+    for (final b in boxes) {
+      final seg = math.min(2, b.s.floor());
+      var ns = b.s + v[seg] * 0.14 * dt;
+      // the next belt stands: wait at the end of this one
+      if (seg < 2 && ns >= seg + 1 - 0.1 && v[seg + 1] < 0.05) ns = math.min(ns, seg + 1 - 0.1);
+      ns = math.min(ns, front - 0.22);
+      b.dwell = ns - b.s < 0.0005 && v[seg] > 0.05 ? b.dwell + dt : 0;
+      if (b.dwell > 2.5 && !b.pressed) {
+        b.pressed = true; // counted once
+        bump('كراتين اتكومت');
+      }
+      b.s = math.max(b.s, ns);
+      front = b.s;
+    }
+    final out = boxes.where((b) => b.s >= end).toList();
+    for (final b in out) {
+      boxes.remove(b);
+      bump('كراتين اتغلفت');
+    }
+    put(io, 'B1', boxes.any((b) => b.s >= 3.0));
+  }
+}
+
+/// a machine of lib/sim/plant.dart for the panel lab (the schematic machines and the
+/// production-line machines that only run in the lab)
+Plant? makeLabPlant(String? k) => switch (k) {
+      'belt' => BeltPlant(),
+      'fan' => FanPlant(),
+      'crusher' => CrusherPlant(),
+      'crane' => CranePlant(),
+      'oven' => OvenPlant(),
+      'mixer' => MixerPlant(),
+      'tank2' => Tank2Plant(),
+      'washer' => WasherPlant(),
+      'hpress' => HPressPlant(),
+      'line3' => Line3Plant(),
+      _ => plantByKey(k)?.make(),
+    };
+
 PlantDef? plantByKey(String? k) {
   for (final p in kPlants) {
     if (p.key == k) return p;

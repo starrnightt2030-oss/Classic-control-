@@ -262,6 +262,8 @@ def render_machine(kind):
         rot = next(((p, r) for p, r in ROT.items() if layer.startswith(p) and layer[len(p):].isdigit()), None)
         if rot:
             node, axis, step = rot[1]
+            # imported glTF nodes rotate by quaternion: switch to Euler or the angle is ignored
+            N[node].rotation_mode = "XYZ"
             N[node].rotation_euler[axis] = math.radians(step * int(layer[len(rot[0]):]))
         if layer == "bottle":
             for o in tree(N["proto_liquid"]):

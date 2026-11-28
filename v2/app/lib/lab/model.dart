@@ -49,16 +49,20 @@ class LabWire {
 
   /// the bends the user gave the wire (mm on the plate); empty: drawn as a free curve
   List<Offset> pts;
-  LabWire(this.a, this.b, this.color, [List<Offset>? pts]) : pts = pts ?? [];
+
+  /// the insulation melted in a short circuit: drawn charred until the wire is replaced
+  bool burnt;
+  LabWire(this.a, this.b, this.color, [List<Offset>? pts, this.burnt = false]) : pts = pts ?? [];
   Map<String, Object?> toJson() => {
         'a': a,
         'b': b,
         'c': color,
         if (pts.isNotEmpty) 'p': [for (final o in pts) [o.dx, o.dy]],
+        if (burnt) 'x': true,
       };
   static LabWire fromJson(Map<String, dynamic> j) => LabWire(j['a'] as String, j['b'] as String, j['c'] as String, [
         for (final o in (j['p'] as List? ?? const [])) Offset(((o as List)[0] as num).toDouble(), (o[1] as num).toDouble()),
-      ]);
+      ], j['x'] == true);
 }
 
 class WireColor {

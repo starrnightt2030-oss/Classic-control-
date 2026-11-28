@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:classic_control/lab/catalog.dart';
 import 'package:classic_control/lab/exercise.dart';
+import 'package:classic_control/lab/machine_sprites.dart';
+import 'package:classic_control/sim/plant.dart';
 import 'package:classic_control/lab/model.dart';
 import 'package:classic_control/lines/lines.dart';
 import 'package:classic_control/schem/ladder.dart';
@@ -264,4 +268,66 @@ void main() {
     l.run(0.5);
     expect(isOn(l, 'K1') || isOn(l, 'K2') || isOn(l, 'K3'), isFalse, reason: 'released: nothing restarts by itself');
   });
+  test('the fan turns visibly: well under the frame-rate aliasing limit', () {
+    final l = wiredLine('l_fan');
+    press(l, 'S11');
+    expect(until(l, () => motorRunning(l, 'M1')), isTrue);
+    l.run(2);
+    final f = l.plants['W1']! as FanPlant;
+    final a0 = f.angle;
+    l.run(1 / 30);
+    final step = ((f.angle - a0) % 360);
+    expect(step, greaterThan(2));
+    expect(step, lessThan(15), reason: 'blades repeat every 90°: big steps look frozen');
+  });
+
+  test('local buttons on the machine press the panel button they double', () {
+    const fan = [('S01', 'pb_nc', 'إيقاف جنبها'), ('S02', 'pb_nc', 'إيقاف التحكم'), ('S11', 'pb_no', 'تشغيل جنبها'), ('S12', 'pb_no', 'تشغيل التحكم')];
+    expect(localButtonTarget('start', fan), 'S11');
+    expect(localButtonTarget('stop', fan), 'S01');
+    const belt = [('S0', 'pb_nc', 'إيقاف'), ('S1', 'pb_no', 'تشغيل')];
+    expect(localButtonTarget('start', belt), 'S1');
+    expect(localButtonTarget('stop', belt), 'S0');
+    expect(localButtonTarget('S2', belt), isNull);
+    expect(localButtonTarget('start', const []), isNull);
+    for (final k in kLocalButtons.keys) {
+      expect(kLabParts.containsKey('mach_$k'), isTrue, reason: k);
+    }
+  });
+  test('turning parts are rendered at different angles (not six copies of one frame)', () {
+    for (final (k, n) in const [('fan', 'blades'), ('crusher', 'fly'), ('oven', 'fan'), ('mixer', 'hook')]) {
+      final frames = {for (var i = 0; i < 6; i++) File('assets/panel/mach_${k}_$n$i.webp').readAsBytesSync().join(',')};
+      expect(frames.length, 6, reason: '$k $n frames are identical');
+    }
+  });
+  test('every line machine moves on the bench when its motors and coils are on', () {
+    String look(MachineLook m) => '${m.x.toStringAsFixed(3)} ${m.y.toStringAsFixed(3)} ${m.z.toStringAsFixed(3)} ${m.angle.toStringAsFixed(1)} '
+        '${m.heat.toStringAsFixed(3)} ${m.ext.toStringAsFixed(3)} ${m.boxes} ${m.bottles} ${m.lamps}';
+    for (final k in const ['belt', 'fan', 'crusher', 'crane', 'oven', 'mixer', 'fill', 'sort', 'tank2', 'washer', 'hpress', 'line3', 'press']) {
+      final p = makeLabPlant(k)!;
+      for (final coils in const [<String>{}, {'Y1', 'E1'}, {'Y2'}, {'Y3'}]) {
+        final io = _AllOn(coils);
+        final before = look(MachineLook.ofPlant(p, io));
+        for (var i = 0; i < 40; i++) {
+          p.tick(0.1, io);
+        }
+        final after = look(MachineLook.ofPlant(p, io));
+        if (before != after) break;
+        expect(coils, isNot(equals(const {'Y3'})), reason: '$k does not move');
+      }
+    }
+  });
+}
+
+class _AllOn implements PlantIo {
+  final Set<String> coils;
+  _AllOn(this.coils);
+  @override
+  double motor(String tag) => 1;
+  @override
+  bool on(String tag) => coils.contains(tag);
+  @override
+  void sense(String tag, bool active) {}
+  @override
+  bool has(String tag) => true;
 }

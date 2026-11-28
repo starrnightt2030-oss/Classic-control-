@@ -75,6 +75,68 @@ class MachineSprites {
   }
 }
 
+/// a push button on a machine's own control station (the green / red buttons in the
+/// Blender model): pressing it on the bench presses the panel button it doubles.
+/// [role] is a panel button id (S1…) or 'start' / 'stop' (see [localButtonTarget]).
+class LocalButton {
+  final String role;
+  final double x, y, z;
+  final bool green;
+  const LocalButton(this.role, this.x, this.y, this.z, {this.green = true});
+}
+
+/// where each machine's local buttons sit in its model (v2/models/machines.py)
+const kLocalButtons = <String, List<LocalButton>>{
+  'fan': [LocalButton('start', 0.86, -0.1, 1.33), LocalButton('stop', 0.99, -0.1, 1.33, green: false)],
+  'belt': [LocalButton('start', 0.38, -0.47, 1.1), LocalButton('stop', 0.50, -0.47, 1.1, green: false)],
+  'sort': [LocalButton('start', 0.38, -0.47, 1.1), LocalButton('stop', 0.50, -0.47, 1.1, green: false)],
+  'fill': [LocalButton('start', 0.38, -0.37, 1.1), LocalButton('stop', 0.50, -0.37, 1.1, green: false)],
+  'mixer': [LocalButton('start', 0.31, -0.39, 1.2), LocalButton('stop', 0.45, -0.39, 1.2, green: false)],
+  'hoist': [LocalButton('S1', 1.3, -0.19, 1.25), LocalButton('S2', 1.3, -0.19, 1.18, green: false)],
+  'lift': [LocalButton('S1', 1.9, -0.11, 1.1), LocalButton('S2', 1.9, -0.11, 3.7), LocalButton('S3', 1.9, -0.11, 6.3)],
+  'press': [LocalButton('S1', -0.2, -0.75, 1.08), LocalButton('S2', 0.2, -0.75, 1.08), LocalButton('stop', 0, -0.75, 1.08, green: false)],
+};
+
+/// machines whose model has no control station get a small one drawn on the bench
+/// beside them: (role, label, green)
+const kLocalPanel = <String, List<(String, String, bool)>>{
+  'crusher': [('start', 'تشغيل', true), ('stop', 'إيقاف', false)],
+  'oven': [('start', 'تشغيل', true), ('stop', 'إيقاف', false)],
+  'cart': [('start', 'تشغيل', true), ('stop', 'إيقاف', false)],
+  'tank2': [('start', 'تشغيل', true), ('stop', 'إيقاف', false)],
+  'washer': [('start', 'بدء', true), ('stop', 'إيقاف', false)],
+  'hpress': [('S1', 'طلمبة', true), ('S2', 'كبس', true), ('stop', 'إيقاف', false)],
+  'line3': [('start', 'تشغيل', true), ('stop', 'إيقاف', false), ('S00', 'طوارئ', false)],
+  'gate': [('S1', 'فتح', true), ('S2', 'قفل', true), ('stop', 'إيقاف', false)],
+  'crane': [('S1', 'رفع', true), ('S2', 'تنزيل', true), ('S3', 'يمين', true), ('S4', 'شمال', true), ('S5', 'قدام', true), ('S6', 'ورا', true)],
+};
+
+/// the roles of a machine's local buttons, on its model or on its drawn station
+List<String> localRoles(String? kind) =>
+    [for (final b in kLocalButtons[kind] ?? const <LocalButton>[]) b.role, if (!kLocalButtons.containsKey(kind)) for (final b in kLocalPanel[kind] ?? const <(String, String, bool)>[]) b.$1];
+
+/// the panel button a local button presses: a named one, or for start / stop the
+/// button marked as the machine's own («جنبها»), else S1 / S0, else the first of its kind.
+/// [buttons] are (id, type pb_no / pb_nc, label).
+String? localButtonTarget(String role, Iterable<(String, String, String)> buttons) {
+  if (role != 'start' && role != 'stop') {
+    return buttons.any((b) => b.$1 == role) ? role : null;
+  }
+  final type = role == 'start' ? 'pb_no' : 'pb_nc';
+  final of = buttons.where((b) => b.$2 == type).toList();
+  if (of.isEmpty) return null;
+  return (of.where((b) => b.$3.contains('جنب')).firstOrNull ??
+          of.where((b) => b.$1 == (role == 'start' ? 'S1' : 'S0')).firstOrNull ??
+          of.first)
+      .$1;
+}
+
+/// [p] (sprite pixels) in a canvas of [size] the sprite is fitted into, as the painter draws it
+Offset spriteToCanvas(MachineSprite s, Size size, Offset p) {
+  final k = (size.width / s.w) < (size.height / s.h) ? size.width / s.w : size.height / s.h;
+  return Offset((size.width - s.w * k) / 2 + p.dx * k, (size.height - s.h * k) / 2 + p.dy * k);
+}
+
 /// what a machine shows now, from a Plant or from the panel lab's own machines
 class MachineLook {
   final double x, z, door, ext;
@@ -127,7 +189,10 @@ class MachineSpritePainter extends CustomPainter {
   final MachineLook look;
   final int frame; // repaint key
   final bool background;
-  MachineSpritePainter(this.s, this.look, this.frame, {this.background = false});
+
+  /// the local buttons that can be pressed now: true while held
+  final List<bool> local;
+  MachineSpritePainter(this.s, this.look, this.frame, {this.background = false, this.local = const []});
 
   static final _img = Paint()..filterQuality = FilterQuality.medium;
 
@@ -285,11 +350,26 @@ class MachineSpritePainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14));
       c.drawCircle(p, 7, Paint()..color = col);
     }
+    // the local control station: a ring shows each button can be pressed, lit while held
+    final lb = kLocalButtons[s.kind] ?? const [];
+    for (var i = 0; i < local.length && i < lb.length; i++) {
+      final b = lb[i], p = s.px(b.x, b.y, b.z);
+      final col = b.green ? const Color(0xFF3DFF8A) : const Color(0xFFFF5A64);
+      if (local[i]) {
+        c.drawCircle(p, 52, Paint()
+          ..color = col.withValues(alpha: 0.6)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22));
+      }
+      c.drawCircle(p, 34, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = local[i] ? 10 : 6
+        ..color = (local[i] ? col : Colors.white).withValues(alpha: local[i] ? 1 : 0.75));
+    }
     c.restore();
   }
 
   @override
-  bool shouldRepaint(covariant MachineSpritePainter old) => old.frame != frame || old.s != s || old.look != look;
+  bool shouldRepaint(covariant MachineSpritePainter old) => old.frame != frame || old.s != s || old.look != look || old.local.toString() != local.toString();
 }
 
 /// the flat view of a machine: its Blender sprites when they have loaded, otherwise

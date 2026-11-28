@@ -251,11 +251,25 @@ class ProjectPage extends StatelessWidget {
     final info = projectInfo[c.id];
     final wide = isWide(context);
     void lab(LabMode m) => _go(context, LabPage(circuit: c, mode: m));
+    final board = Container(color: const Color(0xFFDDE2E8), child: CircuitPreview(c, skin: Skin.board, lit: true));
     final left = <Widget>[
-      AspectRatio(
-        aspectRatio: boardSize.width / boardSize.height,
-        child: ClipRRect(borderRadius: BorderRadius.circular(14), child: Container(color: const Color(0xFFDDE2E8), child: CircuitPreview(c, skin: Skin.board, lit: true))),
-      ),
+      Stack(children: [
+        AspectRatio(
+          aspectRatio: boardSize.width / boardSize.height,
+          child: ClipRRect(borderRadius: BorderRadius.circular(14), child: ZoomBox(child: board)),
+        ),
+        Positioned(
+          right: 2,
+          top: 2,
+          child: IconButton.filledTonal(
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            tooltip: 'ملء الشاشة',
+            onPressed: () => _go(context, FullDrawing(title: c.title, child: board)),
+            icon: const Icon(Icons.fullscreen_rounded),
+          ),
+        ),
+      ]),
       const SizedBox(height: 10),
       FilledButton.icon(
         onPressed: () => _go(context, CircuitPage(c)),

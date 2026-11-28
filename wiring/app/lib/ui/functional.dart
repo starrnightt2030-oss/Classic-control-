@@ -174,7 +174,8 @@ class FunctionalPainter extends CustomPainter {
         byNet.putIfAbsent(lay.nets.find('${d.p.id}.${e.key}'), () => []).add(e.value);
       }
     }
-    final tracks = <int, List<(double, double)>>{};
+    // tracks are worked out afresh on every paint (a repaint must not stack them lower)
+    final spans = <String, List<(double, double)>>{};
     for (final e in byNet.entries) {
       final pts = e.value;
       final net = e.key;
@@ -200,13 +201,11 @@ class FunctionalPainter extends CustomPainter {
       final lvl = lay.depth[net] ?? 0;
       final xs = pts.map((q) => q.dx).toList()..sort();
       final span = (xs.first, xs.last);
-      final lt = tracks.putIfAbsent(lvl, () => []);
       var tr = 0;
-      while (_spans['$lvl/$tr']?.any((u) => !(span.$2 < u.$1 - 6 || span.$1 > u.$2 + 6)) ?? false) {
+      while (spans['$lvl/$tr']?.any((u) => !(span.$2 < u.$1 - 6 || span.$1 > u.$2 + 6)) ?? false) {
         tr++;
       }
-      lt.add((tr.toDouble(), 0));
-      _spans.putIfAbsent('$lvl/$tr', () => []).add(span);
+      spans.putIfAbsent('$lvl/$tr', () => []).add(span);
       final y = lay.railY(net) + 4 + tr * 7.0;
       c.drawLine(Offset(span.$1, y), Offset(span.$2, y), paint);
       for (final q in pts) {
@@ -220,8 +219,6 @@ class FunctionalPainter extends CustomPainter {
       text(c, d.p.id, Offset(d.x + d.w / 2 + (d.w / 2 + 6), (d.y0 + d.y1) / 2 - 12), size: 8.5, color: const Color(0xFF0D2B66), w: FontWeight.w700);
     }
   }
-
-  final Map<String, List<(double, double)>> _spans = {};
 
   String _keyOf(String net) {
     for (final p in sim.parts) {

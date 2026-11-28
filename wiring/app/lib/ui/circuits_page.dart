@@ -108,6 +108,59 @@ class _Crop extends CustomPainter {
   bool shouldRepaint(_Crop o) => true;
 }
 
+/// Pinch to zoom and drag to pan; double tap goes back to the whole drawing.
+class ZoomBox extends StatefulWidget {
+  final Widget child;
+  final double maxScale;
+  const ZoomBox({required this.child, this.maxScale = 6});
+  @override
+  State<ZoomBox> createState() => _ZoomBoxState();
+}
+
+class _ZoomBoxState extends State<ZoomBox> {
+  final _tc = TransformationController();
+  bool _zoomed = false; // drag pans only once zoomed in, so the page still scrolls
+  @override
+  void dispose() {
+    _tc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onDoubleTap: () => setState(() {
+          _tc.value = Matrix4.identity();
+          _zoomed = false;
+        }),
+        child: InteractiveViewer(
+          transformationController: _tc,
+          minScale: 1,
+          maxScale: widget.maxScale,
+          panEnabled: _zoomed,
+          onInteractionEnd: (_) {
+            final z = _tc.value.getMaxScaleOnAxis() > 1.01;
+            if (z != _zoomed) setState(() => _zoomed = z);
+          },
+          child: SizedBox.expand(child: widget.child),
+        ),
+      );
+}
+
+/// A drawing on its own page, as big as the screen allows, zoomable.
+class FullDrawing extends StatelessWidget {
+  final String title;
+  final Widget child;
+  const FullDrawing({required this.title, required this.child});
+  @override
+  Widget build(BuildContext context) => PageFrame(
+        title: title,
+        body: Padding(
+          padding: const EdgeInsets.all(8),
+          child: ClipRRect(borderRadius: BorderRadius.circular(12), child: ZoomBox(maxScale: 8, child: child)),
+        ),
+      );
+}
+
 class CircuitCard extends StatelessWidget {
   final CircuitDef c;
   final bool compact;
@@ -175,32 +228,52 @@ class _CircuitPageState extends State<CircuitPage> {
   @override
   Widget build(BuildContext context) {
     final wide = isWide(context);
+    final narrow = MediaQuery.sizeOf(context).width < 520;
+    final Widget drawing = view == 2
+        ? Container(color: Colors.white, child: CustomPaint(painter: PlanPainter(c), size: Size.infinite))
+        : view == 3
+        ? Container(color: Colors.white, padding: const EdgeInsets.all(6), child: FunctionalDiagram(c))
+        : Container(color: view == 0 ? const Color(0xFFDDE2E8) : Colors.white, child: CircuitPreview(c, skin: view == 0 ? Skin.board : Skin.schematic, lit: true));
     final preview = Container(
       decoration: glowCard(r: 16),
       padding: const EdgeInsets.all(8),
       child: Column(children: [
         SegmentedButton<int>(
-          segments: const [
-            ButtonSegment(value: 0, label: Text('مجسم'), icon: Icon(Icons.view_in_ar_outlined, size: 18)),
-            ButtonSegment(value: 1, label: Text('التوصيل'), icon: Icon(Icons.cable_outlined, size: 18)),
-            ButtonSegment(value: 3, label: Text('الوظيفي'), icon: Icon(Icons.schema_outlined, size: 18)),
-            ButtonSegment(value: 2, label: Text('المسقط'), icon: Icon(Icons.map_outlined, size: 18)),
+          style: const ButtonStyle(visualDensity: VisualDensity.compact, padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4))),
+          segments: [
+            for (final (v, t, i) in const [
+              (0, 'مجسم', Icons.view_in_ar_outlined),
+              (1, 'توصيل', Icons.cable_outlined),
+              (3, 'وظيفي', Icons.schema_outlined),
+              (2, 'مسقط', Icons.map_outlined),
+            ])
+              ButtonSegment(value: v, label: Text(t, maxLines: 1, softWrap: false), icon: narrow ? null : Icon(i, size: 18)),
           ],
           selected: {view},
           showSelectedIcon: false,
           onSelectionChanged: (s) => setState(() => view = s.first),
         ),
         const SizedBox(height: 8),
-        AspectRatio(
-          aspectRatio: boardSize.width / boardSize.height,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: view == 2
-                ? Container(color: Colors.white, child: CustomPaint(painter: PlanPainter(c), size: Size.infinite))
-                : view == 3
-                ? Container(color: Colors.white, padding: const EdgeInsets.all(6), child: FunctionalDiagram(c))
-                : Container(color: view == 0 ? const Color(0xFFDDE2E8) : Colors.white, child: CircuitPreview(c, skin: view == 0 ? Skin.board : Skin.schematic, lit: true)),
+        Stack(children: [
+          AspectRatio(
+            aspectRatio: boardSize.width / boardSize.height,
+            child: ClipRRect(borderRadius: BorderRadius.circular(10), child: ZoomBox(child: drawing)),
           ),
+          Positioned(
+            right: 2,
+            top: 2,
+            child: IconButton.filledTonal(
+              visualDensity: VisualDensity.compact,
+              iconSize: 18,
+              tooltip: 'ملء الشاشة',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullDrawing(title: c.title, child: drawing))),
+              icon: const Icon(Icons.fullscreen_rounded),
+            ),
+          ),
+        ]),
+        const Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text('كبّر بإصبعين واسحب عشان تشوف التفاصيل', style: TextStyle(fontSize: 11, color: C.dim), textAlign: TextAlign.center),
         ),
         const SizedBox(height: 4),
         Text(

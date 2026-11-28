@@ -194,8 +194,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         }
         Future<void>.delayed(const Duration(milliseconds: 600), () {
           _power();
-          sim?.actuate('S1', 'press', true);
-          Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.actuate('S1', 'press', false));
+          final l = sim;
+          final start = (l == null ? null : localButtonTarget('start', _panelButtons(l))) ?? 'S1';
+          sim?.actuate(start, 'press', true);
+          Future<void>.delayed(const Duration(milliseconds: 400), () => sim?.actuate(start, 'press', false));
         });
       }
       if (widget.demo == 3 || widget.demo == 4 || widget.demo == 5 || widget.demo == 7) Future<void>.delayed(const Duration(milliseconds: 600), _power);
@@ -517,7 +519,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         }
       }
       final p = _partAt(mm);
-      if (p != null) _runPress(p, e.pointer, true);
+      if (p != null) _runPress(p, e.pointer, true, mm);
       return;
     }
     if (_pointer != null) {
@@ -1555,6 +1557,12 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       final m = doc.parts.where((q) => q.d.engine == 'motor' || q.d.engine == 'motor1').firstOrNull;
       if (m != null) p.p['motor'] = m.id;
     }
+    // a motor added after its machine drives the machines that have none yet
+    if (p.d.engine == 'motor' || p.d.engine == 'motor1') {
+      for (final q in doc.parts.where((q) => q.d.machine != null && (q.p['motor'] == null || doc.byId(q.p['motor'] as String) == null))) {
+        q.p['motor'] = p.id;
+      }
+    }
     _snapshot();
     doc.parts.add(p);
     _partStart = Offset(p.x, p.y);
@@ -1732,6 +1740,15 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     for (final o in spots) {
       fx.add(LabFx('spark', o, _clock, fx.length * 31 + o.dx.round(), loop: widget.demo > 0));
     }
+    // the culprit wire carried the short-circuit current: its insulation melts and smokes
+    if (newest != null && !doc.wires[newest].burnt) {
+      doc.wires[newest].burnt = true;
+      if (spots.length == 2) {
+        final mid = Offset.lerp(spots[0], spots[1], 0.5)!;
+        fx.add(LabFx('smoke', mid, _clock, newest * 17 + 5, loop: widget.demo > 0));
+      }
+      _persist();
+    }
     HapticFeedback.heavyImpact();
     if (!_ticker.isActive) _ticker.start();
   }
@@ -1771,7 +1788,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           a.sfx('short_circuit_bang');
           final sh = sim?.short;
           if (sh != null) _sparkAt(sh);
-          _toast('قصر كهربائي! فصل ${e.id ?? 'المصدر الرئيسي'}. الأسلاك الحمراء الوامضة هي مسار القصر.');
+          _toast('قصر كهربائي! فصل ${e.id ?? 'المصدر الرئيسي'}. الأسلاك الحمراء الوامضة هي مسار القصر، والسلك اللي اتحرق عزله اسودّ: شيله وركّب سلك جديد.');
         case 'trip':
           if (e.data['why'] != 'short') a.sfx('mcb_trip');
         case 'mainTrip':
@@ -1805,7 +1822,52 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _runPress(Placed? p, int pointer, bool down) {
+  /// the panel buttons of the running circuit: (id, type, label)
+  List<(String, String, String)> _panelButtons(Lab l) => [
+        for (final c in l.comps)
+          if (c.type == 'pb_no' || c.type == 'pb_nc') (c.id, c.type, (c.p['lb'] as String?) ?? ''),
+      ];
+
+  /// the local buttons of machine [p] and the panel button each one presses (null: none)
+  List<String?> _localTargets(Placed p) {
+    final l = sim;
+    final roles = localRoles(p.d.machine);
+    if (l == null || roles.isEmpty) return const [];
+    final bs = _panelButtons(l);
+    return [for (final r in roles) localButtonTarget(r, bs)];
+  }
+
+  /// the local button of machine [p] under [mm], if any
+  int? _localAt(Placed p, Offset mm) {
+    final panel = kLocalPanel[p.d.machine];
+    if (panel != null && !kLocalButtons.containsKey(p.d.machine)) {
+      final (spots, r) = MachinePainter.localSpots(p.rect.size * kPx, panel.length);
+      final at = (mm - p.rect.topLeft) * kPx;
+      for (var i = 0; i < spots.length; i++) {
+        if ((spots[i] - at).distance < r * 1.6) return i;
+      }
+      return null;
+    }
+    final sp = MachineSprites.of(p.d.machine ?? '');
+    final lb = kLocalButtons[p.d.machine] ?? const [];
+    if (sp == null || lb.isEmpty) return null;
+    final size = p.rect.size * kPx;
+    final scene = MachinePainter.spriteScene(size);
+    final at = (mm - p.rect.topLeft) * kPx;
+    int? best;
+    var bd = 22.0; // px: a finger-sized target around a small button
+    for (var i = 0; i < lb.length; i++) {
+      final o = scene.topLeft + spriteToCanvas(sp, scene.size, sp.px(lb[i].x, lb[i].y, lb[i].z));
+      final d = (o - at).distance;
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  void _runPress(Placed? p, int pointer, bool down, [Offset? mm]) {
     final l = sim;
     if (l == null) return;
     if (down && p != null) {
@@ -1845,6 +1907,19 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           l.actuate(p.id, 'load');
           _toast(l[p.id].s.load ? 'تم تحميل المحرك بحمل زائد.' : 'رُفع الحمل الزائد عن المحرك.');
         case 'mach':
+          final i = mm == null ? null : _localAt(p, mm);
+          if (i != null) {
+            // the machine's own control station presses the panel button it doubles
+            final id = _localTargets(p)[i];
+            AudioService.instance.sfx('pushbutton_click');
+            if (id == null) {
+              _toast('الزرار ده على الماكينة نفسها، ومحتاج زرار في اللوحة يقابله (تشغيل أو إيقاف).');
+            } else {
+              _pressBy[pointer] = id;
+              l.actuate(id, 'press', true);
+            }
+            break;
+          }
           final pl = l.plants[p.id];
           if (pl != null) pl.tap(0.25, 0.5); // put a part / box on the machine
           if (p.p['kind'] == 'tank') {
@@ -2503,6 +2578,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                   }(),
                   valve: c?.s.valve ?? true,
                   motor: (p.p['motor'] as String?) ?? '',
+                  local: [for (final id in _localTargets(p)) id != null && (sim?.byId(id)?.s.pr ?? false)],
                   phase: _phase))));
     } else if (p.d.side.isNotEmpty) {
       final lw = kLug * kPx;

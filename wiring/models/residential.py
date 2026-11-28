@@ -162,7 +162,7 @@ def lamp(kind, on):
         else:
             bpy.ops.mesh.primitive_uv_sphere_add(radius=31 * kit.mm, location=(0, 0, 92 * kit.mm), segments=64, ring_count=32)
             g = bpy.context.object
-            g.data.materials.append(glow("r_inc_on", (1.0, 0.78, 0.45), 3.5) if on else C["glass"])
+            g.data.materials.append(glow("r_inc_on", (1.0, 0.78, 0.45), 3.5) if on else lib.mat("r_bulb", (0.97, 0.96, 0.93), rough=0.25, trans=0.35, ior=1.45))
             lib._sel(g)
             bpy.ops.object.shade_smooth()
             kit.G["glass"].append(g)

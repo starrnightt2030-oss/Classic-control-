@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app_info.dart';
 import 'services/progress.dart';
 import 'services/sound.dart';
+import 'services/sprites.dart';
 import 'theme.dart';
 import 'data/circuits.dart';
 import 'ui/lab/lab_page.dart';
@@ -23,6 +24,7 @@ Future<void> main() async {
   Sound.enabled = Progress.i.sound;
   await Sound.init();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.light));
+  Sprites.i.load();
   runApp(const WiringApp());
 }
 

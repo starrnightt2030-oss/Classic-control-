@@ -34,7 +34,7 @@ class Sim {
   bool hasFault(FaultKind k, String target) => faults.any((f) => f.kind == k && f.target == target);
 
   Sim clone() {
-    final s = Sim(parts: parts.map((p) => p.copy()).toList(), wires: wires.map((w) => Wire(w.a, w.b, w.color)).toList(), faults: List.of(faults), power: power);
+    final s = Sim(parts: parts.map((p) => p.copy()).toList(), wires: wires.map((w) => w.copy()).toList(), faults: List.of(faults), power: power);
     s.tripped.addAll(tripped);
     s.fuseBlown = fuseBlown;
     s.stairLeft.addAll(stairLeft);
@@ -176,6 +176,9 @@ _Net _build(Sim s, {required bool sources, Map<String, bool>? stairClosed}) {
         j(p, 'e2', 'e3');
         j(p, 'e3', 'e4');
       case Kind.jbox:
+      case Kind.jbox6:
+      case Kind.jbox8:
+      case Kind.jbox10:
         break;
       case Kind.sw1:
         if (p.on && !broken) j(p, 'L', '1');

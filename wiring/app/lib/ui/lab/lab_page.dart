@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/scheduler.dart';
 
 import '../../data/circuits.dart';
 import '../../services/progress.dart';
 import '../../services/sound.dart';
+import '../../sim/diagnose.dart';
 import '../../sim/model.dart';
 import '../../sim/solver.dart';
 import '../../theme.dart';
@@ -65,9 +66,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // demo autoplay
   int? autoplay;
   String? banner;
-  // drag in the free lab
-  Offset? _dragStart;
-  Offset? _partStart;
+  // drags on the board (parts, wire bends and legs, new wires from a terminal)
+  _Drag? _drag;
+  bool get _ivPan => _drag == null;
+  Offset? _dragTo;
+  // live wiring check
+  List<Issue> issues = const [];
+  bool mono = false; // every wire black, as on a printed drawing
+  String? hint;
 
   CircuitDef? get c => widget.circuit;
   LabMode get mode => widget.mode;
@@ -84,6 +90,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   void _load() {
     if (c == null) {
       sim = Sim(parts: head(rating: 16), wires: headWires(head()));
+      tidyWires(sim);
     } else if (mode == LabMode.demo || mode == LabMode.faults) {
       sim = c!.buildDone();
     } else {
@@ -118,9 +125,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // ------------------------------------------------------------- simulation
   void _run({bool quiet = false}) {
     res = simulate(sim);
+    issues = mode == LabMode.faults || mode == LabMode.demo ? const [] : diagnose(sim, checkColours: !mono);
     if (res.event != SimEvent.none) {
       final p = res.eventAt == null ? null : sim.part(res.eventAt!);
-      final at = p == null ? const Offset(500, 300) : p.pos + Offset(p.type.size.width / 2, p.type.size.height / 3);
+      final at = p == null ? const Offset(500, 300) : p.center;
       switch (res.event) {
         case SimEvent.shortCircuit:
         case SimEvent.fuse:
@@ -209,7 +217,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       _wireTap(term);
       return;
     }
-    final w = hitWire(sim, p, skin);
+    final w = hitWire(sim, p);
     final part = hitPart(sim, p);
     if (part != null && (w == null || _isControl(part))) {
       _partTap(part, p);
@@ -234,7 +242,6 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   bool _isControl(Part p) => const {Kind.sw1, Kind.sw2, Kind.swi, Kind.swd, Kind.pb, Kind.dimmer, Kind.mcb, Kind.rcd, Kind.socket, Kind.supply}.contains(p.kind);
 
   void _partTap(Part part, Offset at) {
-    final local = at - part.pos;
     switch (part.kind) {
       case Kind.sw1:
       case Kind.sw2:
@@ -242,7 +249,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         part.on = !part.on;
         Sound.play(Sfx.click);
       case Kind.swd:
-        if (local.dx < part.type.size.width / 2) {
+        if (part.toLocal(at).dx < part.type.size.width / 2) {
           part.on = !part.on;
         } else {
           part.on2 = !part.on2;
@@ -323,8 +330,10 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   void _addWire(String a, String b, WireColor col) {
-    _undo.add(sim.wires.map((w) => Wire(w.a, w.b, w.color)).toList());
+    _undo.add(sim.wires.map((w) => w.copy()).toList());
     sim.wires.add(Wire(a, b, col));
+    tidyWires(sim, only: {sim.wires.length - 1});
+    hint = null;
     _run(quiet: true);
   }
 
@@ -339,7 +348,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   void _deleteWire(int i) {
-    _undo.add(sim.wires.map((w) => Wire(w.a, w.b, w.color)).toList());
+    _undo.add(sim.wires.map((w) => w.copy()).toList());
     sim.wires.removeAt(i);
     sim.faults.removeWhere((f) => f.kind == FaultKind.wireCut);
     selWire = null;
@@ -348,7 +357,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   }
 
   void _clearWires() {
-    _undo.add(sim.wires.map((w) => Wire(w.a, w.b, w.color)).toList());
+    _undo.add(sim.wires.map((w) => w.copy()).toList());
     final keep = c == null ? <Wire>[] : headWires(sim.parts);
     sim.wires
       ..clear()
@@ -514,7 +523,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       );
 
   void _showSolution() {
-    _undo.add(sim.wires.map((w) => Wire(w.a, w.b, w.color)).toList());
+    _undo.add(sim.wires.map((w) => w.copy()).toList());
     sim.wires
       ..clear()
       ..addAll(c!.referenceWires());
@@ -551,7 +560,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   // ------------------------------------------------------------- free lab
   static const _prefix = {
-    Kind.supply: 'G', Kind.mcb: 'Q', Kind.rcd: 'F', Kind.meter: 'M', Kind.nbar: 'NB', Kind.ebar: 'EB', Kind.jbox: 'J',
+    Kind.supply: 'G', Kind.mcb: 'Q', Kind.rcd: 'F', Kind.meter: 'M', Kind.nbar: 'NB', Kind.ebar: 'EB', Kind.jbox: 'J', Kind.jbox6: 'J', Kind.jbox8: 'J', Kind.jbox10: 'J',
     Kind.sw1: 'S', Kind.sw2: 'S', Kind.swi: 'S', Kind.swd: 'S', Kind.pb: 'P', Kind.dimmer: 'D', Kind.lamp: 'E', Kind.socket: 'X',
     Kind.bell: 'H', Kind.lock: 'Y', Kind.tube: 'T', Kind.ballast: 'BL', Kind.starter: 'ST', Kind.stair: 'K', Kind.driver: 'DR', Kind.ledpanel: 'LP',
   };
@@ -690,7 +699,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           // fit the used part of the board (parts + margin), not the whole plywood
           var bb = Offset.zero & boardSize;
           if (sim.parts.isNotEmpty) {
-            bb = sim.parts.map((p) => p.pos & p.type.size).reduce((a, b) => a.expandToInclude(b)).inflate(40).intersect(Offset.zero & boardSize);
+            bb = sim.parts.map((p) => p.rect).reduce((a, b) => a.expandToInclude(b)).inflate(24).intersect(Offset.zero & boardSize);
           }
           final k = math.min(box.maxWidth / bb.width, box.maxHeight / bb.height) * .98;
           final dx = (box.maxWidth - bb.width * k) / 2 - bb.left * k, dy = (box.maxHeight - bb.height * k) / 2 - bb.top * k;
@@ -700,18 +709,30 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         }
         final st = BoardState(
           sim: sim, res: res, skin: skin, t: t, selTerm: selTerm, selWire: selWire, selPart: solved ? '#reveal' : selPart, fx: fx,
-          glowTerms: mode == LabMode.guide && step < (c?.steps.length ?? 0) ? {c!.steps[step].a, c!.steps[step].b} : const {},
+          glowTerms: mode == LabMode.guide && step < (c?.steps.length ?? 0) ? {c!.steps[step].a, c!.steps[step].b} : (hint != null && _hintStep != null ? {_hintStep!.a, _hintStep!.b} : const {}),
           probes: tool == Tool.meter ? probes : const [],
+          mono: mono, issues: issues,
+          dragFrom: _drag?.kind == _DK.term ? termPos(sim, _drag!.term!) : null, dragTo: _dragTo,
         );
         return Stack(children: [
           ClipRect(
             child: InteractiveViewer(
               transformationController: _tc,
               constrained: false,
-              minScale: .25,
-              maxScale: 5,
+              minScale: .2,
+              maxScale: 8,
+              panEnabled: _ivPan,
+              scaleEnabled: _ivPan,
               boundaryMargin: const EdgeInsets.all(400),
-              child: GestureDetector(
+              child: Listener(
+               onPointerDown: (e) => _down(e.localPosition),
+               onPointerMove: (e) => _move(e.localPosition),
+               onPointerUp: (e) => _up(e.localPosition),
+               onPointerCancel: (_) => setState(() {
+                 _drag = null;
+                 _dragTo = null;
+               }),
+               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTapDown: (d) => _tapDown(d.localPosition),
                 onTapUp: (d) => _tapUp(d.localPosition),
@@ -721,27 +742,19 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                   }
                   _run(quiet: true);
                 },
-                onLongPressStart: mode == LabMode.free
+                onLongPressStart: canWire
                     ? (d) {
                         final p = hitPart(sim, d.localPosition);
                         if (p == null) return;
-                        selPart = p.id;
-                        _dragStart = d.localPosition;
-                        _partStart = p.pos;
+                        setState(() {
+                          selPart = p.id;
+                          selWire = null;
+                        });
                         Sound.play(Sfx.tap);
                       }
                     : null,
-                onLongPressMoveUpdate: mode == LabMode.free
-                    ? (d) {
-                        final p = selPart == null ? null : sim.part(selPart!);
-                        if (p == null || _dragStart == null) return;
-                        final n = _partStart! + d.localPosition - _dragStart!;
-                        p.pos = Offset((n.dx / 5).round() * 5.0, (n.dy / 5).round() * 5.0);
-                        setState(() {});
-                      }
-                    : null,
-                onLongPressEnd: mode == LabMode.free ? (_) => _dragStart = null : null,
                 child: SizedBox.fromSize(size: boardSize, child: CustomPaint(painter: BoardPainter(st))),
+              ),
               ),
             ),
           ),
@@ -793,6 +806,170 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
         ]);
       });
 
+  // ------------------------------------------------------------- board drags
+  Offset _snap(Offset o, [double g = 2.5]) => Offset((o.dx / g).round() * g, (o.dy / g).round() * g);
+
+  void _down(Offset p) {
+    if (tool == Tool.meter || !(canWire || mode == LabMode.demo)) return;
+    _Drag? d;
+    final sw = selWire;
+    if (sw != null && sw < sim.wires.length && canWire) {
+      final w = sim.wires[sw];
+      for (var k = 0; k < w.pts.length; k++) {
+        if ((w.pts[k] - p).distance < 4.5) d = _Drag(_DK.bend, p, wire: sw, idx: k);
+      }
+      if (d == null) {
+        final leg = hitLeg(sim, sw, p);
+        if (leg != null) d = _Drag(_DK.leg, p, wire: sw, idx: leg);
+      }
+    }
+    if (d == null && canWire) {
+      final t = hitTerm(sim, p);
+      if (t != null) d = _Drag(_DK.term, p, term: t);
+    }
+    if (d == null && mode == LabMode.free) {
+      final part = hitPart(sim, p);
+      if (part != null) d = _Drag(_DK.part, p, part: part.id, orig: part.pos);
+    }
+    if (d != null) setState(() => _drag = d);
+  }
+
+  void _move(Offset p) {
+    final d = _drag;
+    if (d == null) return;
+    if (!d.moved && (p - d.start).distance < 3) return;
+    if (!d.moved && (d.kind == _DK.bend || d.kind == _DK.leg)) _undo.add(sim.wires.map((w) => w.copy()).toList());
+    d.moved = true;
+    switch (d.kind) {
+      case _DK.part:
+        final part = sim.part(d.part!);
+        if (part == null) return;
+        final n = _snap(d.orig! + p - d.start, 5);
+        part.pos = Offset(n.dx.clamp(0, boardSize.width - part.box.width), n.dy.clamp(0, boardSize.height - part.box.height));
+        for (final w in sim.wires) {
+          if (w.a.startsWith('${part.id}.') || w.b.startsWith('${part.id}.')) w.pts = [];
+        }
+      case _DK.bend:
+        final w = sim.wires[d.wire!];
+        w.pts[d.idx!] = _snap(p);
+      case _DK.leg:
+        _dragLeg(d, p);
+      case _DK.term:
+        _dragTo = p;
+    }
+    setState(() {});
+  }
+
+  /// slide one leg of a wire sideways, keeping its corners square
+  void _dragLeg(_Drag d, Offset p) {
+    final w = sim.wires[d.wire!];
+    final full = wirePoints(sim, d.wire!)!;
+    var k = d.idx!;
+    if (!d.prepared) {
+      // a leg that starts or ends on a terminal gets its own corner first, so the
+      // wire still leaves the screw straight
+      if (k == full.length - 2) full.insert(full.length - 1, full.last);
+      if (k == 0) {
+        full.insert(1, full.first);
+        k = 1;
+      }
+      d.idx = k;
+      d.base = List.of(full);
+      d.prepared = true;
+    }
+    final base = d.base!;
+    final a = base[k], b = base[k + 1];
+    final delta = p - d.start;
+    final horiz = (a.dy - b.dy).abs() < (a.dx - b.dx).abs();
+    final mv = horiz ? Offset(0, delta.dy) : Offset(delta.dx, 0);
+    final out = List.of(base);
+    out[k] = _snap(a + mv);
+    out[k + 1] = _snap(b + mv);
+    w.pts = out.sublist(1, out.length - 1);
+  }
+
+  void _up(Offset p) {
+    final d = _drag;
+    if (d == null) return;
+    _drag = null;
+    _dragTo = null;
+    if (d.moved) {
+      switch (d.kind) {
+        case _DK.part:
+          final id = d.part!;
+          tidyWires(sim, only: {
+            for (var i = 0; i < sim.wires.length; i++)
+              if (sim.wires[i].a.startsWith('$id.') || sim.wires[i].b.startsWith('$id.')) i
+          });
+          _run(quiet: true);
+        case _DK.bend:
+        case _DK.leg:
+          final w = sim.wires[d.wire!];
+          w.pts = _clean([termPos(sim, w.a)!, ...w.pts, termPos(sim, w.b)!]);
+        case _DK.term:
+          final t = hitTerm(sim, p);
+          if (t != null && t != d.term) {
+            selTerm = d.term;
+            _wireTap(t);
+          }
+      }
+    }
+    setState(() {});
+  }
+
+  /// drop repeated and in-line points
+  List<Offset> _clean(List<Offset> f) {
+    final o = <Offset>[f.first];
+    for (var i = 1; i < f.length; i++) {
+      if ((f[i] - o.last).distance > .5) o.add(f[i]);
+    }
+    if (o.length < 2) return const [];
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (var i = 1; i + 1 < o.length; i++) {
+        final a = o[i - 1], b = o[i], c = o[i + 1];
+        final cross = (b - a).dx * (c - b).dy - (b - a).dy * (c - b).dx;
+        if (cross.abs() < .5) {
+          o.removeAt(i);
+          changed = true;
+          break;
+        }
+      }
+    }
+    return o.length <= 2 ? [Offset((o.first.dx + o.last.dx) / 2, (o.first.dy + o.last.dy) / 2)] : o.sublist(1, o.length - 1);
+  }
+
+  void _tidy() {
+    _undo.add(sim.wires.map((w) => w.copy()).toList());
+    final n = tidyWires(sim);
+    Sound.play(Sfx.wire, volume: .6);
+    _snack('اتنظّمت $n سلك: مسارات مستقيمة بزوايا قايمة، ماشية جنب بعض ومش بتعدّي من ورا المكونات');
+    setState(() {});
+  }
+
+  void _rotate(Part p, int dir) {
+    final c0 = p.center;
+    p.rot = (p.rot + dir) & 3;
+    final n = c0 - Offset(p.box.width / 2, p.box.height / 2);
+    p.pos = Offset(n.dx.clamp(0, boardSize.width - p.box.width), n.dy.clamp(0, boardSize.height - p.box.height));
+    tidyWires(sim, only: {
+      for (var i = 0; i < sim.wires.length; i++)
+        if (sim.wires[i].a.startsWith('${p.id}.') || sim.wires[i].b.startsWith('${p.id}.')) i
+    });
+    Sound.play(Sfx.tap);
+    _run(quiet: true);
+  }
+
+  void _hint() {
+    final h = c == null ? null : nextHint(c!, sim);
+    setState(() => hint = h == null ? 'كل التوصيلات المطلوبة موجودة. شغّل الكهرباء وجرّب، أو اضغط «افحص».' : h.text);
+    if (h != null) _hintStep = h;
+    Sound.play(Sfx.tap);
+  }
+
+  Step? _hintStep;
+
   Widget _zoomBtn(IconData i, VoidCallback f) => Material(
         color: C.navy1.withValues(alpha: .85),
         shape: const CircleBorder(side: BorderSide(color: C.glow, width: .8)),
@@ -811,6 +988,16 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
   // ---------------------------------------------------------- bottom panel
   Widget _panel({required bool wide}) {
     final items = <Widget>[];
+    if (canWire) items.add(_card(_boardTools()));
+    if (issues.isNotEmpty) items.add(_card(_issuesCard()));
+    if (hint != null) {
+      items.add(_card(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Icon(Icons.lightbulb_outline, color: C.goldHi),
+        const SizedBox(width: 8),
+        Expanded(child: Text(hint!, style: const TextStyle(height: 1.5))),
+        InkWell(onTap: () => setState(() => hint = null), child: const Icon(Icons.close, size: 18)),
+      ])));
+    }
     // selected wire tools
     if (selWire != null && selWire! < sim.wires.length) {
       final w = sim.wires[selWire!];
@@ -899,6 +1086,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             OutlinedButton.icon(onPressed: _undoWire, icon: const Icon(Icons.undo), label: const Text('رجوع')),
             OutlinedButton.icon(onPressed: _clearWires, icon: const Icon(Icons.delete_sweep_outlined), label: const Text('امسح')),
             _meterBtn(),
+            OutlinedButton.icon(onPressed: _hint, icon: const Icon(Icons.lightbulb_outline), label: const Text('تلميح')),
             TextButton(onPressed: _showSolution, child: const Text('اعرض الحل')),
           ]),
         ])));
@@ -945,13 +1133,14 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
             TextButton(
                 onPressed: () {
                   sim = Sim(parts: head(rating: 16), wires: headWires(head()));
+                  tidyWires(sim);
                   selPart = null;
                   _run(quiet: true);
                 },
                 child: const Text('لوحة جديدة')),
           ]),
           const SizedBox(height: 4),
-          const Text('اضغط على طرفين لتوصيل سلك • اضغط مطوّل واسحب لتحريك المكون', style: TextStyle(fontSize: 11, color: C.dim)),
+          const Text('اسحب من طرف لطرف (أو اضغط على الطرفين) لتوصيل سلك • اسحب المكون لتحريكه • اختار السلك واسحب أي جزء منه أو أي ركن لتعديل مساره', style: TextStyle(fontSize: 11, color: C.dim, height: 1.4)),
         ])));
     }
     final col = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: items);
@@ -960,6 +1149,53 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .42),
       child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(8, 4, 8, 8), child: SafeArea(top: false, child: col)),
     );
+  }
+
+  Widget _boardTools() {
+    final sp = selPart == null || mode == LabMode.free ? null : sim.part(selPart!);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        FilledButton.tonalIcon(onPressed: _tidy, icon: const Icon(Icons.auto_awesome_mosaic_outlined), label: const Text('نظّم الأسلاك')),
+        FilterChip(
+          label: const Text('أسلاك سودا'),
+          selected: mono,
+          onSelected: (v) {
+            mono = v;
+            _run(quiet: true);
+          },
+        ),
+        if (sp != null) ...[
+          Text('${sp.id}:', style: const TextStyle(fontWeight: FontWeight.w700)),
+          IconButton(tooltip: 'لف', onPressed: () => _rotate(sp, -1), icon: const Icon(Icons.rotate_left)),
+          IconButton(tooltip: 'لف', onPressed: () => _rotate(sp, 1), icon: const Icon(Icons.rotate_right)),
+        ],
+      ]),
+      if (selWire != null) const Text('اسحب أي جزء من السلك المختار أو النقط البيضا اللي عليه عشان تغيّر مساره.', style: TextStyle(fontSize: 11, color: C.dim)),
+    ]);
+  }
+
+  Widget _issuesCard() {
+    final errs = issues.where((i) => i.error).length;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Icon(errs > 0 ? Icons.error_outline : Icons.warning_amber_rounded, color: errs > 0 ? C.bad : C.warn),
+        const SizedBox(width: 6),
+        Expanded(child: Text(errs > 0 ? 'فيه $errs غلطة في التوصيل' : 'ملاحظات على التوصيل', style: const TextStyle(fontWeight: FontWeight.w700))),
+      ]),
+      for (final i in issues.take(4))
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            dense: true,
+            leading: Icon(i.error ? Icons.close_rounded : Icons.priority_high_rounded, color: i.error ? C.bad : C.warn, size: 20),
+            title: Text(i.title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+            childrenPadding: const EdgeInsets.only(bottom: 6),
+            children: [Text('ليه غلط؟ ${i.why}', style: const TextStyle(fontSize: 12.5, color: C.dim, height: 1.5))],
+          ),
+        ),
+      if (issues.length > 4) Text('و${issues.length - 4} ملاحظات تانية', style: const TextStyle(fontSize: 12, color: C.dim)),
+    ]);
   }
 
   Widget _card(Widget child) => Padding(padding: const EdgeInsets.only(bottom: 8), child: Container(padding: const EdgeInsets.all(12), decoration: glowCard(r: 14), child: child));
@@ -1005,7 +1241,9 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
           PartIcon(p.kind, size: 34),
           const SizedBox(width: 8),
           Expanded(child: Text('${p.id} • ${p.type.name}', style: const TextStyle(fontWeight: FontWeight.w700))),
-          IconButton(onPressed: () => _deletePart(p.id), icon: const Icon(Icons.delete_outline, color: C.bad)),
+          IconButton(tooltip: 'لف عكس عقارب الساعة', onPressed: () => _rotate(p, -1), icon: const Icon(Icons.rotate_left)),
+          IconButton(tooltip: 'لف مع عقارب الساعة', onPressed: () => _rotate(p, 1), icon: const Icon(Icons.rotate_right)),
+          if (mode == LabMode.free) IconButton(onPressed: () => _deletePart(p.id), icon: const Icon(Icons.delete_outline, color: C.bad)),
         ]),
         if (p.kind == Kind.lamp || p.kind == Kind.tube || p.kind == Kind.ballast)
           Row(children: [
@@ -1035,7 +1273,8 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   Future<void> _palette() async {
     const groups = {
-      'التغذية والحماية': [Kind.supply, Kind.mcb, Kind.rcd, Kind.meter, Kind.nbar, Kind.ebar, Kind.jbox],
+      'التغذية والحماية': [Kind.supply, Kind.mcb, Kind.rcd, Kind.meter, Kind.nbar, Kind.ebar],
+      'علب التجميع (البواط)': [Kind.jbox, Kind.jbox6, Kind.jbox8, Kind.jbox10],
       'المفاتيح': [Kind.sw1, Kind.sw2, Kind.swi, Kind.swd, Kind.pb, Kind.dimmer],
       'الأحمال': [Kind.lamp, Kind.socket, Kind.bell, Kind.lock],
       'الفلورسنت والـLED والسلم': [Kind.tube, Kind.ballast, Kind.starter, Kind.driver, Kind.ledpanel, Kind.stair],
@@ -1060,7 +1299,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
                       padding: const EdgeInsets.all(6),
                       decoration: glowCard(r: 12),
                       child: Column(children: [
-                        Container(decoration: BoxDecoration(color: skin == Skin.board ? C.board : Colors.white, borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.all(4), child: PartIcon(kind, size: 60, skin: skin)),
+                        Container(decoration: BoxDecoration(color: skin == Skin.board ? const Color(0xFFDDE2E8) : Colors.white, borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.all(4), child: PartIcon(kind, size: 60, skin: skin)),
                         const SizedBox(height: 4),
                         Text(partTypes[kind]!.name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, height: 1.2)),
                       ]),
@@ -1100,4 +1339,20 @@ class _PowerSwitch extends StatelessWidget {
           ]),
         ),
       );
+}
+
+enum _DK { part, bend, leg, term }
+
+class _Drag {
+  final _DK kind;
+  final Offset start;
+  final int? wire;
+  int? idx;
+  final String? term;
+  final String? part;
+  final Offset? orig;
+  bool moved = false;
+  bool prepared = false;
+  List<Offset>? base;
+  _Drag(this.kind, this.start, {this.wire, this.idx, this.term, this.part, this.orig});
 }

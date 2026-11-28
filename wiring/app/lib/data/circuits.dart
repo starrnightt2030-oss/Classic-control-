@@ -1,7 +1,9 @@
 import 'dart:ui' show Offset;
 
+import '../sim/diagnose.dart';
 import '../sim/model.dart';
 import '../sim/solver.dart';
+import '../ui/lab/wires.dart';
 
 /// One wire in the reference wiring, with the guide text that goes with it.
 class Step {
@@ -40,9 +42,39 @@ class CircuitDef {
   /// all wires of the reference wiring (the board head included)
   List<Wire> referenceWires() => [...headWires(parts()), ...steps.map((s) => Wire(s.a, s.b, s.c))];
 
-  Sim buildEmpty() => Sim(parts: parts(), wires: headWires(parts()));
-  Sim buildDone() => Sim(parts: parts(), wires: referenceWires());
+  Sim buildEmpty() {
+    final s = Sim(parts: parts(), wires: headWires(parts()));
+    tidyWires(s);
+    return s;
+  }
+
+  /// the finished board, its wires laid out by the tidy router (worked out once)
+  Sim buildDone() {
+    final s = Sim(parts: parts(), wires: referenceWires());
+    final r = _routes[id];
+    if (r != null && r.length == s.wires.length) {
+      for (var i = 0; i < r.length; i++) {
+        s.wires[i].pts = List.of(r[i]);
+      }
+    } else {
+      tidyWires(s);
+      _routes[id] = [for (final w in s.wires) List.of(w.pts)];
+    }
+    return s;
+  }
 }
+
+/// The first wire of the reference wiring the student has not made yet (by net, so any
+/// equivalent way of joining the two points counts), or null when nothing is missing.
+Step? nextHint(CircuitDef c, Sim s) {
+  final nets = netsOf(s, throughDevices: false);
+  for (final st in c.steps) {
+    if (!nets.same(st.a, st.b)) return st;
+  }
+  return null;
+}
+
+final Map<String, List<List<Offset>>> _routes = {};
 
 const levelNames = ['', 'مبتدئ', 'متوسط', 'متقدم', 'احترافي'];
 
@@ -321,8 +353,8 @@ final List<CircuitDef> circuits = [
   CircuitDef(
     id: 'c13', no: 13, level: 3, title: 'لمبتين فلورسنت على التوازي', room: 'الورشة',
     brief: 'كل أنبوبة ليها بلاست وستارتر، والاتنين على مفتاح واحد.',
-    parts: () => [...head(), sw('S1', Kind.sw1, 130, 330), Part('BL1', Kind.ballast, const Offset(300, 200), watts: 40), Part('T1', Kind.tube, const Offset(460, 180), watts: 40), Part('ST1', Kind.starter, const Offset(580, 250)),
-      Part('BL2', Kind.ballast, const Offset(300, 420), watts: 40), Part('T2', Kind.tube, const Offset(460, 400), watts: 40), Part('ST2', Kind.starter, const Offset(580, 470))],
+    parts: () => [...head(), sw('S1', Kind.sw1, 130, 330), Part('BL1', Kind.ballast, const Offset(300, 200), watts: 40), Part('T1', Kind.tube, const Offset(500, 180), watts: 40), Part('ST1', Kind.starter, const Offset(640, 250)),
+      Part('BL2', Kind.ballast, const Offset(300, 420), watts: 40), Part('T2', Kind.tube, const Offset(500, 400), watts: 40), Part('ST2', Kind.starter, const Offset(640, 470))],
     steps: const [
       Step('Q1.out', 'S1.L', WireColor.brown, 'الفاز للمفتاح'),
       Step('S1.1', 'BL1.1', WireColor.brown, 'من المفتاح للبلاست الأول'),
@@ -346,8 +378,8 @@ final List<CircuitDef> circuits = [
     id: 'c14', no: 14, level: 3, title: 'لمبتين فلورسنت توالي على خانق واحد', room: 'الورشة',
     brief: 'أنبوبتين 60 سم (20 وات) ورا بعض على بلاست واحد 40 وات، ولكل أنبوبة ستارتر.',
     parts: () => [...head(), sw('S1', Kind.sw1, 130, 330), Part('BL1', Kind.ballast, const Offset(260, 220), watts: 40),
-      Part('T1', Kind.tube, const Offset(420, 180), watts: 20), Part('ST1', Kind.starter, const Offset(540, 250)),
-      Part('T2', Kind.tube, const Offset(420, 400), watts: 20), Part('ST2', Kind.starter, const Offset(540, 470))],
+      Part('T1', Kind.tube, const Offset(470, 180), watts: 20), Part('ST1', Kind.starter, const Offset(610, 250)),
+      Part('T2', Kind.tube, const Offset(470, 400), watts: 20), Part('ST2', Kind.starter, const Offset(610, 470))],
     steps: const [
       Step('Q1.out', 'S1.L', WireColor.brown, 'الفاز للمفتاح'),
       Step('S1.1', 'BL1.1', WireColor.brown, 'من المفتاح للبلاست'),
@@ -442,7 +474,7 @@ final List<CircuitDef> circuits = [
     id: 'c19', no: 19, level: 4, title: 'بريزة 16 أمبير بمفتاح تسريب أرضي', room: 'الحمام',
     brief: 'بريزة السخان أو الغسالة محمية بقاطع 16 أمبير ومفتاح تسريب 30 مللي أمبير بيفصل لو فيه تيار بيهرب للأرض.',
     tips: ['اضغط زرار TEST في مفتاح التسريب كل شهر.', 'لو التسريب فصل، دوّر على جهاز عازله ضعيف.'],
-    parts: () => [...head(rating: 16), Part('R1', Kind.rcd, const Offset(380, 14)), Part('X1', Kind.socket, const Offset(600, 320), plug: true)],
+    parts: () => [...head(rating: 16), Part('R1', Kind.rcd, const Offset(420, 14)), Part('X1', Kind.socket, const Offset(600, 320), plug: true)],
     steps: const [
       Step('Q1.out', 'R1.Li', WireColor.brown, 'الفاز من القاطع لطرف L فوق في مفتاح التسريب'),
       Step('NB.n2', 'R1.Ni', WireColor.blue, 'النيوترال لطرف N فوق في مفتاح التسريب'),

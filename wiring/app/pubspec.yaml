@@ -24,6 +24,7 @@ flutter:
   assets:
     - assets/images/
     - assets/sfx/
+    - assets/board/
   fonts:
     - family: Cairo
       fonts:

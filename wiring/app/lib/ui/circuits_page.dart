@@ -83,7 +83,7 @@ class CircuitPreview extends StatelessWidget {
       applyScenario(sim, c.tests.lastWhere((s) => s.wait == 0, orElse: () => c.tests.last));
       res = simulate(sim);
     }
-    final bb = sim.parts.map((p) => p.pos & p.type.size).reduce((a, b) => a.expandToInclude(b)).inflate(34).intersect(Offset.zero & boardSize);
+    final bb = sim.parts.map((p) => p.rect).reduce((a, b) => a.expandToInclude(b)).inflate(16).intersect(Offset.zero & boardSize);
     return FittedBox(
       fit: BoxFit.contain,
       child: SizedBox.fromSize(size: bb.size, child: CustomPaint(painter: _Crop(BoardPainter(BoardState(sim: sim, res: res, skin: skin, t: 0, fx: Fx(), showLabels: skin == Skin.board)), bb.topLeft))),

@@ -1,4 +1,6 @@
-import 'dart:ui' show Offset, Size;
+import 'dart:ui' show Offset, Rect, Size;
+
+import '../data/board_geom.dart';
 
 /// Wire insulation colours used in residential wiring (IEC).
 enum WireColor { brown, blue, earth, black, grey, red }
@@ -16,106 +18,76 @@ const wireColorNames = {
 class TermDef {
   final String id;
   final String label;
-  final Offset pos; // inside the part box, in board units
+  final Offset pos; // inside the unrotated part box, in mm
   const TermDef(this.id, this.label, this.pos);
 }
 
 /// What kind of electrical behaviour a part has.
 enum Kind {
-  supply, mcb, rcd, meter, nbar, ebar, jbox,
+  supply, mcb, rcd, meter, nbar, ebar, jbox, jbox6, jbox8, jbox10,
   sw1, sw2, swi, swd, pb, dimmer,
   lamp, socket, bell, lock, tube, ballast, starter, stair, driver, ledpanel,
 }
 
+const jboxKinds = {Kind.jbox, Kind.jbox6, Kind.jbox8, Kind.jbox10};
+
+/// A part type. Its size and terminal positions come from the Blender front render
+/// of the real device (lib/data/board_geom.dart), so the board view, the hit tests
+/// and the wires all agree with the picture. Board units are millimetres.
 class PartType {
   final Kind kind;
   final String name;
   final String en;
-  final Size size;
-  final List<TermDef> terms;
-  final String symbol; // key of the IEC symbol painter
-  const PartType(this.kind, this.name, this.en, this.size, this.terms, {this.symbol = ''});
+  final String sprite; // base sprite in assets/board
+  final List<(String, String)> termIds; // (id, label)
+  PartType(this.kind, this.name, this.en, this.sprite, this.termIds);
+
+  SpriteGeom get geom => spriteGeom[sprite]!;
+  late final Size size = Size(geom.w, geom.h);
+  late final List<TermDef> terms = [for (final t in termIds) TermDef(t.$1, t.$2, geom.terms[t.$1]!)];
 
   TermDef term(String id) => terms.firstWhere((t) => t.id == id);
 }
 
-/// Board units: 1 unit = 1 logical px on a 1000 x 700 board.
-const partTypes = <Kind, PartType>{
-  Kind.supply: PartType(Kind.supply, 'مصدر التغذية', 'Supply 220V', Size(120, 90), [
-    TermDef('L', 'L', Offset(25, 75)), TermDef('N', 'N', Offset(60, 75)), TermDef('PE', 'PE', Offset(95, 75)),
-  ]),
-  Kind.mcb: PartType(Kind.mcb, 'قاطع آلي', 'MCB', Size(46, 110), [
-    TermDef('in', '1', Offset(23, 10)), TermDef('out', '2', Offset(23, 100)),
-  ]),
-  Kind.rcd: PartType(Kind.rcd, 'مفتاح تسريب أرضي', 'RCD 30mA', Size(90, 110), [
-    TermDef('Li', 'L', Offset(25, 10)), TermDef('Ni', 'N', Offset(65, 10)),
-    TermDef('Lo', 'L', Offset(25, 100)), TermDef('No', 'N', Offset(65, 100)),
-  ]),
-  Kind.meter: PartType(Kind.meter, 'العداد الكهربي', 'Energy meter', Size(120, 150), [
-    TermDef('Li', '1', Offset(18, 138)), TermDef('Lo', '3', Offset(46, 138)),
-    TermDef('Ni', '4', Offset(74, 138)), TermDef('No', '6', Offset(102, 138)),
-  ]),
-  Kind.nbar: PartType(Kind.nbar, 'قضيب النيوترال', 'Neutral bar', Size(110, 34), [
-    TermDef('n1', 'N', Offset(15, 17)), TermDef('n2', 'N', Offset(42, 17)), TermDef('n3', 'N', Offset(68, 17)), TermDef('n4', 'N', Offset(95, 17)),
-  ]),
-  Kind.ebar: PartType(Kind.ebar, 'قضيب الأرضي', 'Earth bar', Size(110, 34), [
-    TermDef('e1', 'PE', Offset(15, 17)), TermDef('e2', 'PE', Offset(42, 17)), TermDef('e3', 'PE', Offset(68, 17)), TermDef('e4', 'PE', Offset(95, 17)),
-  ]),
-  Kind.jbox: PartType(Kind.jbox, 'علبة تجميع', 'Junction box', Size(110, 110), [
-    TermDef('a', '1', Offset(30, 30)), TermDef('b', '2', Offset(80, 30)), TermDef('c', '3', Offset(30, 80)), TermDef('d', '4', Offset(80, 80)),
-  ]),
-  Kind.sw1: PartType(Kind.sw1, 'مفتاح مفرد', 'One-way switch', Size(86, 86), [
-    TermDef('L', 'L', Offset(25, 74)), TermDef('1', 'L1', Offset(61, 74)),
-  ]),
-  Kind.sw2: PartType(Kind.sw2, 'مفتاح دفياتير', 'Two-way switch', Size(86, 86), [
-    TermDef('C', 'C', Offset(18, 74)), TermDef('1', 'L1', Offset(43, 74)), TermDef('2', 'L2', Offset(68, 74)),
-  ]),
-  Kind.swi: PartType(Kind.swi, 'مفتاح انترميديت', 'Intermediate switch', Size(86, 86), [
-    TermDef('A1', 'A1', Offset(16, 74)), TermDef('A2', 'A2', Offset(34, 74)), TermDef('B1', 'B1', Offset(52, 74)), TermDef('B2', 'B2', Offset(70, 74)),
-  ]),
-  Kind.swd: PartType(Kind.swd, 'مفتاح توالي (مزدوج)', 'Two-gang switch', Size(86, 86), [
-    TermDef('L', 'L', Offset(18, 74)), TermDef('1', 'L1', Offset(43, 74)), TermDef('2', 'L2', Offset(68, 74)),
-  ]),
-  Kind.pb: PartType(Kind.pb, 'ضاغط جرس', 'Push button', Size(70, 70), [
-    TermDef('1', '1', Offset(18, 60)), TermDef('2', '2', Offset(52, 60)),
-  ]),
-  Kind.dimmer: PartType(Kind.dimmer, 'دايمر', 'Dimmer', Size(86, 86), [
-    TermDef('L', 'L', Offset(25, 74)), TermDef('1', 'L1', Offset(61, 74)),
-  ]),
-  Kind.lamp: PartType(Kind.lamp, 'لمبة ودواية', 'Lamp holder', Size(80, 100), [
-    TermDef('L', 'L', Offset(25, 90)), TermDef('N', 'N', Offset(55, 90)),
-  ]),
-  Kind.socket: PartType(Kind.socket, 'بريزة بأرضي', 'Socket 16A', Size(86, 86), [
-    TermDef('L', 'L', Offset(18, 74)), TermDef('N', 'N', Offset(43, 74)), TermDef('PE', 'PE', Offset(68, 74)),
-  ]),
-  Kind.bell: PartType(Kind.bell, 'جرس كهربي', 'Bell', Size(80, 80), [
-    TermDef('1', '1', Offset(22, 70)), TermDef('2', '2', Offset(58, 70)),
-  ]),
-  Kind.lock: PartType(Kind.lock, 'كالون كهربي', 'Electric lock', Size(70, 110), [
-    TermDef('1', '1', Offset(20, 100)), TermDef('2', '2', Offset(50, 100)),
-  ]),
-  Kind.tube: PartType(Kind.tube, 'أنبوبة فلورسنت', 'Fluorescent tube', Size(300, 50), [
-    TermDef('A1', 'A1', Offset(10, 14)), TermDef('A2', 'A2', Offset(10, 38)),
-    TermDef('B1', 'B1', Offset(290, 14)), TermDef('B2', 'B2', Offset(290, 38)),
-  ]),
-  Kind.ballast: PartType(Kind.ballast, 'ملف خانق (بلاست)', 'Ballast', Size(110, 44), [
-    TermDef('1', '1', Offset(12, 22)), TermDef('2', '2', Offset(98, 22)),
-  ]),
-  Kind.starter: PartType(Kind.starter, 'ستارتر', 'Starter', Size(50, 60), [
-    TermDef('1', '1', Offset(14, 52)), TermDef('2', '2', Offset(36, 52)),
-  ]),
-  Kind.stair: PartType(Kind.stair, 'ماكينة السلم', 'Staircase timer', Size(60, 110), [
-    TermDef('L', 'L', Offset(12, 10)), TermDef('N', 'N', Offset(30, 10)), TermDef('S', '3', Offset(48, 10)),
-    TermDef('O', '4', Offset(30, 100)),
-  ]),
-  Kind.driver: PartType(Kind.driver, 'درايفر LED', 'LED driver', Size(120, 50), [
-    TermDef('L', 'L', Offset(12, 14)), TermDef('N', 'N', Offset(12, 36)),
-    TermDef('+', '+', Offset(108, 14)), TermDef('-', '−', Offset(108, 36)),
-  ]),
-  Kind.ledpanel: PartType(Kind.ledpanel, 'كشاف LED', 'LED panel', Size(120, 120), [
-    TermDef('+', '+', Offset(45, 110)), TermDef('-', '−', Offset(75, 110)),
-  ]),
+List<(String, String)> _jt(int n) => [for (var i = 1; i <= n; i++) ('t$i', '$i')];
+
+/// Board units: 1 unit = 1 mm on a 1000 x 620 mm training board.
+final partTypes = <Kind, PartType>{
+  Kind.supply: PartType(Kind.supply, 'مصدر التغذية', 'Supply 220V', 'supply', [('L', 'L'), ('N', 'N'), ('PE', 'PE')]),
+  Kind.mcb: PartType(Kind.mcb, 'قاطع آلي', 'MCB', 'mcb_1p', [('in', '1'), ('out', '2')]),
+  Kind.rcd: PartType(Kind.rcd, 'مفتاح تسريب أرضي', 'RCD 30mA', 'rccb', [('Li', 'L'), ('Ni', 'N'), ('Lo', 'L'), ('No', 'N')]),
+  Kind.meter: PartType(Kind.meter, 'العداد الكهربي', 'Energy meter', 'kwh_meter', [('Li', '1'), ('Lo', '3'), ('Ni', '4'), ('No', '6')]),
+  Kind.nbar: PartType(Kind.nbar, 'قضيب النيوترال', 'Neutral bar', 'nbar', [('n1', 'N'), ('n2', 'N'), ('n3', 'N'), ('n4', 'N')]),
+  Kind.ebar: PartType(Kind.ebar, 'قضيب الأرضي', 'Earth bar', 'ebar', [('e1', 'PE'), ('e2', 'PE'), ('e3', 'PE'), ('e4', 'PE')]),
+  Kind.jbox: PartType(Kind.jbox, 'علبة تجميع 4 نقط', 'Junction box 4', 'jbox4', _jt(4)),
+  Kind.jbox6: PartType(Kind.jbox6, 'علبة تجميع 6 نقط', 'Junction box 6', 'jbox6', _jt(6)),
+  Kind.jbox8: PartType(Kind.jbox8, 'علبة تجميع 8 نقط', 'Junction box 8', 'jbox8', _jt(8)),
+  Kind.jbox10: PartType(Kind.jbox10, 'علبة تجميع 10 نقط', 'Junction box 10', 'jbox10', _jt(10)),
+  Kind.sw1: PartType(Kind.sw1, 'مفتاح مفرد', 'One-way switch', 'sw1_0', [('L', 'L'), ('1', 'L1')]),
+  Kind.sw2: PartType(Kind.sw2, 'مفتاح دفياتير', 'Two-way switch', 'sw2_0', [('C', 'C'), ('1', 'L1'), ('2', 'L2')]),
+  Kind.swi: PartType(Kind.swi, 'مفتاح انترميديت', 'Intermediate switch', 'swi_0', [('A1', 'A1'), ('A2', 'A2'), ('B1', 'B1'), ('B2', 'B2')]),
+  Kind.swd: PartType(Kind.swd, 'مفتاح توالي (مزدوج)', 'Two-gang switch', 'swd_00', [('L', 'L'), ('1', 'L1'), ('2', 'L2')]),
+  Kind.pb: PartType(Kind.pb, 'ضاغط جرس', 'Push button', 'pb_0', [('1', '1'), ('2', '2')]),
+  Kind.dimmer: PartType(Kind.dimmer, 'دايمر', 'Dimmer', 'dimmer', [('L', 'L'), ('1', 'L1')]),
+  Kind.lamp: PartType(Kind.lamp, 'لمبة ودواية', 'Lamp holder', 'lamp_0', [('L', 'L'), ('N', 'N')]),
+  Kind.socket: PartType(Kind.socket, 'بريزة بأرضي', 'Socket 16A', 'socket', [('L', 'L'), ('N', 'N'), ('PE', 'PE')]),
+  Kind.bell: PartType(Kind.bell, 'جرس كهربي', 'Bell', 'bell', [('1', '1'), ('2', '2')]),
+  Kind.lock: PartType(Kind.lock, 'كالون كهربي', 'Electric lock', 'lock_0', [('1', '1'), ('2', '2')]),
+  Kind.tube: PartType(Kind.tube, 'أنبوبة فلورسنت', 'Fluorescent tube', 'tube_0', [('A1', 'A1'), ('A2', 'A2'), ('B1', 'B1'), ('B2', 'B2')]),
+  Kind.ballast: PartType(Kind.ballast, 'ملف خانق (بلاست)', 'Ballast', 'ballast', [('1', '1'), ('2', '2')]),
+  Kind.starter: PartType(Kind.starter, 'ستارتر', 'Starter', 'starter', [('1', '1'), ('2', '2')]),
+  Kind.stair: PartType(Kind.stair, 'ماكينة السلم', 'Staircase timer', 'stair', [('L', 'L'), ('N', 'N'), ('S', '3'), ('O', '4')]),
+  Kind.driver: PartType(Kind.driver, 'درايفر LED', 'LED driver', 'driver', [('L', 'L'), ('N', 'N'), ('+', '+'), ('-', '−')]),
+  Kind.ledpanel: PartType(Kind.ledpanel, 'كشاف LED', 'LED panel', 'ledpanel_0', [('+', '+'), ('-', '−')]),
 };
+
+/// Rotate [v] (relative to a box centre) by [rot] quarter turns clockwise (screen axes).
+Offset rotQ(Offset v, int rot) => switch (rot & 3) {
+      0 => v,
+      1 => Offset(-v.dy, v.dx),
+      2 => Offset(-v.dx, -v.dy),
+      _ => Offset(v.dy, -v.dx),
+    };
 
 /// A part placed on a board.
 class Part {
@@ -130,20 +102,45 @@ class Part {
   bool led; // lamp is an LED bulb
   bool plug; // socket has a load plugged in
   int rating; // MCB rating (A)
+  int rot; // quarter turns clockwise
   Part(this.id, this.kind, this.pos,
-      {this.on = false, this.on2 = false, this.level = 1, this.watts = 0, this.led = false, this.plug = false, this.rating = 10});
+      {this.on = false, this.on2 = false, this.level = 1, this.watts = 0, this.led = false, this.plug = false, this.rating = 10, this.rot = 0});
 
   PartType get type => partTypes[kind]!;
-  Offset termPos(String t) => pos + type.term(t).pos;
 
-  Part copy() => Part(id, kind, pos, on: on, on2: on2, level: level, watts: watts, led: led, plug: plug, rating: rating);
+  /// size of the part on the board (after rotation)
+  Size get box => rot.isOdd ? Size(type.size.height, type.size.width) : type.size;
+  Rect get rect => pos & box;
+  Offset get center => pos + Offset(box.width / 2, box.height / 2);
+
+  /// a point of the unrotated part (mm from its top-left) on the board
+  Offset toBoard(Offset local) => center + rotQ(local - Offset(type.size.width / 2, type.size.height / 2), rot);
+
+  /// a board point in the part's own (unrotated) coordinates
+  Offset toLocal(Offset board) => rotQ(board - center, (4 - (rot & 3)) & 3) + Offset(type.size.width / 2, type.size.height / 2);
+
+  Offset termPos(String t) => toBoard(type.term(t).pos);
+
+  /// the way a wire leaves terminal [t]: away from the part, towards the nearest edge
+  Offset termDir(String t) {
+    final p = type.term(t).pos, s = type.size;
+    final d = [p.dy, s.height - p.dy, p.dx, s.width - p.dx];
+    var k = 0;
+    for (var i = 1; i < 4; i++) {
+      if (d[i] < d[k]) k = i;
+    }
+    const dirs = [Offset(0, -1), Offset(0, 1), Offset(-1, 0), Offset(1, 0)];
+    return rotQ(dirs[k], rot);
+  }
+
+  Part copy() => Part(id, kind, pos, on: on, on2: on2, level: level, watts: watts, led: led, plug: plug, rating: rating, rot: rot);
 
   Map<String, dynamic> toJson() => {
         'id': id, 'k': kind.name, 'x': pos.dx, 'y': pos.dy, 'on': on, 'on2': on2, 'lv': level,
-        'w': watts, 'led': led, 'plug': plug, 'r': rating,
+        'w': watts, 'led': led, 'plug': plug, 'r': rating, 'rot': rot,
       };
   static Part fromJson(Map<String, dynamic> j) => Part(j['id'], Kind.values.byName(j['k']), Offset((j['x'] as num).toDouble(), (j['y'] as num).toDouble()),
-      on: j['on'] ?? false, on2: j['on2'] ?? false, level: (j['lv'] ?? 1).toDouble(), watts: j['w'] ?? 0, led: j['led'] ?? false, plug: j['plug'] ?? false, rating: j['r'] ?? 10);
+      on: j['on'] ?? false, on2: j['on2'] ?? false, level: (j['lv'] ?? 1).toDouble(), watts: j['w'] ?? 0, led: j['led'] ?? false, plug: j['plug'] ?? false, rating: j['r'] ?? 10, rot: j['rot'] ?? 0);
 }
 
 /// A wire between two terminals, written as "PART.TERM".
@@ -151,11 +148,15 @@ class Wire {
   final String a;
   final String b;
   WireColor color;
-  Wire(this.a, this.b, this.color);
+  /// bend points chosen by the student or by "tidy" (board mm); empty = automatic route
+  List<Offset> pts;
+  Wire(this.a, this.b, this.color, {List<Offset>? pts}) : pts = pts ?? [];
   bool joins(String x, String y) => (a == x && b == y) || (a == y && b == x);
   bool touches(String t) => a == t || b == t;
-  Map<String, dynamic> toJson() => {'a': a, 'b': b, 'c': color.name};
-  static Wire fromJson(Map<String, dynamic> j) => Wire(j['a'], j['b'], WireColor.values.byName(j['c']));
+  Wire copy() => Wire(a, b, color, pts: List.of(pts));
+  Map<String, dynamic> toJson() => {'a': a, 'b': b, 'c': color.name, if (pts.isNotEmpty) 'p': [for (final o in pts) [o.dx, o.dy]]};
+  static Wire fromJson(Map<String, dynamic> j) => Wire(j['a'], j['b'], WireColor.values.byName(j['c']),
+      pts: [for (final o in (j['p'] as List? ?? const [])) Offset((o[0] as num).toDouble(), (o[1] as num).toDouble())]);
 }
 
 /// Hidden faults the trainer can put in a working circuit.

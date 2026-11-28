@@ -245,6 +245,7 @@ class WirePainter extends CustomPainter {
         ..add(w.b)
         ..add(w.color)
         ..add(Object.hashAll(w.pts))
+        ..add(w.burnt)
         ..add(doc.termPos(w.a))
         ..add(doc.termPos(w.b))
         ..add(doc.termUp(w.a))
@@ -252,6 +253,30 @@ class WirePainter extends CustomPainter {
         ..add(nets != null && nets!.live(w.a));
     }
     return Object.hashAll(h);
+  }
+
+  /// a wire whose insulation melted in a short: blackened and blistered along its
+  /// length, worst in the middle, with the bare copper showing through in places
+  static void _charred(Canvas c, Path path, double thick, int seed) {
+    final rnd = math.Random(seed * 7919 + 13);
+    for (final m in path.computeMetrics()) {
+      final len = m.length;
+      c.drawPath(m.extractPath(len * 0.12, len * 0.88), Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = thick + 1.2
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xE0201812));
+      for (var t = len * 0.15; t < len * 0.85; t += 6 + rnd.nextDouble() * 10) {
+        final tg = m.getTangentForOffset(t);
+        if (tg == null) continue;
+        final mid = 1 - ((t / len) - 0.5).abs() * 2;
+        c.drawCircle(tg.position + Offset(rnd.nextDouble() - 0.5, rnd.nextDouble() - 0.5) * thick * 0.6, thick * (0.45 + 0.4 * mid * rnd.nextDouble()),
+            Paint()..color = const Color(0xFF0B0806));
+        if (rnd.nextDouble() < 0.18 + 0.2 * mid) {
+          c.drawCircle(tg.position, thick * 0.22, Paint()..color = const Color(0xFFC77B3A)); // bare copper
+        }
+      }
+    }
   }
 
   _WireCache _build(int sig) {
@@ -329,6 +354,7 @@ class WirePainter extends CustomPainter {
         ..strokeWidth = thick * 0.22
         ..strokeCap = StrokeCap.round
         ..color = Colors.white.withValues(alpha: 0.28));
+      if (w.burnt) _charred(c, path, thick, i);
     }
     final base = rec.endRecording();
     // ferrules on top of everything at each end
@@ -621,6 +647,9 @@ class MachinePainter extends CustomPainter {
 
   /// the machine rendered from its Blender model (lib/lab/machine_sprites.dart), when loaded
   final MachineSprite? sprite;
+
+  /// the machine's local buttons that work now (true while held), see kLocalButtons
+  final List<bool> local;
   MachinePainter(this.kind,
       {this.x = 0,
       this.sw = const [false, false, false, false],
@@ -631,7 +660,55 @@ class MachinePainter extends CustomPainter {
       this.plant,
       this.io,
       this.coil = false,
+      this.local = const [],
       this.sprite});
+
+  /// the buttons of the drawn local station (kLocalPanel) inside a machine part of [size]: centres, radius
+  static (List<Offset>, double) localSpots(Size size, int n) {
+    const s = kPx;
+    final scene = spriteScene(size);
+    const r = 4.6 * s, gap = 13.0 * s;
+    final x0 = scene.right - 4 * s - r - (n - 1) * gap;
+    return ([for (var i = 0; i < n; i++) Offset(x0 + i * gap, scene.top + 5 * s + r)], r);
+  }
+
+  /// where the Blender sprite is drawn inside a machine part of [size] (px)
+  static Rect spriteScene(Size size) {
+    const s = kPx;
+    final stripTop = size.height - 20 * s;
+    return Rect.fromLTRB(10 * s, 12 * s + 2 * s, size.width - 10 * s, stripTop - 12 * s + 8 * s);
+  }
+
+  /// the small control station drawn beside machines whose model has none
+  void _localStation(Canvas c, Size size) {
+    final bs = kLocalPanel[kind];
+    if (bs == null || kLocalButtons.containsKey(kind)) return;
+    const s = kPx;
+    final (spots, r) = localSpots(size, bs.length);
+    final box = Rect.fromLTRB(spots.first.dx - r - 3 * s, spots.first.dy - r - 3 * s, spots.last.dx + r + 3 * s, spots.first.dy + r + 7.5 * s);
+    c.drawRRect(RRect.fromRectAndRadius(box.shift(const Offset(0, 1.2 * s)), const Radius.circular(2.5 * s)), Paint()..color = const Color(0x66000000));
+    c.drawRRect(RRect.fromRectAndRadius(box, const Radius.circular(2.5 * s)), Paint()..color = const Color(0xFFB9C0C8));
+    c.drawRRect(RRect.fromRectAndRadius(box, const Radius.circular(2.5 * s)), Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5 * s
+      ..color = const Color(0xFF7D8690));
+    for (var i = 0; i < bs.length; i++) {
+      final (_, label, green) = bs[i];
+      final o = spots[i];
+      final held = i < local.length && local[i];
+      final col = green ? const Color(0xFF2FBF5A) : const Color(0xFFE0393E);
+      if (held) {
+        c.drawCircle(o, r * 1.9, Paint()
+          ..color = col.withValues(alpha: 0.55)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5 * s));
+      }
+      c.drawCircle(o, r + 0.8 * s, Paint()..color = const Color(0xFF2B3036));
+      c.drawCircle(o + (held ? Offset.zero : Offset(0, -0.4 * s)), r * (held ? 0.86 : 1), Paint()
+        ..shader = RadialGradient(colors: [Color.lerp(col, Colors.white, 0.35)!, col, Color.lerp(col, Colors.black, 0.35)!], stops: const [0, 0.55, 1])
+            .createShader(Rect.fromCircle(center: o + Offset(-r * 0.3, -r * 0.4), radius: r * 1.4)));
+      _text(c, label, Offset(o.dx, o.dy + r + 3.4 * s), 3.2 * s, col: const Color(0xFF1C2229));
+    }
+  }
 
   /// what the panel lab's own machines (cart, hoist, lift) show now
   MachineLook _look() {
@@ -741,11 +818,12 @@ class MachinePainter extends CustomPainter {
         _text(c, motor.isEmpty ? 'غير مربوطة بمحرك' : '$what $motor', Offset(area.left, 6.5 * s), 4.2 * s,
             col: motor.isEmpty ? const Color(0xFFFF8A8A) : const Color(0xFF8EA0B8), dir: TextDirection.rtl, center: false, bold: false);
       }
-      final scene = Rect.fromLTRB(area.left, area.top + 2 * s, area.right, area.bottom + 8 * s);
+      final scene = spriteScene(size);
       c.save();
       c.translate(scene.left, scene.top);
-      MachineSpritePainter(sp, _look(), 0).paint(c, scene.size);
+      MachineSpritePainter(sp, _look(), 0, local: kLocalButtons.containsKey(kind) ? local : const []).paint(c, scene.size);
       c.restore();
+      _localStation(c, size);
       return;
     }
     final pl = plant;

@@ -363,7 +363,9 @@ class FanPlant extends Plant {
   void step(double dt, PlantIo io) {
     final v = io.motor('M1');
     spd = v;
-    angle = (angle + v * 900 * dt) % 360;
+    // the drawn blades turn slower than the real 1400 rpm: at 30 frames a second a
+    // faster turn aliases into blades that seem to stand still or jump
+    angle = (angle + v * 200 * dt) % 360;
     if (v.abs() > 0.5) {
       _on += dt;
       if (_on >= 60) {
@@ -382,7 +384,7 @@ class CrusherPlant extends Plant {
   @override
   void step(double dt, PlantIo io) {
     final v = io.motor('M1');
-    angle = (angle + v * 420 * dt) % 360;
+    angle = (angle + v * 260 * dt) % 360;
     if (v.abs() > 0.8) {
       _t += dt;
       if (_t >= 12) {
@@ -426,7 +428,7 @@ class OvenPlant extends Plant {
   void step(double dt, PlantIo io) {
     final fan = io.motor('M1').abs();
     final heat = io.on('E1');
-    angle = (angle + fan * 900 * dt) % 360;
+    angle = (angle + fan * 200 * dt) % 360; // drawn slower than real, see FanPlant
     temp += ((heat ? 0.06 : 0) - fan * 0.012 - (temp - 0.1) * 0.012) * dt;
     temp = temp.clamp(0.0, 1.0).toDouble();
     if (_stat ? temp < 0.7 : temp >= 0.8) _stat = !_stat;
@@ -455,7 +457,7 @@ class MixerPlant extends Plant {
   @override
   void step(double dt, PlantIo io) {
     final v = io.motor('M1');
-    angle = (angle + v * 540 * dt) % 360;
+    angle = (angle + v * 240 * dt) % 360;
     if (v.abs() > 0.5) {
       _t += dt;
       if (_t >= 15) {

@@ -426,9 +426,13 @@ MODELS = {
     # tools and materials (3D viewer / library only)
     "pliers": (pliers("pliers"), "زرادية"), "cutter": (pliers("cutter"), "قصافة"),
     "tester": (tester, "مفك اختبار"), "hammer": (hammer, "شاكوش"), "tape": (tape, "شريط عازل"),
-    "conduit": (conduit, "مواسير"), "coil_brown": (coil("brown"), "لفة سلك"), "coil_blue": (coil("blue"), "لفة سلك"),
-    "coil_earth": (coil("earth"), "لفة سلك"), "flush_box": (flush_box, "علبة مفتاح"), "earth_rod": (earth_rod, "عمود أرضي"),
+    "conduit": (conduit, "مواسير"), "coil_brown": (coil("brown"), "لفة سلك"),
+    "flush_box": (flush_box, "علبة مفتاح"), "earth_rod": (earth_rod, "عمود أرضي"),
 }
+
+# how far each group slides out in the 3D viewer's exploded view (mm)
+EXPLODE = {"mech": (0, -30, -35), "glass": (0, 0, 45), "gong": (0, -35, 0), "bolt": (40, 0, 0), "tube": (0, -35, 0),
+           "bar": (0, -25, 0), "head": (0, 0, 35), "blade": (0, 0, -40), "handle": (0, 0, -40), "flex": (0, 0, 40), "clamp": (0, 0, 40)}
 
 TOOLS = {"pliers", "cutter", "tester", "hammer", "tape", "conduit", "coil_brown", "coil_blue", "coil_earth", "flush_box", "earth_rod"}
 
@@ -440,7 +444,7 @@ def build_one(name):
     groups = [g for g in kit.G if kit.G[g]]
     parts = {g: ({"body": "الجسم", "mech": "الأطراف", "glass": "اللمبة", "gong": "الجرس", "bolt": "اللسان", "tube": "الأنبوبة",
                   "bar": "القضيب", "grip": "اليد المعزولة", "head": "الرأس", "blade": "السلاح", "handle": "اليد", "pipe": "ماسورة صلبة",
-                  "flex": "خرطوم مرن", "coil": "اللفة", "rod": "العمود", "clamp": "الكلامب"}.get(g, g), g, (0, 0, 0)) for g in groups}
+                  "flex": "خرطوم مرن", "coil": "اللفة", "rod": "العمود", "clamp": "الكلامب"}.get(g, g), g, EXPLODE.get(g, (0, 0, 0))) for g in groups}
     kit.merge(parts)
     lib.OUT = OUT + os.sep
     lib.export(name)

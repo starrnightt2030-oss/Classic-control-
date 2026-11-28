@@ -34,6 +34,8 @@ jobs:
       - name: Patch platform folder
         run: python3 tool/patch_platforms.py
       - run: flutter pub get
+      - name: Patch plugin build files
+        run: python3 tool/patch_pubcache.py
       - name: Analyze (errors become annotations)
         shell: bash
         run: |

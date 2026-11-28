@@ -13,7 +13,21 @@ class LibItem {
   final List<String> use;
   final String safety;
   const LibItem(this.id, this.cat, this.name, this.en, this.emoji, this.about, {this.kind, this.specs = const [], this.use = const [], this.safety = ''});
+
+  /// the 3D model (assets/models) and its studio render (assets/renders), when there is one
+  String? get model => libModels[id];
 }
+
+const libModels = {
+  'pliers': 'pliers', 'cutter': 'cutter', 'stripper': 'wire_stripper', 'screwdrivers': 'screwdriver', 'tester': 'tester',
+  'hammer': 'hammer', 'tape': 'tape', 'multimeter': 'multimeter', 'clamp': 'clamp_meter', 'megger': 'inst_megger',
+  'sw1': 'sw1_1', 'sw2': 'sw2_0', 'swi': 'swi_0', 'swd': 'swd_10', 'pb': 'pb_0', 'dimmer': 'dimmer',
+  'lamp': 'lamp_1', 'led': 'ledbulb_1', 'tube': 'tube_1', 'ballast': 'ballast', 'starter': 'starter', 'driver': 'driver',
+  'ledpanel': 'ledpanel_1', 'socket': 'socket', 'bell': 'bell', 'lock': 'lock_0', 'stair': 'stair', 'mcb': 'mcb_1p',
+  'rcd': 'rccb', 'meter': 'kwh_meter', 'nbar': 'nbar', 'ebar': 'ebar', 'wire15': 'coil_brown', 'wire25': 'coil_brown',
+  'wire4': 'coil_brown', 'conduit': 'conduit', 'jbox': 'jbox6', 'swbox': 'flush_box', 'connector': 'terminal_block',
+  'earthtester': 'earth_rod', 'board': 'mcb_2p',
+};
 
 const libCats = ['العِدد والأدوات', 'أجهزة القياس', 'المفاتيح', 'الإنارة', 'البرايز والأحمال', 'الحماية واللوحات', 'الأسلاك والكابلات', 'العلب والمواسير'];
 

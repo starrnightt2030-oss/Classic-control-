@@ -9,6 +9,7 @@ import '../sim/model.dart';
 import '../sim/solver.dart';
 import '../theme.dart';
 import 'lab/fx.dart';
+import 'functional.dart';
 import 'lab/lab_page.dart';
 import 'lab/painters.dart';
 
@@ -155,13 +156,14 @@ class CircuitCard extends StatelessWidget {
 
 class CircuitPage extends StatefulWidget {
   final CircuitDef c;
-  const CircuitPage(this.c);
+  final int view;
+  const CircuitPage(this.c, {this.view = 0});
   @override
   State<CircuitPage> createState() => _CircuitPageState();
 }
 
 class _CircuitPageState extends State<CircuitPage> {
-  int view = 0; // 0 board, 1 schematic, 2 plan
+  late int view = widget.view; // 0 board, 1 wiring diagram, 2 plan, 3 functional
   CircuitDef get c => widget.c;
 
   void _open(LabMode m) {
@@ -178,8 +180,9 @@ class _CircuitPageState extends State<CircuitPage> {
       child: Column(children: [
         SegmentedButton<int>(
           segments: const [
-            ButtonSegment(value: 0, label: Text('التوصيل'), icon: Icon(Icons.view_in_ar_outlined, size: 18)),
-            ButtonSegment(value: 1, label: Text('الخطي'), icon: Icon(Icons.schema_outlined, size: 18)),
+            ButtonSegment(value: 0, label: Text('مجسم'), icon: Icon(Icons.view_in_ar_outlined, size: 18)),
+            ButtonSegment(value: 1, label: Text('التوصيل'), icon: Icon(Icons.cable_outlined, size: 18)),
+            ButtonSegment(value: 3, label: Text('الوظيفي'), icon: Icon(Icons.schema_outlined, size: 18)),
             ButtonSegment(value: 2, label: Text('المسقط'), icon: Icon(Icons.map_outlined, size: 18)),
           ],
           selected: {view},
@@ -193,16 +196,19 @@ class _CircuitPageState extends State<CircuitPage> {
             borderRadius: BorderRadius.circular(10),
             child: view == 2
                 ? Container(color: Colors.white, child: CustomPaint(painter: PlanPainter(c), size: Size.infinite))
-                : Container(color: view == 0 ? C.board : Colors.white, child: CircuitPreview(c, skin: view == 0 ? Skin.board : Skin.schematic, lit: true)),
+                : view == 3
+                ? Container(color: Colors.white, padding: const EdgeInsets.all(6), child: FunctionalDiagram(c))
+                : Container(color: view == 0 ? const Color(0xFFDDE2E8) : Colors.white, child: CircuitPreview(c, skin: view == 0 ? Skin.board : Skin.schematic, lit: true)),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          view == 0
-              ? 'مخطط التوصيل: بيوري كل سلك ولونه على الطبيعة'
-              : view == 1
-                  ? 'المخطط الخطي (IEC): رموز وخطوط مستقيمة لفهم فكرة الدايرة'
-                  : 'المسقط: أماكن النقط في الغرفة، والشرط على الخط = عدد الأسلاك',
+          switch (view) {
+            0 => 'المجسم: الأجهزة الحقيقية على لوحة التدريب، وكل سلك بلونه رايح فين',
+            1 => 'رسم التوصيل (التفصيلي): نفس أماكن الأجهزة برموز IEC، وكل سلك ظاهر من طرف لطرف',
+            3 => 'الرسم الوظيفي (مسار التيار): الفاز فوق والنيوترال تحت، وتمشي ورا التيار من المفاتيح للحمل',
+            _ => 'الرسم التنفيذي (المسقط): أماكن النقط في الغرفة، والشرط على الخط = عدد الأسلاك',
+          },
           style: const TextStyle(fontSize: 11.5, color: C.dim),
           textAlign: TextAlign.center,
         ),

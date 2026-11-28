@@ -8,6 +8,7 @@ import 'services/sound.dart';
 import 'services/sprites.dart';
 import 'theme.dart';
 import 'data/circuits.dart';
+import 'data/lessons.dart';
 import 'ui/lab/lab_page.dart';
 import 'ui/lab/painters.dart';
 import 'ui/calc_page.dart';
@@ -59,7 +60,9 @@ Widget? _deepLink() {
     case 'circuits':
       return const Scaffold(body: CircuitsPage());
     case 'circuit':
-      return CircuitPage(c ?? circuits.first);
+      return CircuitPage(c ?? circuits.first, view: int.tryParse(q['v'] ?? '') ?? 0);
+    case 'lesson':
+      return LessonPage(lessonById(q['id'] ?? '') ?? lessons.first);
     case 'learn':
       return Scaffold(body: LearnPage(), backgroundColor: C.navy0);
     case 'calc':

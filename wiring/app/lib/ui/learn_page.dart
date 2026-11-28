@@ -8,6 +8,7 @@ import '../sim/model.dart';
 import '../theme.dart';
 import 'circuits_page.dart';
 import 'lab/painters.dart';
+import 'viewer3d.dart';
 
 class LearnPage extends StatelessWidget {
   const LearnPage();
@@ -45,72 +46,227 @@ class LessonsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wide = isWide(context);
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: wide ? 360 : 420, mainAxisExtent: 112, mainAxisSpacing: 10, crossAxisSpacing: 10),
-      itemCount: lessons.length,
-      itemBuilder: (context, i) {
-        final l = lessons[i];
-        return GlowCard(
-          padding: const EdgeInsets.all(8),
-          onTap: () {
-            Sound.play(Sfx.tap);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => LessonPage(l)));
-          },
-          child: Row(children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(l.image, width: 130, height: 96, fit: BoxFit.cover)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text('الدرس ${i + 1}', style: const TextStyle(color: C.goldHi, fontSize: 11)),
-                Text(l.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                Text(l.sub, maxLines: 2, style: const TextStyle(color: C.dim, fontSize: 12)),
-                Text('⏱ ${l.minutes} دقايق', style: const TextStyle(color: C.dim, fontSize: 11)),
-              ]),
-            ),
-          ]),
-        );
-      },
-    );
-  }
-}
-
-class LessonPage extends StatelessWidget {
-  final Lesson l;
-  const LessonPage(this.l);
-  @override
-  Widget build(BuildContext context) => PageFrame(
-        title: l.title,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
-            child: ListView(padding: const EdgeInsets.all(14), children: [
-              ClipRRect(borderRadius: BorderRadius.circular(16), child: AspectRatio(aspectRatio: 2.2, child: Image.asset(l.image, fit: BoxFit.cover))),
-              const SizedBox(height: 10),
-              Text(l.sub, style: const TextStyle(color: C.dim)),
-              for (final p in l.parts) ...[
-                SectionTitle(p.h),
-                if (p.body.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(p.body, style: const TextStyle(fontSize: 15, height: 1.7))),
-                for (final pt in p.points)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Padding(padding: EdgeInsets.only(top: 6), child: Icon(Icons.bolt, size: 16, color: C.gold)),
-                      const SizedBox(width: 6),
-                      Expanded(child: Text(pt, style: const TextStyle(fontSize: 14.5, height: 1.6))),
-                    ]),
-                  ),
-              ],
-              if (l.circuits.isNotEmpty) ...[
-                const SectionTitle('طبّق على المحاكي'),
-                for (final id in l.circuits)
-                  if (circuitById(id) != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: SizedBox(height: 140, child: CircuitCard(circuitById(id)!))),
-              ],
-              const SizedBox(height: 20),
+    var n = 0;
+    return CustomScrollView(slivers: [
+      for (final g in lessonGroups) ...[
+        SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.fromLTRB(12, 10, 12, 0), child: SectionTitle(g.$1))),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: wide ? 380 : 440, mainAxisExtent: 112, mainAxisSpacing: 10, crossAxisSpacing: 10),
+            delegate: SliverChildListDelegate([
+              for (final id in g.$2)
+                if (lessonById(id) case final l?) _LessonCard(l, ++n),
             ]),
           ),
         ),
+      ],
+      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+    ]);
+  }
+}
+
+class _LessonCard extends StatelessWidget {
+  final Lesson l;
+  final int n;
+  const _LessonCard(this.l, this.n);
+  @override
+  Widget build(BuildContext context) => GlowCard(
+        padding: const EdgeInsets.all(8),
+        onTap: () {
+          Sound.play(Sfx.tap);
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => LessonPage(l)));
+        },
+        child: Row(children: [
+          Container(
+            width: 104,
+            height: 96,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), gradient: const RadialGradient(colors: [Color(0xFF1E3B73), Color(0xFF0A1A36)])),
+            padding: const EdgeInsets.all(4),
+            child: ModelPicture(l.cover),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('الدرس $n', style: const TextStyle(color: C.goldHi, fontSize: 11)),
+              Text(l.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              Text(l.sub, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: C.dim, fontSize: 12)),
+              Text('⏱ ${l.minutes} دقيقة • ${l.parts.where((p) => p.model != null).length} مجسم 3D • ${l.quiz.length} سؤال', style: const TextStyle(color: C.dim, fontSize: 11)),
+            ]),
+          ),
+        ]),
       );
+}
+
+class LessonPage extends StatefulWidget {
+  final Lesson l;
+  const LessonPage(this.l);
+  @override
+  State<LessonPage> createState() => _LessonPageState();
+}
+
+class _LessonPageState extends State<LessonPage> {
+  final Map<int, int> picked = {};
+  Lesson get l => widget.l;
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = isWide(context);
+    return PageFrame(
+      title: l.title,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 960),
+          child: ListView(padding: const EdgeInsets.all(14), children: [
+            Text(l.sub, style: const TextStyle(color: C.goldHi, fontSize: 15)),
+            const SizedBox(height: 6),
+            for (var i = 0; i < l.parts.length; i++) _part(l.parts[i], i, wide),
+            if (l.quiz.isNotEmpty) ...[
+              const SectionTitle('اختبر نفسك'),
+              for (var i = 0; i < l.quiz.length; i++) _question(i),
+            ],
+            if (l.circuits.isNotEmpty) ...[
+              const SectionTitle('طبّق على المحاكي'),
+              for (final id in l.circuits)
+                if (circuitById(id) != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: SizedBox(height: 140, child: CircuitCard(circuitById(id)!))),
+            ],
+            const SizedBox(height: 24),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _part(LessonPart p, int i, bool wide) {
+    final text = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (p.body.isNotEmpty) Text(p.body, style: const TextStyle(fontSize: 15, height: 1.75)),
+      for (final pt in p.points)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Padding(padding: EdgeInsets.only(top: 6), child: Icon(Icons.bolt, size: 16, color: C.gold)),
+            const SizedBox(width: 6),
+            Expanded(child: Text(pt, style: const TextStyle(fontSize: 14.5, height: 1.6))),
+          ]),
+        ),
+      if (p.facts.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: C.glow.withValues(alpha: .5))),
+          clipBehavior: Clip.antiAlias,
+          child: Column(children: [
+            for (var k = 0; k < p.facts.length; k++)
+              Container(
+                color: k.isEven ? Colors.white.withValues(alpha: .04) : Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(width: 150, child: Text(p.facts[k].$1, style: const TextStyle(fontWeight: FontWeight.w700, color: C.goldHi, fontSize: 13.5))),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(p.facts[k].$2, style: const TextStyle(fontSize: 13.5, height: 1.5))),
+                ]),
+              ),
+          ]),
+        ),
+      ],
+      if (p.formula.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: glowCard(r: 12, border: C.gold),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('القانون', style: TextStyle(color: C.goldHi, fontSize: 12)),
+            Directionality(textDirection: TextDirection.ltr, child: Text(p.formula, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700))),
+            if (p.example.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text('مثال: ${p.example}', style: const TextStyle(fontSize: 13.5, height: 1.6, color: C.text)),
+            ],
+          ]),
+        ),
+      ] else if (p.example.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Text('مثال: ${p.example}', style: const TextStyle(fontSize: 13.5, height: 1.6, color: C.dim)),
+      ],
+      if (p.mistakes.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: glowCard(r: 12, border: C.bad),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Row(children: [Icon(Icons.dangerous_outlined, color: C.bad, size: 18), SizedBox(width: 6), Text('أخطاء شائعة', style: TextStyle(fontWeight: FontWeight.w700))]),
+            for (final m in p.mistakes) Padding(padding: const EdgeInsets.only(top: 4), child: Text('✗ $m', style: const TextStyle(fontSize: 13.5, height: 1.5))),
+          ]),
+        ),
+      ],
+    ]);
+    final model = p.model == null
+        ? null
+        : Container(
+            height: wide ? 340 : 300,
+            decoration: glowCard(r: 14),
+            padding: const EdgeInsets.all(6),
+            child: Column(children: [
+              Expanded(child: ModelStage(model: p.model!, nameAr: p.modelName)),
+              Text(p.modelName.isEmpty ? 'لف المجسم بصباعك، وكبّر بصباعين' : '${p.modelName} • لف بصباعك وكبّر بصباعين', style: const TextStyle(fontSize: 11.5, color: C.dim), textAlign: TextAlign.center),
+            ]),
+          );
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SectionTitle('${i + 1}. ${p.h}'),
+        if (model != null && wide)
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(flex: 5, child: text), const SizedBox(width: 14), Expanded(flex: 4, child: model)])
+        else ...[
+          if (model != null) ...[model, const SizedBox(height: 10)],
+          text,
+        ],
+      ]),
+    );
+  }
+
+  Widget _question(int i) {
+    final q = l.quiz[i];
+    final pick = picked[i];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: glowCard(r: 14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${i + 1}. ${q.q}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+        const SizedBox(height: 6),
+        for (var k = 0; k < q.options.length; k++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: pick != null
+                  ? null
+                  : () {
+                      setState(() => picked[i] = k);
+                      Sound.play(k == q.answer ? Sfx.success : Sfx.buzzer, volume: .5);
+                    },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: pick == null
+                      ? Colors.white.withValues(alpha: .05)
+                      : k == q.answer
+                          ? C.ok.withValues(alpha: .25)
+                          : k == pick
+                              ? C.bad.withValues(alpha: .25)
+                              : Colors.white.withValues(alpha: .03),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Text(q.options[k]),
+              ),
+            ),
+          ),
+        if (pick != null) Text('${pick == q.answer ? '✓ صح. ' : '✗ مش دي. '}${q.why}', style: TextStyle(color: pick == q.answer ? C.ok : C.warn, height: 1.5)),
+      ]),
+    );
+  }
 }
 
 class LibraryList extends StatefulWidget {
@@ -180,10 +336,10 @@ class LibVisual extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: e.kind != null ? const LinearGradient(colors: [C.board, C.boardDark]) : const RadialGradient(colors: [C.cardHi, C.navy1]),
+          gradient: const RadialGradient(colors: [Color(0xFF1E3B73), Color(0xFF0A1A36)]),
         ),
         padding: const EdgeInsets.all(8),
-        child: e.kind != null ? PartIcon(e.kind!, size: 200) : Center(child: Text(e.emoji, style: TextStyle(fontSize: emoji))),
+        child: e.model != null ? ModelPicture(e.model!) : e.kind != null ? PartIcon(e.kind!, size: 200) : Center(child: Text(e.emoji, style: TextStyle(fontSize: emoji))),
       );
 }
 
@@ -197,7 +353,15 @@ class LibItemPage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 820),
             child: ListView(padding: const EdgeInsets.all(14), children: [
-              SizedBox(height: 220, child: LibVisual(e, emoji: 90)),
+              if (e.model != null)
+                Container(
+                  height: 360,
+                  decoration: glowCard(r: 14),
+                  padding: const EdgeInsets.all(6),
+                  child: ModelStage(model: e.model!, nameAr: e.name, nameEn: e.en),
+                )
+              else
+                SizedBox(height: 220, child: LibVisual(e, emoji: 90)),
               const SizedBox(height: 10),
               Text(e.en, style: const TextStyle(color: C.goldHi)),
               const SizedBox(height: 6),

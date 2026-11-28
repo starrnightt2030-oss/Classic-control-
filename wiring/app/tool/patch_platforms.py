@@ -20,6 +20,11 @@ def patch_android() -> None:
     if not man.exists():
         return
     s = man.read_text(encoding="utf-8")
+    # the 3D viewer is a WebView fed by an in-app server on 127.0.0.1
+    if "android.permission.INTERNET" not in s:
+        s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
+    if "usesCleartextTraffic" not in s:
+        s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
     s = re.sub(r'android:label="[^"]*"', f'android:label="{LABEL}"', s, count=1)
     man.write_text(s, encoding="utf-8")
     res = APP / "android/app/src/main/res"
@@ -38,6 +43,13 @@ def patch_windows() -> None:
     s = re.sub(r'window\.Create\(L"[^"]*"', 'window.Create(L"Wiring Academy"', s)
     s = re.sub(r"Win32Window::Size size\(\d+, \d+\)", "Win32Window::Size size(1366, 820)", s)
     main_cpp.write_text(s, encoding="utf-8")
+    cm = APP / "windows/CMakeLists.txt"
+    t = cm.read_text(encoding="utf-8")
+    flag = "add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)"
+    if flag not in t:
+        # flutter_inappwebview_windows still uses <experimental/coroutine>; newer MSVC turns that into an error
+        t = re.sub(r"(project\([^)]*\)\r?\n)", r"\1" + flag + "\n", t, count=1)
+        cm.write_text(t, encoding="utf-8")
     ico = APP / "windows/runner/resources/app_icon.ico"
     if ico.parent.exists():
         shutil.copy2(ICON / "app_icon.ico", ico)

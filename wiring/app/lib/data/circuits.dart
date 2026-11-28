@@ -4,6 +4,9 @@ import '../sim/diagnose.dart';
 import '../sim/model.dart';
 import '../sim/solver.dart';
 import '../ui/lab/wires.dart';
+import 'project_circuits.dart';
+
+export 'project_circuits.dart';
 
 /// One wire in the reference wiring, with the guide text that goes with it.
 class Step {
@@ -34,16 +37,22 @@ class CircuitDef {
   final List<Scenario> tests;
   final List<Fault> faults;
   final String room; // where it lives in the apartment
+  /// board wiring that comes ready made; null = the usual supply/breaker/bars head
+  final List<Step>? pre;
   const CircuitDef({
     required this.id, required this.no, required this.title, required this.level, required this.brief,
     this.tips = const [], required this.parts, required this.steps, required this.tests, required this.faults, this.room = 'الصالة',
+    this.pre,
   });
 
+  /// the wires that are already there when the lesson starts
+  List<Wire> preWires() => pre == null ? headWires(parts()) : [for (final s in pre!) Wire(s.a, s.b, s.c)];
+
   /// all wires of the reference wiring (the board head included)
-  List<Wire> referenceWires() => [...headWires(parts()), ...steps.map((s) => Wire(s.a, s.b, s.c))];
+  List<Wire> referenceWires() => [...preWires(), ...steps.map((s) => Wire(s.a, s.b, s.c))];
 
   Sim buildEmpty() {
-    final s = Sim(parts: parts(), wires: headWires(parts()));
+    final s = Sim(parts: parts(), wires: preWires());
     tidyWires(s);
     return s;
   }
@@ -535,8 +544,11 @@ final List<CircuitDef> circuits = [
   ),
 ];
 
+/// the training circuits plus the full installation projects
+List<CircuitDef> get allCircuits => [...circuits, ...projectCircuits];
+
 CircuitDef? circuitById(String id) {
-  for (final c in circuits) {
+  for (final c in allCircuits) {
     if (c.id == id) return c;
   }
   return null;

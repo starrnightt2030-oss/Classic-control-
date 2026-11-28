@@ -109,6 +109,9 @@ class _Viewer3DState extends State<Viewer3D> {
 }
 
 /// The studio render of a model (assets/renders/<model>.webp), or its board sprite.
+/// background colour of the studio renders, so a card around one shows no edge
+const kRenderBg = Color(0xFF21446C);
+
 class ModelPicture extends StatelessWidget {
   final String model;
   const ModelPicture(this.model, {super.key});

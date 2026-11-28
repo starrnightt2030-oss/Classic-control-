@@ -9,6 +9,8 @@ import 'circuits_page.dart';
 import 'lab/lab_page.dart';
 import 'lab/painters.dart';
 import 'learn_page.dart';
+import 'viewer3d.dart';
+import '../data/lessons.dart';
 import 'projects_page.dart';
 import 'quiz_page.dart';
 
@@ -22,12 +24,12 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = isWide(context);
     final tiles = [
-      ('assets/images/hicon1.webp', 'محاكي الدوائر', '21 دايرة تفاعلية', () => onTab(1)),
-      ('assets/images/hicon2.webp', 'رسم الدوائر', 'ارسم وحاكي بالرموز', () => _push(context, const LabPage(skin: Skin.schematic))),
-      ('assets/images/hicon3.webp', 'الدروس', 'من الأساسيات للتأسيس', () => _push(context, const LessonsPage())),
-      ('assets/images/hicon4.webp', 'الحاسبات', 'أحمال، كابلات، قواطع', () => _push(context, const CalcPage())),
-      ('assets/images/hicon5.webp', 'الاختبارات', 'بنك أسئلة وانترفيو', () => _push(context, const QuizHome())),
-      ('assets/images/hicon6.webp', 'المشروعات', 'شقة وفيلا وورشة', () => _push(context, const ProjectsPage())),
+      ('lamp_1', 'محاكي الدوائر', '21 دايرة تفاعلية', () => onTab(1)),
+      ('sw2_1', 'رسم الدوائر', 'ارسم وحاكي بالرموز', () => _push(context, const LabPage(skin: Skin.schematic))),
+      ('multimeter', 'الدروس', 'من الأساسيات للتأسيس', () => _push(context, const LessonsPage())),
+      ('kwh_meter', 'الحاسبات', 'أحمال، كابلات، قواطع', () => _push(context, const CalcPage())),
+      ('tester', 'الاختبارات', 'بنك أسئلة وانترفيو', () => _push(context, const QuizHome())),
+      ('jbox8', 'المشروعات', 'غرفة نوم، طرقة، مطبخ', () => _push(context, const ProjectsPage())),
     ];
     return NavyBackground(
       child: SafeArea(
@@ -35,7 +37,7 @@ class HomePage extends StatelessWidget {
           listenable: Progress.i,
           builder: (context, _) {
             final last = circuitById(Progress.i.lastCircuit);
-            final done = Progress.i.stars.length;
+            final done = circuits.where((c) => Progress.i.stars.containsKey(c.id)).length;
             return ListView(padding: EdgeInsets.zero, children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -59,7 +61,7 @@ class HomePage extends StatelessWidget {
                   child: AspectRatio(
                     aspectRatio: wide ? 3.2 : 1.75,
                     child: Stack(fit: StackFit.expand, children: [
-                      Image.asset('assets/images/home_banner.webp', fit: BoxFit.cover, alignment: Alignment.center),
+                      Image.asset('assets/images/home_banner.webp', fit: BoxFit.cover, alignment: Alignment.centerLeft),
                       const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Colors.transparent, Color(0xCC06122E)]))),
                       Positioned(
                         right: 16,
@@ -98,7 +100,7 @@ class HomePage extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         onTap: t.$4,
                         child: Column(children: [
-                          Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(t.$1, fit: BoxFit.cover, width: double.infinity))),
+                          Expanded(child: Container(width: double.infinity, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: kRenderBg), child: ModelPicture(t.$1))),
                           const SizedBox(height: 6),
                           Text(t.$2, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
                           Text(t.$3, style: const TextStyle(fontSize: 10.5, color: C.dim), maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -145,12 +147,30 @@ class HomePage extends StatelessWidget {
               SizedBox(
                 height: 120,
                 child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
-                  for (final l in ['lesson1', 'lesson2', 'lesson3', 'lesson4', 'lesson5'])
+                  for (final l in lessons.take(10))
                     Padding(
                       padding: const EdgeInsets.only(left: 10),
                       child: InkWell(
-                        onTap: () => _push(context, const LessonsPage()),
-                        child: ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.asset('assets/images/$l.webp', width: 200, fit: BoxFit.cover)),
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => _push(context, LessonPage(l)),
+                        child: Container(
+                          width: 150,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), color: kRenderBg, border: Border.all(color: Colors.white12)),
+                          child: Stack(children: [
+                            Positioned.fill(bottom: 26, child: ModelPicture(l.cover)),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                color: const Color(0xCC06122E),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                child: Text(l.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                          ]),
+                        ),
                       ),
                     ),
                 ]),

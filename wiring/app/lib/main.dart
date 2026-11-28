@@ -71,6 +71,8 @@ Widget? _deepLink() {
       return const PageFrame(title: 'حساب الأحمال', body: LoadCalc());
     case 'projects':
       return const ProjectsPage();
+    case 'project':
+      return ProjectPage(c ?? projectCircuits.first);
     case 'apt':
       return const ApartmentPage();
     case 'quiz':

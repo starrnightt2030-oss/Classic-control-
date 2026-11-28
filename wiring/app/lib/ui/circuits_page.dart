@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/circuits.dart';
 import '../services/progress.dart';
 import '../services/sound.dart';
+import '../services/sprites.dart';
 import '../sim/model.dart';
 import '../sim/solver.dart';
 import '../theme.dart';
@@ -95,7 +96,7 @@ class CircuitPreview extends StatelessWidget {
 class _Crop extends CustomPainter {
   final BoardPainter inner;
   final Offset origin;
-  _Crop(this.inner, this.origin);
+  _Crop(this.inner, this.origin) : super(repaint: Sprites.i.ready);
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Offset.zero & size);
@@ -122,14 +123,14 @@ class CircuitCard extends StatelessWidget {
       },
       child: compact
           ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Container(color: Colors.white, width: double.infinity, child: CircuitPreview(c)))),
+              Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Container(color: const Color(0xFFDDE2E8), width: double.infinity, child: CircuitPreview(c, skin: Skin.board, lit: true)))),
               const SizedBox(height: 4),
               Text('${c.no}. ${c.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
             ])
           : Row(children: [
               SizedBox(
                 width: 120,
-                child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Container(color: Colors.white, height: double.infinity, child: CircuitPreview(c))),
+                child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Container(color: const Color(0xFFDDE2E8), height: double.infinity, child: CircuitPreview(c, skin: Skin.board, lit: true))),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -323,7 +324,7 @@ class PlanPainter extends CustomPainter {
     final loads = parts.where((p) => const {Kind.lamp, Kind.tube, Kind.ledpanel, Kind.bell, Kind.lock}.contains(p.kind)).toList();
     final ctrls = parts.where((p) => const {Kind.sw1, Kind.sw2, Kind.swi, Kind.swd, Kind.pb, Kind.dimmer}.contains(p.kind)).toList();
     final sockets = parts.where((p) => p.kind == Kind.socket).toList();
-    final extra = parts.where((p) => const {Kind.stair, Kind.driver, Kind.ballast, Kind.starter, Kind.rcd, Kind.meter, Kind.jbox}.contains(p.kind)).toList();
+    final extra = parts.where((p) => const {Kind.stair, Kind.driver, Kind.ballast, Kind.starter, Kind.rcd, Kind.meter, ...jboxKinds}.contains(p.kind)).toList();
     for (var i = 0; i < loads.length; i++) {
       pos[loads[i].id] = Offset(260 + (560.0 / math.max(1, loads.length)) * (i + .5), 230);
     }

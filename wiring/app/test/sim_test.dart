@@ -8,7 +8,7 @@ void main() {
     expect(circuits.map((c) => c.id).toSet().length, circuits.length);
   });
 
-  for (final c in circuits) {
+  for (final c in allCircuits) {
     group('${c.id} ${c.title}', () {
       test('reference wiring passes every scenario with no warnings', () {
         final rep = checkCircuit(c, c.buildDone());

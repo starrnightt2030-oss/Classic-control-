@@ -358,7 +358,7 @@ class _LabPageState extends State<LabPage> with SingleTickerProviderStateMixin {
 
   void _clearWires() {
     _undo.add(sim.wires.map((w) => w.copy()).toList());
-    final keep = c == null ? <Wire>[] : headWires(sim.parts);
+    final keep = c == null ? <Wire>[] : c!.preWires();
     sim.wires
       ..clear()
       ..addAll(keep);

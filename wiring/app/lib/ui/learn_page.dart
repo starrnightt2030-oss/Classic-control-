@@ -81,8 +81,8 @@ class _LessonCard extends StatelessWidget {
           Container(
             width: 104,
             height: 96,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), gradient: const RadialGradient(colors: [Color(0xFF1E3B73), Color(0xFF0A1A36)])),
-            padding: const EdgeInsets.all(4),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: kRenderBg),
             child: ModelPicture(l.cover),
           ),
           const SizedBox(width: 10),
@@ -334,11 +334,9 @@ class LibVisual extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: const RadialGradient(colors: [Color(0xFF1E3B73), Color(0xFF0A1A36)]),
-        ),
-        padding: const EdgeInsets.all(8),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: kRenderBg),
+        padding: e.model != null ? EdgeInsets.zero : const EdgeInsets.all(8),
         child: e.model != null ? ModelPicture(e.model!) : e.kind != null ? PartIcon(e.kind!, size: 200) : Center(child: Text(e.emoji, style: TextStyle(fontSize: emoji))),
       );
 }

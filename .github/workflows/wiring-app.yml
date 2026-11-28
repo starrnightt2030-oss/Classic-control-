@@ -1,0 +1,131 @@
+name: Wiring Academy app (Android + Windows)
+
+on:
+  push:
+    branches: [claude/project-thread-37rwcu, v2-rebuild]
+    paths:
+      - 'wiring/app/**'
+      - '.github/workflows/wiring-app.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: wiring-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wiring/app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.1
+          cache: true
+      - name: Generate platform folder
+        run: flutter create --platforms=android --org com.eldawly --project-name wiring_academy .
+      - name: Patch platform folder
+        run: python3 tool/patch_platforms.py
+      - run: flutter pub get
+      - name: Analyze (errors become annotations)
+        shell: bash
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
+          cat analyze.txt
+          python3 tool/ci_report.py analyze.txt
+      - name: Fixed test signing key (updates install over older builds)
+        run: mkdir -p ~/.android && cp tool/signing/debug.keystore ~/.android/debug.keystore
+      - name: Unit tests (simulator + circuits)
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter test 2>&1 | tee test.txt || { python3 tool/ci_report.py test.txt --tail; exit 1; }
+      - name: Build APK
+        shell: bash
+        run: |
+          set -o pipefail
+          for i in 1 2 3 4; do
+            if flutter build apk --release --build-number ${{ github.run_number }} 2>&1 | tee build.txt; then exit 0; fi
+            grep -q "429\|Could not resolve\|Could not GET" build.txt || break
+            sleep $((i * 45))
+          done
+          python3 tool/ci_report.py build.txt --tail; exit 1
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wiring-android
+          path: wiring/app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: wiring/app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.1
+          cache: true
+      - name: Generate platform folder
+        run: flutter create --platforms=windows --org com.eldawly --project-name wiring_academy .
+      - name: Patch platform folder
+        run: python tool/patch_platforms.py
+      - run: flutter pub get
+      - name: Build Windows
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter build windows --release --build-number ${{ github.run_number }} 2>&1 | tee build.txt || { python tool/ci_report.py build.txt --tail; exit 1; }
+      - name: Bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $rel = "build/windows/x64/runner/Release"
+          foreach ($d in @("msvcp140.dll","msvcp140_1.dll","msvcp140_2.dll","vcruntime140.dll","vcruntime140_1.dll","concrt140.dll")) {
+            $src = Join-Path $env:WINDIR "System32\$d"
+            if (Test-Path $src) { Copy-Item $src $rel -Force }
+          }
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath WiringAcademy-Windows.zip
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wiring-windows
+          path: wiring/app/WiringAcademy-Windows.zip
+          retention-days: 30
+
+  release:
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+      - name: Rename
+        run: |
+          mv dist/wiring-android/app-release.apk dist/WiringAcademy-Android.apk
+          mv dist/wiring-windows/* dist/
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: wiring-build-${{ github.run_number }}
+          name: "نسخة تجريبية ${{ github.run_number }} — أكاديمية التمديدات الكهربية"
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          make_latest: false
+          body: |
+            نسخة تجريبية من أكاديمية التمديدات الكهربية.
+            - Android: نزّل WiringAcademy-Android.apk وثبّته (اسمح بالتثبيت من مصادر غير معروفة).
+            - Windows: فك ضغط WiringAcademy-Windows.zip كله في فولدر وشغّل wiring_academy.exe.
+          files: |
+            dist/WiringAcademy-Android.apk
+            dist/WiringAcademy-Windows.zip
